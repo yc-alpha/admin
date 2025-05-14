@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package admin.v1;
+option go_package = "github.com/yc-alpha/admin/api/admin/v1;v1";
+
+import "google/api/annotations.proto";
+
+// 系统菜单服务
+service SysMenuService {
+  // 获取菜单列表
+  rpc ListMenu(ListMenuRequest) returns (ListMenuResponse) {
+    option (google.api.http) = {
+      get: "/v1/menus"
+    };
+  }
+
+  // 获取菜单详情
+  rpc GetMenu(GetMenuRequest) returns (GetMenuResponse) {
+    option (google.api.http) = {
+      get: "/v1/menus/{id}"
+    };
+  }
+
+  // 创建菜单
+  rpc CreateMenu(CreateMenuRequest) returns (CreateMenuResponse) {
+    option (google.api.http) = {
+      post: "/v1/menus",
+      body: "*"
+    };
+  }
+
+  // 更新菜单
+  rpc UpdateMenu(UpdateMenuRequest) returns (UpdateMenuResponse) {
+    option (google.api.http) = {
+      put: "/v1/menus/{id}",
+      body: "*"
+    };
+  }
+
+  // 删除菜单
+  rpc DeleteMenu(DeleteMenuRequest) returns (DeleteMenuResponse) {
+    option (google.api.http) = {
+      delete: "/v1/menus/{id}"
+    };
+  }
+}
+
+// 菜单基础信息
+message Menu {
+  string id = 1;                // 菜单ID
+  string name = 2;             // 菜单名称
+  string title = 3;            // 显示名称
+  string parent_id = 4;        // 父菜单ID
+  int32 order_num = 5;         // 显示顺序
+  string path = 6;             // 路由地址
+  string component = 7;        // 组件路径
+  string redirect = 8;         // 跳转地址
+  string icon = 9;             // 菜单图标
+  bool is_hidden = 10;         // 是否隐藏
+  bool is_disabled = 11;       // 是否禁用
+  bool is_external = 12;       // 是否外链
+  string permission = 13;      // 权限标识
+  string created_at = 14;      // 创建时间
+  string updated_at = 15;      // 更新时间
+}
+
+// 获取菜单列表请求
+message ListMenuRequest {
+  string keyword = 1;          // 搜索关键字
+  bool include_disabled = 2;   // 是否包含禁用菜单
+  bool include_hidden = 3;     // 是否包含隐藏菜单
+}
+
+// 获取菜单列表响应
+message ListMenuResponse {
+  repeated Menu items = 1;     // 菜单列表
+  int32 total = 2;            // 总数
+}
+
+// 获取菜单详情请求
+message GetMenuRequest {
+  string id = 1;              // 菜单ID
+}
+
+// 获取菜单详情响应
+message GetMenuResponse {
+  Menu menu = 1;              // 菜单信息
+}
+
+// 创建菜单请求
+message CreateMenuRequest {
+  string name = 1;            // 菜单名称
+  string title = 2;           // 显示名称
+  string parent_id = 3;       // 父菜单ID
+  int32 order_num = 4;        // 显示顺序
+  string path = 5;            // 路由地址
+  string component = 6;       // 组件路径
+  string redirect = 7;        // 跳转地址
+  string icon = 8;            // 菜单图标
+  bool is_hidden = 9;         // 是否隐藏
+  bool is_disabled = 10;      // 是否禁用
+  bool is_external = 11;      // 是否外链
+  string permission = 12;     // 权限标识
+}
+
+// 创建菜单响应
+message CreateMenuResponse {
+  string id = 1;              // 新创建的菜单ID
+}
+
+// 更新菜单请求
+message UpdateMenuRequest {
+  string id = 1;              // 菜单ID
+  string name = 2;            // 菜单名称
+  string title = 3;           // 显示名称
+  string parent_id = 4;       // 父菜单ID
+  int32 order_num = 5;        // 显示顺序
+  string path = 6;            // 路由地址
+  string component = 7;       // 组件路径
+  string redirect = 8;        // 跳转地址
+  string icon = 9;            // 菜单图标
+  bool is_hidden = 10;        // 是否隐藏
+  bool is_disabled = 11;      // 是否禁用
+  bool is_external = 12;      // 是否外链
+  string permission = 13;     // 权限标识
+}
+
+// 更新菜单响应
+message UpdateMenuResponse {
+  bool success = 1;           // 更新是否成功
+}
+
+// 删除菜单请求
+message DeleteMenuRequest {
+  string id = 1;              // 菜单ID
+}
+
+// 删除菜单响应
+message DeleteMenuResponse {
+  bool success = 1;           // 删除是否成功
+}

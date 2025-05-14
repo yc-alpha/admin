@@ -1,0 +1,301 @@
+syntax = "proto3";
+
+package user_management.v1;
+
+option go_package = "github.com/yc-alpha/admin/api/user_management/v1;v1";
+
+import "google/api/annotations.proto";
+
+// 定义服务
+service UserService {
+  // 新增用户
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {
+    option (google.api.http) = {
+      post: "/v1/users",
+      body: "*"
+    };
+  }
+  // 删除用户
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      delete: "/v1/users/{id}"
+    };
+  }
+  // 更新用户
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{id}",
+      body: "*"
+    };
+  }
+  // 更新用户属性
+  rpc UpdateUserAttrs (UpdateUserAttrsRequest) returns (UpdateUserAttrsResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{id}/attrs",
+      body: "*"
+    };
+  }
+  // 更新用户关联账号
+  rpc UpdateUserAccounts (UpdateUserAccountsRequest) returns (UpdateUserAccountsResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{id}/accounts",
+      body: "*"
+    };
+  }
+  // 修改用户密码
+  rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{id}/password",
+      body: "*"
+    };
+  }
+  // 获取用户列表
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1/users"
+    };
+  }
+  // 获取用户信息详情
+  rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoResponse) {
+    option (google.api.http) = {
+      get: "/v1/users/{id}"
+    };
+  }
+  // 验证用户密码
+  rpc CheckPassword (CheckPasswordRequest) returns (CheckPasswordResponse) {
+    option (google.api.http) = {
+      post: "/v1/users/{id}/password/check",
+      body: "*"
+    };
+  }
+}
+
+enum UserStatus {
+    PENDING = 0;
+    ACTIVE = 1;
+    DISABLED = 2;
+}
+
+enum Gender {
+    UNKNOWN = 0;
+    MALE = 1;
+    FEMALE = 2;
+}
+
+// 全部用户信息
+message User {
+  string id = 1;
+  string username = 2;
+  string nickname = 3;
+  string email = 4;
+  string phone = 5;
+  string post = 6;
+  string avatar_url = 7;
+  string fullname = 8;
+  UserStatus status = 9;
+  Gender gender = 10;
+  string last_login_ip = 11;
+  string last_login_at = 12;
+  string timezone = 13;
+  string language = 14;
+  string created_by = 15;
+  string updated_by = 16;
+  string created_at = 17;
+  string updated_at = 18;
+  bool deleted = 19; // 软删除标记
+
+  repeated UserAccount user_accounts = 20;
+  repeated UserAttr user_attrs = 21;
+}
+
+message SimpleUser {
+  string id = 1;
+  string username = 2;
+  string nickname = 3;
+  string email = 4;
+  string phone = 5;
+  string post = 6;
+  string avatar_url = 7;
+  string fullname = 8;
+  UserStatus status = 9;
+  Gender gender = 10;
+  string last_login_ip = 11;
+  string last_login_at = 12;
+  string timezone = 13;
+  string language = 14;
+  string created_by = 15;
+  string updated_by = 16;
+  string created_at = 17;
+  string updated_at = 18;
+  bool deleted = 19; // 软删除标记
+}
+
+message UserAccount {
+  uint64 id = 1;
+  string user_id = 2;
+  string platform = 3;
+  string account = 4;
+  string name = 5;
+  bool is_active = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  bool deleted = 9;
+}
+
+message UserAttr {
+  uint64 id = 1;
+  string user_id = 2;
+  string key = 3;
+  string value = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string nickname = 2;
+  string email = 3;
+  string phone = 4;
+  string post = 5;
+  string password = 6;
+  string fullname = 7;
+  UserStatus status = 8;
+  Gender gender = 9;
+  string timezone = 10;
+  string language = 11;
+  string last_login_ip = 12;
+  string last_login_at = 13;
+  repeated UserAccount user_accounts = 14;
+  repeated UserAttr user_attrs = 15;
+}
+
+message CreateUserResponse {
+  bool result = 1;
+  int32 code = 2;
+  User user = 3;
+  string msg = 4;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message DeleteUserResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 3;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string username = 2;
+  string nickname = 3;
+  string fullname = 4;
+  string email = 5;
+  string phone = 6;
+  string post = 7;
+  UserStatus status = 8;
+  Gender gender = 9;
+  string timezone = 10;
+  string language = 11;
+  string last_login_ip = 12;
+  string last_login_at = 13;
+}
+
+message UpdateUserResponse {
+  bool result = 1;
+  int32 code = 2;
+  SimpleUser user = 3;
+  string msg = 4;
+}
+
+
+message UpdateUserAttrsRequest {
+  string id = 1;
+  repeated UserAttr user_attrs = 2;
+}
+
+message UpdateUserAttrsResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 3;
+}
+
+message UpdateUserAccountsRequest {
+  string id = 1;
+  repeated UserAccount user_accounts = 2;
+}
+
+message UpdateUserAccountsResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 3;
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string order = 3;
+  bool is_desc = 4;
+  string username = 5;
+  string nickname = 6;
+  string fullname = 7;
+  string email = 8;
+  string phone = 9;
+  string post = 10;
+  string filter = 11;
+  repeated UserStatus status = 12;
+  repeated Gender gender = 13;
+}
+
+
+message ListUsersResponse {
+  message PageResult {
+    int32 total = 1;
+    repeated SimpleUser users = 2;
+    int32 page = 3;
+    int32 page_size = 4;
+  }
+
+  bool result = 1;
+  int32 code = 2;
+  PageResult data = 3;
+  string msg = 4;
+}
+
+message GetUserInfoRequest {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+}
+
+message GetUserInfoResponse {
+  bool result = 1;
+  int32 code = 2;
+  User data = 3;
+  string msg = 4;
+}
+
+message CheckPasswordRequest {
+  string id = 1;
+  string password = 2;
+}
+
+message CheckPasswordResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 3;
+}
+
+message ChangePasswordRequest {
+  string id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 3;
+}

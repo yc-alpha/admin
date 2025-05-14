@@ -1,0 +1,166 @@
+syntax = "proto3";
+
+option go_package = "github.com/yc-alpha/admin/api/login/v1;v1";
+package login.v1;
+
+import "google/api/annotations.proto";
+import "user_management/v1/user.proto";
+
+service LoginService {
+  // 登陆
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/login",
+      body: "*"
+    };
+  };
+
+  // 登出
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = {
+      get: "/v1/logout",
+    };
+  };
+
+  // 获取图片验证码
+  rpc GetCaptcha(GetCaptchaRequest) returns (GetCaptchaResponse) {
+    option (google.api.http) = {
+      get: "/v1/captcha"
+    };
+  }
+
+  // 验证图片验证码
+  rpc VerifyCaptcha(VerifyCaptchaRequest) returns (VerifyCaptchaResponse) {
+    option (google.api.http) = {
+      post: "/v1/captcha/verify",
+      body: "*"
+    };
+  }
+
+  // 发送手机验证码
+  rpc SendSmsCode(SendSmsCodeRequest) returns (SendSmsCodeResponse) {
+    option (google.api.http) = {
+      post: "/v1/sms/code",
+      body: "*"
+    };
+  }
+
+  // 手机验证码登录
+  rpc LoginBySms(LoginBySmsRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/login/sms",
+      body: "*"
+    };
+  }
+
+  // OAuth2.0第三方登录
+  rpc OAuthLogin(OAuthLoginRequest) returns (OAuthLoginResponse) {
+    option (google.api.http) = {
+      post: "/v1/oauth/login",
+      body: "*"
+    };
+  }
+
+  // OAuth2.0回调处理
+  rpc OAuthCallback(OAuthCallbackRequest) returns (OAuthCallbackResponse) {
+    option (google.api.http) = {
+      get: "/v1/oauth/callback/{provider}"
+    };
+  }
+}
+
+// 登录请求
+message LoginRequest {
+  string username = 1;
+  string email = 2;
+  string phone = 3;
+  string password = 4;
+}
+
+message LoginResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 4;
+}
+
+message LogoutRequest {
+
+}
+
+message LogoutResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 4;
+}
+
+
+// 获取验证码请求
+message GetCaptchaRequest {
+  string captcha_type = 1;  // 验证码类型：slide(滑动)、click(点选)等
+}
+
+// 获取验证码响应
+message GetCaptchaResponse {
+  string captcha_id = 1;    // 验证码ID
+  string captcha_image = 2; // Base64编码的验证码图片
+  bytes puzzle_image = 3;   // 滑动验证码的拼图部分
+}
+
+// 验证码校验请求
+message VerifyCaptchaRequest {
+  string captcha_id = 1;    // 验证码ID
+  int32 point_x = 2;       // 验证坐标x
+  int32 point_y = 3;       // 验证坐标y
+  string track = 4;        // 滑动轨迹数据
+}
+
+// 验证码校验响应
+message VerifyCaptchaResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 发送短信验证码请求
+message SendSmsCodeRequest {
+  string phone = 1;
+  string captcha_id = 2;    // 图形验证码ID(可选)
+}
+
+// 发送短信验证码响应
+message SendSmsCodeResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// 短信验证码登录请求
+message LoginBySmsRequest {
+  string phone = 1;
+  string sms_code = 2;
+}
+
+// OAuth登录请求
+message OAuthLoginRequest {
+  string provider = 1;      // 提供商：github、google、wechat等
+  string redirect_uri = 2;  // 回调地址
+  string state = 3;         // 状态码
+}
+
+// OAuth登录响应
+message OAuthLoginResponse {
+  string auth_url = 1;      // 第三方授权页面URL
+}
+
+// OAuth回调请求
+message OAuthCallbackRequest {
+  string provider = 1;     // 提供商
+  string code = 2;        // 授权码
+  string state = 3;       // 状态码
+}
+
+// OAuth回调响应
+message OAuthCallbackResponse {
+  bool success = 1;
+  string token = 2;       // JWT Token
+  string refresh_token = 3;
+  user_management.v1.SimpleUser user_info = 4; // 用户信息
+}

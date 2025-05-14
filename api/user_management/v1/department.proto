@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package user_management.v1;
+option go_package = "github.com/yc-alpha/admin/api/user_management/v1;v1";
+
+import "google/api/annotations.proto";
+
+service DepartmentService {
+    // 创建部门
+    rpc CreateDepartment(CreateDepartmentRequest) returns (CreateDepartmentResponse) {
+        option (google.api.http) = {
+            post: "/v1/departments",
+            body: "*"
+        };
+    }
+    // 删除部门
+    rpc DeleteDepartment(DeleteDepartmentRequest) returns (DeleteDepartmentResponse) {
+        option (google.api.http) = {
+            delete: "/v1/departments/{id}"
+        };
+    }
+    // 更新部门
+    rpc UpdateDepartment(UpdateDepartmentRequest) returns (UpdateDepartmentResponse) {
+        option (google.api.http) = {
+            put: "/v1/departments/{id}",
+            body: "*"
+        };
+    }
+    // 获取部门列表
+    rpc ListDepartments(ListDepartmentsRequest) returns (ListDepartmentsResponse) {
+        option (google.api.http) = {
+            get: "/v1/departments"
+        };
+    }
+//    rpc GetDepartment(GetDepartmentRequest) returns (DepartmentResponse) {}
+    // 用户-部门关联操作
+//    rpc AddUsersToDepartment(AddUsersToDepartmentRequest) returns (Empty) {}
+//    rpc RemoveUsersFromDepartment(RemoveUsersFromDepartmentRequest) returns (Empty) {}
+//    rpc ListDepartmentUsers(ListDepartmentUsersRequest) returns (ListDepartmentUsersResponse) {}
+}
+
+message Department {
+    string id = 1;
+    string name = 2;
+    string code = 3;
+    string pid = 4;
+    string description = 5;
+    string created_by = 6;
+    string updated_by = 7;
+    string created_at = 8;
+    string updated_at = 9;
+}
+
+message CreateDepartmentRequest {
+    string name = 1;
+    string code = 2;
+    string pid = 3;
+    string description = 4;
+}
+
+message CreateDepartmentResponse {
+    bool result = 1;
+    int32 code = 2;
+    Department department = 3;
+    string msg = 4;
+}
+
+message DeleteDepartmentRequest {
+    string id = 1;
+}
+
+message DeleteDepartmentResponse {
+    bool result = 1;
+    int32 code = 2;
+    string msg = 3;
+}
+
+message UpdateDepartmentRequest {
+    string id = 1;
+    string name = 2;
+    string code = 3;
+    string pid = 4;
+    string description = 5;
+}
+
+message UpdateDepartmentResponse {
+    bool result = 1;
+    int32 code = 2;
+    Department department = 3;
+    string msg = 4;
+}
+
+
+message GetDepartmentRequest {
+    string id = 1;
+}
+
+message ListDepartmentsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string order = 3;
+    bool is_desc = 4;
+    string pid = 5; // 筛选特定父部门下的子部门
+    string name = 6;
+    string code = 7;
+}
+
+message ListDepartmentsResponse {
+    message PageResult {
+        int32 total = 1;
+        repeated Department departments = 2;
+        int32 page = 3;
+        int32 page_size = 4;
+    }
+
+    bool result = 1;
+    int32 code = 2;
+    PageResult data = 3;
+    string msg = 4;
+}
+
+message AddUsersToDepartmentRequest {
+    string department_id = 1;
+    repeated string user_ids = 2;
+}
+
+message RemoveUsersFromDepartmentRequest {
+    string department_id = 1;
+    repeated string user_ids = 2;
+}
+
+message ListDepartmentUsersRequest {
+    string department_id = 1;
+    int32 page = 2;
+    int32 page_size = 3;
+}

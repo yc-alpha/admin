@@ -1,0 +1,187 @@
+syntax = "proto3";
+
+package permission.v1;
+option go_package = "github.com/yc-alpha/admin/api/permission/v1;v1";
+
+import "google/api/annotations.proto";
+
+// 权限控制服务
+service PermissionService {
+  // 创建策略
+  rpc CreatePolicy(CreatePolicyRequest) returns (CreatePolicyResponse) {
+    option (google.api.http) = {
+      post: "/v1/policies",
+      body: "*"
+    };
+  }
+
+  // 更新策略
+  rpc UpdatePolicy(UpdatePolicyRequest) returns (UpdatePolicyResponse) {
+    option (google.api.http) = {
+      put: "/v1/policies/{id}",
+      body: "*"
+    };
+  }
+
+  // 删除策略
+  rpc DeletePolicy(DeletePolicyRequest) returns (DeletePolicyResponse) {
+    option (google.api.http) = {
+      delete: "/v1/policies/{id}"
+    };
+  }
+
+  // 获取策略列表
+  rpc ListPolicies(ListPoliciesRequest) returns (ListPoliciesResponse) {
+    option (google.api.http) = {
+      get: "/v1/policies"
+    };
+  }
+
+  // 检查权限
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse) {
+    option (google.api.http) = {
+      post: "/v1/permissions/check",
+      body: "*"
+    };
+  }
+
+  // 批量检查权限
+  rpc BatchCheckPermission(BatchCheckPermissionRequest) returns (BatchCheckPermissionResponse) {
+    option (google.api.http) = {
+      post: "/v1/permissions/batch-check",
+      body: "*"
+    };
+  }
+}
+
+// 策略定义
+message Policy {
+  string id = 1;                    // 策略ID
+  string name = 2;                  // 策略名称
+  string description = 3;           // 策略描述
+  Effect effect = 4;               // 策略效果
+  repeated Attribute subjects = 5;  // 主体属性条件
+  repeated Attribute resources = 6; // 资源属性条件
+  repeated Attribute actions = 7;   // 操作属性条件
+  repeated Attribute contexts = 8;  // 环境属性条件
+  int32 priority = 9;              // 策略优先级
+  bool is_enabled = 10;            // 是否启用
+  string created_at = 11;          // 创建时间
+  string updated_at = 12;          // 更新时间
+}
+
+// 属性定义
+message Attribute {
+  string key = 1;           // 属性键
+  Operator operator = 2;    // 操作符
+  repeated string values = 3; // 属性值列表
+}
+
+// 策略效果
+enum Effect {
+  EFFECT_UNSPECIFIED = 0;
+  ALLOW = 1;              // 允许
+  DENY = 2;               // 拒绝
+}
+
+// 操作符
+enum Operator {
+  OPERATOR_UNSPECIFIED = 0;
+  EQUAL = 1;              // 等于
+  NOT_EQUAL = 2;          // 不等于
+  IN = 3;                 // 在列表中
+  NOT_IN = 4;             // 不在列表中
+  CONTAINS = 5;           // 包含
+  NOT_CONTAINS = 6;       // 不包含
+  STARTS_WITH = 7;        // 以...开始
+  ENDS_WITH = 8;          // 以...结束
+  GREATER = 9;            // 大于
+  LESS = 10;              // 小于
+  GREATER_OR_EQUAL = 11;  // 大于等于
+  LESS_OR_EQUAL = 12;     // 小于等于
+}
+
+// 创建策略请求
+message CreatePolicyRequest {
+  string name = 1;                  // 策略名称
+  string description = 2;           // 策略描述
+  Effect effect = 3;               // 策略效果
+  repeated Attribute subjects = 4;  // 主体属性条件
+  repeated Attribute resources = 5; // 资源属性条件
+  repeated Attribute actions = 6;   // 操作属性条件
+  repeated Attribute contexts = 7;  // 环境属性条件
+  int32 priority = 8;              // 策略优先级
+  bool is_enabled = 9;             // 是否启用
+}
+
+// 创建策略响应
+message CreatePolicyResponse {
+  string id = 1;          // 新创建的策略ID
+}
+
+// 更新策略请求
+message UpdatePolicyRequest {
+  string id = 1;                    // 策略ID
+  string name = 2;                  // 策略名称
+  string description = 3;           // 策略描述
+  Effect effect = 4;               // 策略效果
+  repeated Attribute subjects = 5;  // 主体属性条件
+  repeated Attribute resources = 6; // 资源属性条件
+  repeated Attribute actions = 7;   // 操作属性条件
+  repeated Attribute contexts = 8;  // 环境属性条件
+  int32 priority = 9;              // 策略优先级
+  bool is_enabled = 10;            // 是否启用
+}
+
+// 更新策略响应
+message UpdatePolicyResponse {
+  bool success = 1;       // 更新是否成功
+}
+
+// 删除策略请求
+message DeletePolicyRequest {
+  string id = 1;         // 策略ID
+}
+
+// 删除策略响应
+message DeletePolicyResponse {
+  bool success = 1;      // 删除是否成功
+}
+
+// 获取策略列表请求
+message ListPoliciesRequest {
+  string keyword = 1;    // 搜索关键字
+  int32 page = 2;       // 页码
+  int32 page_size = 3;  // 每页数量
+}
+
+// 获取策略列表响应
+message ListPoliciesResponse {
+  repeated Policy items = 1;  // 策略列表
+  int32 total = 2;           // 总数
+}
+
+// 检查权限请求
+message CheckPermissionRequest {
+  map<string, string> subject = 1;   // 主体属性
+  map<string, string> resource = 2;  // 资源属性
+  map<string, string> action = 3;    // 操作属性
+  map<string, string> context = 4;   // 环境属性
+}
+
+// 检查权限响应
+message CheckPermissionResponse {
+  bool allowed = 1;      // 是否允许访问
+  string policy_id = 2;  // 匹配的策略ID
+  string reason = 3;     // 决策原因
+}
+
+// 批量检查权限请求
+message BatchCheckPermissionRequest {
+  repeated CheckPermissionRequest requests = 1;
+}
+
+// 批量检查权限响应
+message BatchCheckPermissionResponse {
+  repeated CheckPermissionResponse results = 1;
+}

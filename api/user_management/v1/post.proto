@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package user_management.v1;
+option go_package = "github.com/yc-alpha/admin/api/user_management/v1;v1";
+
+import "google/api/annotations.proto";
+
+service PositionService {
+  // 新增岗位
+  rpc CreatePosition(CreatePositionRequest) returns (CreatePositionResponse) {
+    option (google.api.http) = {
+        post: "/v1/posts",
+        body: "*"
+    };
+  };
+  // 更新岗位
+  rpc UpdatePosition(UpdatePositionRequest) returns (UpdatePositionResponse) {
+    option (google.api.http) = {
+        put: "/v1/posts",
+        body: "*"
+    };
+  };
+  // 删除岗位
+  rpc DeletePosition(DeletePositionRequest) returns (DeletePositionResponse) {
+    option (google.api.http) = {
+        delete: "/v1/posts/{id}"
+    };
+  };
+  // 分页获取岗位列表
+  rpc ListPositions(ListPositionsRequest) returns (ListPositionsResponse) {
+    option (google.api.http) = {
+        get: "/v1/posts"
+    };
+  };
+}
+
+message Position {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message CreatePositionRequest {
+  string code = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message CreatePositionResponse {
+  bool result = 1;
+  int32 code = 2;
+  Position position = 3;
+  string msg = 4;
+}
+
+message UpdatePositionRequest {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string description = 4;
+}
+
+message UpdatePositionResponse {
+  bool result = 1;
+  int32 code = 2;
+  Position post = 3;
+  string msg = 4;
+}
+
+message DeletePositionRequest {
+  int64 id = 1;
+}
+
+message DeletePositionResponse {
+  bool result = 1;
+  int32 code = 2;
+  string msg = 3;
+}
+
+message ListPositionsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string order = 3;
+    bool is_desc = 4;
+    string filter = 6;
+}
+
+message ListPositionsResponse {
+    message PageResult {
+        int32 total = 1;
+        repeated Position list = 2;
+        int32 page = 3;
+        int32 page_size = 4;
+    }
+
+    bool result = 1;
+    int32 code = 2;
+    PageResult data = 3;
+    string msg = 4;
+}

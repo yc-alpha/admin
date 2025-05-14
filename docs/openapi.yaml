@@ -1,0 +1,1858 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /v1/captcha:
+        get:
+            tags:
+                - LoginService
+            description: 获取图片验证码
+            operationId: LoginService_GetCaptcha
+            parameters:
+                - name: captchaType
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.GetCaptchaResponse'
+    /v1/captcha/verify:
+        post:
+            tags:
+                - LoginService
+            description: 验证图片验证码
+            operationId: LoginService_VerifyCaptcha
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/login.v1.VerifyCaptchaRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.VerifyCaptchaResponse'
+    /v1/departments:
+        get:
+            tags:
+                - DepartmentService
+            description: 获取部门列表
+            operationId: DepartmentService_ListDepartments
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: order
+                  in: query
+                  schema:
+                    type: string
+                - name: isDesc
+                  in: query
+                  schema:
+                    type: boolean
+                - name: pid
+                  in: query
+                  schema:
+                    type: string
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+                - name: code
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.ListDepartmentsResponse'
+        post:
+            tags:
+                - DepartmentService
+            description: 创建部门
+            operationId: DepartmentService_CreateDepartment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.CreateDepartmentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.CreateDepartmentResponse'
+    /v1/departments/{id}:
+        put:
+            tags:
+                - DepartmentService
+            description: 更新部门
+            operationId: DepartmentService_UpdateDepartment
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.UpdateDepartmentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.UpdateDepartmentResponse'
+        delete:
+            tags:
+                - DepartmentService
+            description: 删除部门
+            operationId: DepartmentService_DeleteDepartment
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.DeleteDepartmentResponse'
+    /v1/login:
+        post:
+            tags:
+                - LoginService
+            description: 登陆
+            operationId: LoginService_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/login.v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.LoginResponse'
+    /v1/login/sms:
+        post:
+            tags:
+                - LoginService
+            description: 手机验证码登录
+            operationId: LoginService_LoginBySms
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/login.v1.LoginBySmsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.LoginResponse'
+    /v1/logout:
+        get:
+            tags:
+                - LoginService
+            description: 登出
+            operationId: LoginService_Logout
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.LogoutResponse'
+    /v1/menus:
+        get:
+            tags:
+                - SysMenuService
+            description: 获取菜单列表
+            operationId: SysMenuService_ListMenu
+            parameters:
+                - name: keyword
+                  in: query
+                  schema:
+                    type: string
+                - name: includeDisabled
+                  in: query
+                  schema:
+                    type: boolean
+                - name: includeHidden
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.ListMenuResponse'
+        post:
+            tags:
+                - SysMenuService
+            description: 创建菜单
+            operationId: SysMenuService_CreateMenu
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/admin.v1.CreateMenuRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.CreateMenuResponse'
+    /v1/menus/{id}:
+        get:
+            tags:
+                - SysMenuService
+            description: 获取菜单详情
+            operationId: SysMenuService_GetMenu
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.GetMenuResponse'
+        put:
+            tags:
+                - SysMenuService
+            description: 更新菜单
+            operationId: SysMenuService_UpdateMenu
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/admin.v1.UpdateMenuRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.UpdateMenuResponse'
+        delete:
+            tags:
+                - SysMenuService
+            description: 删除菜单
+            operationId: SysMenuService_DeleteMenu
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.DeleteMenuResponse'
+    /v1/oauth/callback/{provider}:
+        get:
+            tags:
+                - LoginService
+            description: OAuth2.0回调处理
+            operationId: LoginService_OAuthCallback
+            parameters:
+                - name: provider
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: code
+                  in: query
+                  schema:
+                    type: string
+                - name: state
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.OAuthCallbackResponse'
+    /v1/oauth/login:
+        post:
+            tags:
+                - LoginService
+            description: OAuth2.0第三方登录
+            operationId: LoginService_OAuthLogin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/login.v1.OAuthLoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.OAuthLoginResponse'
+    /v1/permissions/batch-check:
+        post:
+            tags:
+                - PermissionService
+            description: 批量检查权限
+            operationId: PermissionService_BatchCheckPermission
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/permission.v1.BatchCheckPermissionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/permission.v1.BatchCheckPermissionResponse'
+    /v1/permissions/check:
+        post:
+            tags:
+                - PermissionService
+            description: 检查权限
+            operationId: PermissionService_CheckPermission
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/permission.v1.CheckPermissionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/permission.v1.CheckPermissionResponse'
+    /v1/policies:
+        get:
+            tags:
+                - PermissionService
+            description: 获取策略列表
+            operationId: PermissionService_ListPolicies
+            parameters:
+                - name: keyword
+                  in: query
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/permission.v1.ListPoliciesResponse'
+        post:
+            tags:
+                - PermissionService
+            description: 创建策略
+            operationId: PermissionService_CreatePolicy
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/permission.v1.CreatePolicyRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/permission.v1.CreatePolicyResponse'
+    /v1/policies/{id}:
+        put:
+            tags:
+                - PermissionService
+            description: 更新策略
+            operationId: PermissionService_UpdatePolicy
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/permission.v1.UpdatePolicyRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/permission.v1.UpdatePolicyResponse'
+        delete:
+            tags:
+                - PermissionService
+            description: 删除策略
+            operationId: PermissionService_DeletePolicy
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/permission.v1.DeletePolicyResponse'
+    /v1/posts:
+        get:
+            tags:
+                - PositionService
+            description: 分页获取岗位列表
+            operationId: PositionService_ListPositions
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: order
+                  in: query
+                  schema:
+                    type: string
+                - name: isDesc
+                  in: query
+                  schema:
+                    type: boolean
+                - name: filter
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.ListPositionsResponse'
+        put:
+            tags:
+                - PositionService
+            description: 更新岗位
+            operationId: PositionService_UpdatePosition
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.UpdatePositionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.UpdatePositionResponse'
+        post:
+            tags:
+                - PositionService
+            description: 新增岗位
+            operationId: PositionService_CreatePosition
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.CreatePositionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.CreatePositionResponse'
+    /v1/posts/{id}:
+        delete:
+            tags:
+                - PositionService
+            description: 删除岗位
+            operationId: PositionService_DeletePosition
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.DeletePositionResponse'
+    /v1/sms/code:
+        post:
+            tags:
+                - LoginService
+            description: 发送手机验证码
+            operationId: LoginService_SendSmsCode
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/login.v1.SendSmsCodeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/login.v1.SendSmsCodeResponse'
+    /v1/users:
+        get:
+            tags:
+                - UserService
+            description: 获取用户列表
+            operationId: UserService_ListUsers
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: order
+                  in: query
+                  schema:
+                    type: string
+                - name: isDesc
+                  in: query
+                  schema:
+                    type: boolean
+                - name: username
+                  in: query
+                  schema:
+                    type: string
+                - name: nickname
+                  in: query
+                  schema:
+                    type: string
+                - name: fullname
+                  in: query
+                  schema:
+                    type: string
+                - name: email
+                  in: query
+                  schema:
+                    type: string
+                - name: phone
+                  in: query
+                  schema:
+                    type: string
+                - name: post
+                  in: query
+                  schema:
+                    type: string
+                - name: filter
+                  in: query
+                  schema:
+                    type: string
+                - name: status
+                  in: query
+                  schema:
+                    type: array
+                    items:
+                        type: integer
+                        format: enum
+                - name: gender
+                  in: query
+                  schema:
+                    type: array
+                    items:
+                        type: integer
+                        format: enum
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.ListUsersResponse'
+        post:
+            tags:
+                - UserService
+            description: 新增用户
+            operationId: UserService_CreateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.CreateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.CreateUserResponse'
+    /v1/users/{id}:
+        get:
+            tags:
+                - UserService
+            description: 获取用户信息详情
+            operationId: UserService_GetUserInfo
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: username
+                  in: query
+                  schema:
+                    type: string
+                - name: email
+                  in: query
+                  schema:
+                    type: string
+                - name: phone
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.GetUserInfoResponse'
+        put:
+            tags:
+                - UserService
+            description: 更新用户
+            operationId: UserService_UpdateUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.UpdateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.UpdateUserResponse'
+        delete:
+            tags:
+                - UserService
+            description: 删除用户
+            operationId: UserService_DeleteUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.DeleteUserResponse'
+    /v1/users/{id}/accounts:
+        put:
+            tags:
+                - UserService
+            description: 更新用户关联账号
+            operationId: UserService_UpdateUserAccounts
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.UpdateUserAccountsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.UpdateUserAccountsResponse'
+    /v1/users/{id}/attrs:
+        put:
+            tags:
+                - UserService
+            description: 更新用户属性
+            operationId: UserService_UpdateUserAttrs
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.UpdateUserAttrsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.UpdateUserAttrsResponse'
+    /v1/users/{id}/password:
+        put:
+            tags:
+                - UserService
+            description: 修改用户密码
+            operationId: UserService_ChangePassword
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.ChangePasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.ChangePasswordResponse'
+    /v1/users/{id}/password/check:
+        post:
+            tags:
+                - UserService
+            description: 验证用户密码
+            operationId: UserService_CheckPassword
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user_management.v1.CheckPasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.CheckPasswordResponse'
+components:
+    schemas:
+        admin.v1.CreateMenuRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                title:
+                    type: string
+                parentId:
+                    type: string
+                orderNum:
+                    type: integer
+                    format: int32
+                path:
+                    type: string
+                component:
+                    type: string
+                redirect:
+                    type: string
+                icon:
+                    type: string
+                isHidden:
+                    type: boolean
+                isDisabled:
+                    type: boolean
+                isExternal:
+                    type: boolean
+                permission:
+                    type: string
+            description: 创建菜单请求
+        admin.v1.CreateMenuResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+            description: 创建菜单响应
+        admin.v1.DeleteMenuResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+            description: 删除菜单响应
+        admin.v1.GetMenuResponse:
+            type: object
+            properties:
+                menu:
+                    $ref: '#/components/schemas/admin.v1.Menu'
+            description: 获取菜单详情响应
+        admin.v1.ListMenuResponse:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.Menu'
+                total:
+                    type: integer
+                    format: int32
+            description: 获取菜单列表响应
+        admin.v1.Menu:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                title:
+                    type: string
+                parentId:
+                    type: string
+                orderNum:
+                    type: integer
+                    format: int32
+                path:
+                    type: string
+                component:
+                    type: string
+                redirect:
+                    type: string
+                icon:
+                    type: string
+                isHidden:
+                    type: boolean
+                isDisabled:
+                    type: boolean
+                isExternal:
+                    type: boolean
+                permission:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+            description: 菜单基础信息
+        admin.v1.UpdateMenuRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                title:
+                    type: string
+                parentId:
+                    type: string
+                orderNum:
+                    type: integer
+                    format: int32
+                path:
+                    type: string
+                component:
+                    type: string
+                redirect:
+                    type: string
+                icon:
+                    type: string
+                isHidden:
+                    type: boolean
+                isDisabled:
+                    type: boolean
+                isExternal:
+                    type: boolean
+                permission:
+                    type: string
+            description: 更新菜单请求
+        admin.v1.UpdateMenuResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+            description: 更新菜单响应
+        login.v1.GetCaptchaResponse:
+            type: object
+            properties:
+                captchaId:
+                    type: string
+                captchaImage:
+                    type: string
+                puzzleImage:
+                    type: string
+                    format: bytes
+            description: 获取验证码响应
+        login.v1.LoginBySmsRequest:
+            type: object
+            properties:
+                phone:
+                    type: string
+                smsCode:
+                    type: string
+            description: 短信验证码登录请求
+        login.v1.LoginRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                password:
+                    type: string
+            description: 登录请求
+        login.v1.LoginResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        login.v1.LogoutResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        login.v1.OAuthCallbackResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                token:
+                    type: string
+                refreshToken:
+                    type: string
+                userInfo:
+                    $ref: '#/components/schemas/user_management.v1.SimpleUser'
+            description: OAuth回调响应
+        login.v1.OAuthLoginRequest:
+            type: object
+            properties:
+                provider:
+                    type: string
+                redirectUri:
+                    type: string
+                state:
+                    type: string
+            description: OAuth登录请求
+        login.v1.OAuthLoginResponse:
+            type: object
+            properties:
+                authUrl:
+                    type: string
+            description: OAuth登录响应
+        login.v1.SendSmsCodeRequest:
+            type: object
+            properties:
+                phone:
+                    type: string
+                captchaId:
+                    type: string
+            description: 发送短信验证码请求
+        login.v1.SendSmsCodeResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                message:
+                    type: string
+            description: 发送短信验证码响应
+        login.v1.VerifyCaptchaRequest:
+            type: object
+            properties:
+                captchaId:
+                    type: string
+                pointX:
+                    type: integer
+                    format: int32
+                pointY:
+                    type: integer
+                    format: int32
+                track:
+                    type: string
+            description: 验证码校验请求
+        login.v1.VerifyCaptchaResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                message:
+                    type: string
+            description: 验证码校验响应
+        permission.v1.Attribute:
+            type: object
+            properties:
+                key:
+                    type: string
+                operator:
+                    type: integer
+                    format: enum
+                values:
+                    type: array
+                    items:
+                        type: string
+            description: 属性定义
+        permission.v1.BatchCheckPermissionRequest:
+            type: object
+            properties:
+                requests:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.CheckPermissionRequest'
+            description: 批量检查权限请求
+        permission.v1.BatchCheckPermissionResponse:
+            type: object
+            properties:
+                results:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.CheckPermissionResponse'
+            description: 批量检查权限响应
+        permission.v1.CheckPermissionRequest:
+            type: object
+            properties:
+                subject:
+                    type: object
+                    additionalProperties:
+                        type: string
+                resource:
+                    type: object
+                    additionalProperties:
+                        type: string
+                action:
+                    type: object
+                    additionalProperties:
+                        type: string
+                context:
+                    type: object
+                    additionalProperties:
+                        type: string
+            description: 检查权限请求
+        permission.v1.CheckPermissionResponse:
+            type: object
+            properties:
+                allowed:
+                    type: boolean
+                policyId:
+                    type: string
+                reason:
+                    type: string
+            description: 检查权限响应
+        permission.v1.CreatePolicyRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                description:
+                    type: string
+                effect:
+                    type: integer
+                    format: enum
+                subjects:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                resources:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                contexts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                priority:
+                    type: integer
+                    format: int32
+                isEnabled:
+                    type: boolean
+            description: 创建策略请求
+        permission.v1.CreatePolicyResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+            description: 创建策略响应
+        permission.v1.DeletePolicyResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+            description: 删除策略响应
+        permission.v1.ListPoliciesResponse:
+            type: object
+            properties:
+                items:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Policy'
+                total:
+                    type: integer
+                    format: int32
+            description: 获取策略列表响应
+        permission.v1.Policy:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                effect:
+                    type: integer
+                    format: enum
+                subjects:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                resources:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                contexts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                priority:
+                    type: integer
+                    format: int32
+                isEnabled:
+                    type: boolean
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+            description: 策略定义
+        permission.v1.UpdatePolicyRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                effect:
+                    type: integer
+                    format: enum
+                subjects:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                resources:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                actions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                contexts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/permission.v1.Attribute'
+                priority:
+                    type: integer
+                    format: int32
+                isEnabled:
+                    type: boolean
+            description: 更新策略请求
+        permission.v1.UpdatePolicyResponse:
+            type: object
+            properties:
+                success:
+                    type: boolean
+            description: 更新策略响应
+        user_management.v1.ChangePasswordRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                oldPassword:
+                    type: string
+                newPassword:
+                    type: string
+        user_management.v1.ChangePasswordResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.CheckPasswordRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                password:
+                    type: string
+        user_management.v1.CheckPasswordResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.CreateDepartmentRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                code:
+                    type: string
+                pid:
+                    type: string
+                description:
+                    type: string
+        user_management.v1.CreateDepartmentResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                department:
+                    $ref: '#/components/schemas/user_management.v1.Department'
+                msg:
+                    type: string
+        user_management.v1.CreatePositionRequest:
+            type: object
+            properties:
+                code:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+        user_management.v1.CreatePositionResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                position:
+                    $ref: '#/components/schemas/user_management.v1.Position'
+                msg:
+                    type: string
+        user_management.v1.CreateUserRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                nickname:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                post:
+                    type: string
+                password:
+                    type: string
+                fullname:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                timezone:
+                    type: string
+                language:
+                    type: string
+                lastLoginIp:
+                    type: string
+                lastLoginAt:
+                    type: string
+                userAccounts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.UserAccount'
+                userAttrs:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.UserAttr'
+        user_management.v1.CreateUserResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                user:
+                    $ref: '#/components/schemas/user_management.v1.User'
+                msg:
+                    type: string
+        user_management.v1.DeleteDepartmentResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.DeletePositionResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.DeleteUserResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.Department:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                code:
+                    type: string
+                pid:
+                    type: string
+                description:
+                    type: string
+                createdBy:
+                    type: string
+                updatedBy:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+        user_management.v1.GetUserInfoResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                data:
+                    $ref: '#/components/schemas/user_management.v1.User'
+                msg:
+                    type: string
+        user_management.v1.ListDepartmentsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                data:
+                    $ref: '#/components/schemas/user_management.v1.ListDepartmentsResponse_PageResult'
+                msg:
+                    type: string
+        user_management.v1.ListDepartmentsResponse_PageResult:
+            type: object
+            properties:
+                total:
+                    type: integer
+                    format: int32
+                departments:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.Department'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        user_management.v1.ListPositionsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                data:
+                    $ref: '#/components/schemas/user_management.v1.ListPositionsResponse_PageResult'
+                msg:
+                    type: string
+        user_management.v1.ListPositionsResponse_PageResult:
+            type: object
+            properties:
+                total:
+                    type: integer
+                    format: int32
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.Position'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        user_management.v1.ListUsersResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                data:
+                    $ref: '#/components/schemas/user_management.v1.ListUsersResponse_PageResult'
+                msg:
+                    type: string
+        user_management.v1.ListUsersResponse_PageResult:
+            type: object
+            properties:
+                total:
+                    type: integer
+                    format: int32
+                users:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.SimpleUser'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        user_management.v1.Position:
+            type: object
+            properties:
+                id:
+                    type: string
+                code:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+        user_management.v1.SimpleUser:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                nickname:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                post:
+                    type: string
+                avatarUrl:
+                    type: string
+                fullname:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                lastLoginIp:
+                    type: string
+                lastLoginAt:
+                    type: string
+                timezone:
+                    type: string
+                language:
+                    type: string
+                createdBy:
+                    type: string
+                updatedBy:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                deleted:
+                    type: boolean
+        user_management.v1.UpdateDepartmentRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                code:
+                    type: string
+                pid:
+                    type: string
+                description:
+                    type: string
+        user_management.v1.UpdateDepartmentResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                department:
+                    $ref: '#/components/schemas/user_management.v1.Department'
+                msg:
+                    type: string
+        user_management.v1.UpdatePositionRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                code:
+                    type: string
+                name:
+                    type: string
+                description:
+                    type: string
+        user_management.v1.UpdatePositionResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                post:
+                    $ref: '#/components/schemas/user_management.v1.Position'
+                msg:
+                    type: string
+        user_management.v1.UpdateUserAccountsRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                userAccounts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.UserAccount'
+        user_management.v1.UpdateUserAccountsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.UpdateUserAttrsRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                userAttrs:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.UserAttr'
+        user_management.v1.UpdateUserAttrsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        user_management.v1.UpdateUserRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                nickname:
+                    type: string
+                fullname:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                post:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                timezone:
+                    type: string
+                language:
+                    type: string
+                lastLoginIp:
+                    type: string
+                lastLoginAt:
+                    type: string
+        user_management.v1.UpdateUserResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                user:
+                    $ref: '#/components/schemas/user_management.v1.SimpleUser'
+                msg:
+                    type: string
+        user_management.v1.User:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                nickname:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                post:
+                    type: string
+                avatarUrl:
+                    type: string
+                fullname:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                lastLoginIp:
+                    type: string
+                lastLoginAt:
+                    type: string
+                timezone:
+                    type: string
+                language:
+                    type: string
+                createdBy:
+                    type: string
+                updatedBy:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                deleted:
+                    type: boolean
+                userAccounts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.UserAccount'
+                userAttrs:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user_management.v1.UserAttr'
+            description: 全部用户信息
+        user_management.v1.UserAccount:
+            type: object
+            properties:
+                id:
+                    type: string
+                userId:
+                    type: string
+                platform:
+                    type: string
+                account:
+                    type: string
+                name:
+                    type: string
+                isActive:
+                    type: boolean
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                deleted:
+                    type: boolean
+        user_management.v1.UserAttr:
+            type: object
+            properties:
+                id:
+                    type: string
+                userId:
+                    type: string
+                key:
+                    type: string
+                value:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+tags:
+    - name: DepartmentService
+    - name: LoginService
+    - name: PermissionService
+      description: 权限控制服务
+    - name: PositionService
+    - name: SysMenuService
+      description: 系统菜单服务
+    - name: UserService
+      description: 定义服务

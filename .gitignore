@@ -11,6 +11,10 @@
 # Test binary, built with `go test -c`
 *.test
 
+# OS General
+Thumbs.db
+.DS_Store
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
@@ -23,3 +27,14 @@ go.work.sum
 
 # env file
 .env
+
+# project
+*.cert
+*.key
+*.log
+bin/
+
+# Develop tools
+.vscode/
+.idea/
+*.swp
