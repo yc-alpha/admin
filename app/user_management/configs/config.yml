@@ -1,0 +1,30 @@
+node: 0
+server:
+  http:
+    address: :8100
+    timeout: 10000
+  grpc:
+    address: localhost:9100
+    timeout: 5000
+data:
+  database:
+    driver: mysql
+    host: localhost
+    port: 3306
+    username: root
+    password: 1234
+    db: paas
+  cache:
+    driver: redis
+    host: 127.0.0.1
+    port: 6379
+    read_timeout: 0.2s
+    write_timeout: 0.2s
+registry:
+  etcd:
+    schema: http
+    host: localhost
+    port: 2379
+system:
+  skip_activate: false
+
