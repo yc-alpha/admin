@@ -1,19 +1,46 @@
 package data
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	"github.com/go-kratos/kratos/contrib/registry/etcd/v2"
 	"github.com/go-kratos/kratos/v2/registry"
+	_ "github.com/lib/pq"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/logger"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"time"
 )
 
 type Data struct {
+	client *ent.Client
 }
 
 func NewData() *Data {
-	return &Data{}
+	return &Data{
+		client: NewDBClient(),
+	}
+}
+
+func NewDBClient() *ent.Client {
+	host := config.GetString("data.database.host", "")
+	port := config.GetInt("data.database.port", 5432)
+	username := config.GetString("data.database.username", "")
+	password := config.GetString("data.database.password", "")
+	db := config.GetString("data.database.db", "")
+	url := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable", host, port, username, db, password)
+	client, err := ent.Open("postgres", url)
+	if err != nil {
+		logger.Fatalf("failed opening connection to postgres: %v", err)
+	}
+	// defer client.Close()
+	// Run the auto migration tool.
+	if err := client.Schema.Create(context.Background()); err != nil {
+		logger.Fatalf("failed creating schema resources: %v", err)
+	}
+	return client
 }
 
 func NewRegistrar() registry.Registrar {

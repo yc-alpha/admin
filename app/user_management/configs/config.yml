@@ -8,12 +8,12 @@ server:
     timeout: 5000
 data:
   database:
-    driver: mysql
+    driver: postgres
     host: localhost
-    port: 3306
-    username: root
+    port: 5432
+    username: postgres
     password: 1234
-    db: paas
+    db: admin
   cache:
     driver: redis
     host: 127.0.0.1
