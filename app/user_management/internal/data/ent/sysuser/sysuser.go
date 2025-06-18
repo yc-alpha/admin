@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -35,10 +36,6 @@ const (
 	FieldLanguage = "language"
 	// FieldTimezone holds the string denoting the timezone field in the database.
 	FieldTimezone = "timezone"
-	// FieldLastLogin holds the string denoting the last_login field in the database.
-	FieldLastLogin = "last_login"
-	// FieldLastIP holds the string denoting the last_ip field in the database.
-	FieldLastIP = "last_ip"
 	// FieldCreatedBy holds the string denoting the created_by field in the database.
 	FieldCreatedBy = "created_by"
 	// FieldUpdatedBy holds the string denoting the updated_by field in the database.
@@ -49,8 +46,17 @@ const (
 	FieldUpdatedAt = "updated_at"
 	// FieldDeletedAt holds the string denoting the deleted_at field in the database.
 	FieldDeletedAt = "deleted_at"
+	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
+	EdgeAccounts = "accounts"
 	// Table holds the table name of the sysuser in the database.
 	Table = "sys_users"
+	// AccountsTable is the table that holds the accounts relation/edge.
+	AccountsTable = "sys_user_accounts"
+	// AccountsInverseTable is the table name for the SysUserAccount entity.
+	// It exists in this package in order to avoid circular dependency with the "sysuseraccount" package.
+	AccountsInverseTable = "sys_user_accounts"
+	// AccountsColumn is the table column denoting the accounts relation/edge.
+	AccountsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for sysuser fields.
@@ -66,8 +72,6 @@ var Columns = []string{
 	FieldAvatar,
 	FieldLanguage,
 	FieldTimezone,
-	FieldLastLogin,
-	FieldLastIP,
 	FieldCreatedBy,
 	FieldUpdatedBy,
 	FieldCreatedAt,
@@ -121,14 +125,14 @@ var (
 // Status defines the type for the "status" enum field.
 type Status string
 
-// StatusPending is the default value of the Status enum.
-const DefaultStatus = StatusPending
+// StatusPENDING is the default value of the Status enum.
+const DefaultStatus = StatusPENDING
 
 // Status values.
 const (
-	StatusActive   Status = "active"
-	StatusDisabled Status = "disabled"
-	StatusPending  Status = "pending"
+	StatusACTIVE   Status = "ACTIVE"
+	StatusDISABLED Status = "DISABLED"
+	StatusPENDING  Status = "PENDING"
 )
 
 func (s Status) String() string {
@@ -138,7 +142,7 @@ func (s Status) String() string {
 // StatusValidator is a validator for the "status" field enum values. It is called by the builders before save.
 func StatusValidator(s Status) error {
 	switch s {
-	case StatusActive, StatusDisabled, StatusPending:
+	case StatusACTIVE, StatusDISABLED, StatusPENDING:
 		return nil
 	default:
 		return fmt.Errorf("sysuser: invalid enum value for status field: %q", s)
@@ -148,14 +152,14 @@ func StatusValidator(s Status) error {
 // Gender defines the type for the "gender" enum field.
 type Gender string
 
-// GenderUnknown is the default value of the Gender enum.
-const DefaultGender = GenderUnknown
+// GenderUNKNOWN is the default value of the Gender enum.
+const DefaultGender = GenderUNKNOWN
 
 // Gender values.
 const (
-	GenderMale    Gender = "male"
-	GenderFemale  Gender = "female"
-	GenderUnknown Gender = "unknown"
+	GenderMALE    Gender = "MALE"
+	GenderFEMALE  Gender = "FEMALE"
+	GenderUNKNOWN Gender = "UNKNOWN"
 )
 
 func (ge Gender) String() string {
@@ -165,7 +169,7 @@ func (ge Gender) String() string {
 // GenderValidator is a validator for the "gender" field enum values. It is called by the builders before save.
 func GenderValidator(ge Gender) error {
 	switch ge {
-	case GenderMale, GenderFemale, GenderUnknown:
+	case GenderMALE, GenderFEMALE, GenderUNKNOWN:
 		return nil
 	default:
 		return fmt.Errorf("sysuser: invalid enum value for gender field: %q", ge)
@@ -230,16 +234,6 @@ func ByTimezone(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTimezone, opts...).ToFunc()
 }
 
-// ByLastLogin orders the results by the last_login field.
-func ByLastLogin(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLastLogin, opts...).ToFunc()
-}
-
-// ByLastIP orders the results by the last_ip field.
-func ByLastIP(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLastIP, opts...).ToFunc()
-}
-
 // ByCreatedBy orders the results by the created_by field.
 func ByCreatedBy(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedBy, opts...).ToFunc()
@@ -263,4 +257,25 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByDeletedAt orders the results by the deleted_at field.
 func ByDeletedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDeletedAt, opts...).ToFunc()
+}
+
+// ByAccountsCount orders the results by accounts count.
+func ByAccountsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccountsStep(), opts...)
+	}
+}
+
+// ByAccounts orders the results by accounts terms.
+func ByAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newAccountsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccountsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AccountsTable, AccountsColumn),
+	)
 }

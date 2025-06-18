@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// SysUser is the client for interacting with the SysUser builders.
 	SysUser *SysUserClient
+	// SysUserAccount is the client for interacting with the SysUserAccount builders.
+	SysUserAccount *SysUserAccountClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.SysUser = NewSysUserClient(tx.config)
+	tx.SysUserAccount = NewSysUserAccountClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

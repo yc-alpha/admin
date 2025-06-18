@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/predicate"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuseraccount"
 )
 
 // SysUserUpdate is the builder for updating SysUser entities.
@@ -112,6 +113,12 @@ func (suu *SysUserUpdate) SetNillableFullName(s *string) *SysUserUpdate {
 	return suu
 }
 
+// ClearFullName clears the value of the "full_name" field.
+func (suu *SysUserUpdate) ClearFullName() *SysUserUpdate {
+	suu.mutation.ClearFullName()
+	return suu
+}
+
 // SetGender sets the "gender" field.
 func (suu *SysUserUpdate) SetGender(s sysuser.Gender) *SysUserUpdate {
 	suu.mutation.SetGender(s)
@@ -137,6 +144,12 @@ func (suu *SysUserUpdate) SetNillableAvatar(s *string) *SysUserUpdate {
 	if s != nil {
 		suu.SetAvatar(*s)
 	}
+	return suu
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (suu *SysUserUpdate) ClearAvatar() *SysUserUpdate {
+	suu.mutation.ClearAvatar()
 	return suu
 }
 
@@ -168,34 +181,6 @@ func (suu *SysUserUpdate) SetNillableTimezone(s *string) *SysUserUpdate {
 	return suu
 }
 
-// SetLastLogin sets the "last_login" field.
-func (suu *SysUserUpdate) SetLastLogin(t time.Time) *SysUserUpdate {
-	suu.mutation.SetLastLogin(t)
-	return suu
-}
-
-// SetNillableLastLogin sets the "last_login" field if the given value is not nil.
-func (suu *SysUserUpdate) SetNillableLastLogin(t *time.Time) *SysUserUpdate {
-	if t != nil {
-		suu.SetLastLogin(*t)
-	}
-	return suu
-}
-
-// SetLastIP sets the "last_ip" field.
-func (suu *SysUserUpdate) SetLastIP(s string) *SysUserUpdate {
-	suu.mutation.SetLastIP(s)
-	return suu
-}
-
-// SetNillableLastIP sets the "last_ip" field if the given value is not nil.
-func (suu *SysUserUpdate) SetNillableLastIP(s *string) *SysUserUpdate {
-	if s != nil {
-		suu.SetLastIP(*s)
-	}
-	return suu
-}
-
 // SetCreatedBy sets the "created_by" field.
 func (suu *SysUserUpdate) SetCreatedBy(i int64) *SysUserUpdate {
 	suu.mutation.ResetCreatedBy()
@@ -217,6 +202,12 @@ func (suu *SysUserUpdate) AddCreatedBy(i int64) *SysUserUpdate {
 	return suu
 }
 
+// ClearCreatedBy clears the value of the "created_by" field.
+func (suu *SysUserUpdate) ClearCreatedBy() *SysUserUpdate {
+	suu.mutation.ClearCreatedBy()
+	return suu
+}
+
 // SetUpdatedBy sets the "updated_by" field.
 func (suu *SysUserUpdate) SetUpdatedBy(i int64) *SysUserUpdate {
 	suu.mutation.ResetUpdatedBy()
@@ -235,6 +226,12 @@ func (suu *SysUserUpdate) SetNillableUpdatedBy(i *int64) *SysUserUpdate {
 // AddUpdatedBy adds i to the "updated_by" field.
 func (suu *SysUserUpdate) AddUpdatedBy(i int64) *SysUserUpdate {
 	suu.mutation.AddUpdatedBy(i)
+	return suu
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (suu *SysUserUpdate) ClearUpdatedBy() *SysUserUpdate {
+	suu.mutation.ClearUpdatedBy()
 	return suu
 }
 
@@ -264,9 +261,45 @@ func (suu *SysUserUpdate) ClearDeletedAt() *SysUserUpdate {
 	return suu
 }
 
+// AddAccountIDs adds the "accounts" edge to the SysUserAccount entity by IDs.
+func (suu *SysUserUpdate) AddAccountIDs(ids ...int) *SysUserUpdate {
+	suu.mutation.AddAccountIDs(ids...)
+	return suu
+}
+
+// AddAccounts adds the "accounts" edges to the SysUserAccount entity.
+func (suu *SysUserUpdate) AddAccounts(s ...*SysUserAccount) *SysUserUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suu.AddAccountIDs(ids...)
+}
+
 // Mutation returns the SysUserMutation object of the builder.
 func (suu *SysUserUpdate) Mutation() *SysUserMutation {
 	return suu.mutation
+}
+
+// ClearAccounts clears all "accounts" edges to the SysUserAccount entity.
+func (suu *SysUserUpdate) ClearAccounts() *SysUserUpdate {
+	suu.mutation.ClearAccounts()
+	return suu
+}
+
+// RemoveAccountIDs removes the "accounts" edge to SysUserAccount entities by IDs.
+func (suu *SysUserUpdate) RemoveAccountIDs(ids ...int) *SysUserUpdate {
+	suu.mutation.RemoveAccountIDs(ids...)
+	return suu
+}
+
+// RemoveAccounts removes "accounts" edges to SysUserAccount entities.
+func (suu *SysUserUpdate) RemoveAccounts(s ...*SysUserAccount) *SysUserUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suu.RemoveAccountIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -386,11 +419,17 @@ func (suu *SysUserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := suu.mutation.FullName(); ok {
 		_spec.SetField(sysuser.FieldFullName, field.TypeString, value)
 	}
+	if suu.mutation.FullNameCleared() {
+		_spec.ClearField(sysuser.FieldFullName, field.TypeString)
+	}
 	if value, ok := suu.mutation.Gender(); ok {
 		_spec.SetField(sysuser.FieldGender, field.TypeEnum, value)
 	}
 	if value, ok := suu.mutation.Avatar(); ok {
 		_spec.SetField(sysuser.FieldAvatar, field.TypeString, value)
+	}
+	if suu.mutation.AvatarCleared() {
+		_spec.ClearField(sysuser.FieldAvatar, field.TypeString)
 	}
 	if value, ok := suu.mutation.Language(); ok {
 		_spec.SetField(sysuser.FieldLanguage, field.TypeString, value)
@@ -398,23 +437,23 @@ func (suu *SysUserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := suu.mutation.Timezone(); ok {
 		_spec.SetField(sysuser.FieldTimezone, field.TypeString, value)
 	}
-	if value, ok := suu.mutation.LastLogin(); ok {
-		_spec.SetField(sysuser.FieldLastLogin, field.TypeTime, value)
-	}
-	if value, ok := suu.mutation.LastIP(); ok {
-		_spec.SetField(sysuser.FieldLastIP, field.TypeString, value)
-	}
 	if value, ok := suu.mutation.CreatedBy(); ok {
 		_spec.SetField(sysuser.FieldCreatedBy, field.TypeInt64, value)
 	}
 	if value, ok := suu.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(sysuser.FieldCreatedBy, field.TypeInt64, value)
 	}
+	if suu.mutation.CreatedByCleared() {
+		_spec.ClearField(sysuser.FieldCreatedBy, field.TypeInt64)
+	}
 	if value, ok := suu.mutation.UpdatedBy(); ok {
 		_spec.SetField(sysuser.FieldUpdatedBy, field.TypeInt64, value)
 	}
 	if value, ok := suu.mutation.AddedUpdatedBy(); ok {
 		_spec.AddField(sysuser.FieldUpdatedBy, field.TypeInt64, value)
+	}
+	if suu.mutation.UpdatedByCleared() {
+		_spec.ClearField(sysuser.FieldUpdatedBy, field.TypeInt64)
 	}
 	if value, ok := suu.mutation.UpdatedAt(); ok {
 		_spec.SetField(sysuser.FieldUpdatedAt, field.TypeTime, value)
@@ -424,6 +463,51 @@ func (suu *SysUserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if suu.mutation.DeletedAtCleared() {
 		_spec.ClearField(sysuser.FieldDeletedAt, field.TypeTime)
+	}
+	if suu.mutation.AccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suu.mutation.RemovedAccountsIDs(); len(nodes) > 0 && !suu.mutation.AccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suu.mutation.AccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, suu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -529,6 +613,12 @@ func (suuo *SysUserUpdateOne) SetNillableFullName(s *string) *SysUserUpdateOne {
 	return suuo
 }
 
+// ClearFullName clears the value of the "full_name" field.
+func (suuo *SysUserUpdateOne) ClearFullName() *SysUserUpdateOne {
+	suuo.mutation.ClearFullName()
+	return suuo
+}
+
 // SetGender sets the "gender" field.
 func (suuo *SysUserUpdateOne) SetGender(s sysuser.Gender) *SysUserUpdateOne {
 	suuo.mutation.SetGender(s)
@@ -554,6 +644,12 @@ func (suuo *SysUserUpdateOne) SetNillableAvatar(s *string) *SysUserUpdateOne {
 	if s != nil {
 		suuo.SetAvatar(*s)
 	}
+	return suuo
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (suuo *SysUserUpdateOne) ClearAvatar() *SysUserUpdateOne {
+	suuo.mutation.ClearAvatar()
 	return suuo
 }
 
@@ -585,34 +681,6 @@ func (suuo *SysUserUpdateOne) SetNillableTimezone(s *string) *SysUserUpdateOne {
 	return suuo
 }
 
-// SetLastLogin sets the "last_login" field.
-func (suuo *SysUserUpdateOne) SetLastLogin(t time.Time) *SysUserUpdateOne {
-	suuo.mutation.SetLastLogin(t)
-	return suuo
-}
-
-// SetNillableLastLogin sets the "last_login" field if the given value is not nil.
-func (suuo *SysUserUpdateOne) SetNillableLastLogin(t *time.Time) *SysUserUpdateOne {
-	if t != nil {
-		suuo.SetLastLogin(*t)
-	}
-	return suuo
-}
-
-// SetLastIP sets the "last_ip" field.
-func (suuo *SysUserUpdateOne) SetLastIP(s string) *SysUserUpdateOne {
-	suuo.mutation.SetLastIP(s)
-	return suuo
-}
-
-// SetNillableLastIP sets the "last_ip" field if the given value is not nil.
-func (suuo *SysUserUpdateOne) SetNillableLastIP(s *string) *SysUserUpdateOne {
-	if s != nil {
-		suuo.SetLastIP(*s)
-	}
-	return suuo
-}
-
 // SetCreatedBy sets the "created_by" field.
 func (suuo *SysUserUpdateOne) SetCreatedBy(i int64) *SysUserUpdateOne {
 	suuo.mutation.ResetCreatedBy()
@@ -634,6 +702,12 @@ func (suuo *SysUserUpdateOne) AddCreatedBy(i int64) *SysUserUpdateOne {
 	return suuo
 }
 
+// ClearCreatedBy clears the value of the "created_by" field.
+func (suuo *SysUserUpdateOne) ClearCreatedBy() *SysUserUpdateOne {
+	suuo.mutation.ClearCreatedBy()
+	return suuo
+}
+
 // SetUpdatedBy sets the "updated_by" field.
 func (suuo *SysUserUpdateOne) SetUpdatedBy(i int64) *SysUserUpdateOne {
 	suuo.mutation.ResetUpdatedBy()
@@ -652,6 +726,12 @@ func (suuo *SysUserUpdateOne) SetNillableUpdatedBy(i *int64) *SysUserUpdateOne {
 // AddUpdatedBy adds i to the "updated_by" field.
 func (suuo *SysUserUpdateOne) AddUpdatedBy(i int64) *SysUserUpdateOne {
 	suuo.mutation.AddUpdatedBy(i)
+	return suuo
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (suuo *SysUserUpdateOne) ClearUpdatedBy() *SysUserUpdateOne {
+	suuo.mutation.ClearUpdatedBy()
 	return suuo
 }
 
@@ -681,9 +761,45 @@ func (suuo *SysUserUpdateOne) ClearDeletedAt() *SysUserUpdateOne {
 	return suuo
 }
 
+// AddAccountIDs adds the "accounts" edge to the SysUserAccount entity by IDs.
+func (suuo *SysUserUpdateOne) AddAccountIDs(ids ...int) *SysUserUpdateOne {
+	suuo.mutation.AddAccountIDs(ids...)
+	return suuo
+}
+
+// AddAccounts adds the "accounts" edges to the SysUserAccount entity.
+func (suuo *SysUserUpdateOne) AddAccounts(s ...*SysUserAccount) *SysUserUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suuo.AddAccountIDs(ids...)
+}
+
 // Mutation returns the SysUserMutation object of the builder.
 func (suuo *SysUserUpdateOne) Mutation() *SysUserMutation {
 	return suuo.mutation
+}
+
+// ClearAccounts clears all "accounts" edges to the SysUserAccount entity.
+func (suuo *SysUserUpdateOne) ClearAccounts() *SysUserUpdateOne {
+	suuo.mutation.ClearAccounts()
+	return suuo
+}
+
+// RemoveAccountIDs removes the "accounts" edge to SysUserAccount entities by IDs.
+func (suuo *SysUserUpdateOne) RemoveAccountIDs(ids ...int) *SysUserUpdateOne {
+	suuo.mutation.RemoveAccountIDs(ids...)
+	return suuo
+}
+
+// RemoveAccounts removes "accounts" edges to SysUserAccount entities.
+func (suuo *SysUserUpdateOne) RemoveAccounts(s ...*SysUserAccount) *SysUserUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suuo.RemoveAccountIDs(ids...)
 }
 
 // Where appends a list predicates to the SysUserUpdate builder.
@@ -833,11 +949,17 @@ func (suuo *SysUserUpdateOne) sqlSave(ctx context.Context) (_node *SysUser, err 
 	if value, ok := suuo.mutation.FullName(); ok {
 		_spec.SetField(sysuser.FieldFullName, field.TypeString, value)
 	}
+	if suuo.mutation.FullNameCleared() {
+		_spec.ClearField(sysuser.FieldFullName, field.TypeString)
+	}
 	if value, ok := suuo.mutation.Gender(); ok {
 		_spec.SetField(sysuser.FieldGender, field.TypeEnum, value)
 	}
 	if value, ok := suuo.mutation.Avatar(); ok {
 		_spec.SetField(sysuser.FieldAvatar, field.TypeString, value)
+	}
+	if suuo.mutation.AvatarCleared() {
+		_spec.ClearField(sysuser.FieldAvatar, field.TypeString)
 	}
 	if value, ok := suuo.mutation.Language(); ok {
 		_spec.SetField(sysuser.FieldLanguage, field.TypeString, value)
@@ -845,23 +967,23 @@ func (suuo *SysUserUpdateOne) sqlSave(ctx context.Context) (_node *SysUser, err 
 	if value, ok := suuo.mutation.Timezone(); ok {
 		_spec.SetField(sysuser.FieldTimezone, field.TypeString, value)
 	}
-	if value, ok := suuo.mutation.LastLogin(); ok {
-		_spec.SetField(sysuser.FieldLastLogin, field.TypeTime, value)
-	}
-	if value, ok := suuo.mutation.LastIP(); ok {
-		_spec.SetField(sysuser.FieldLastIP, field.TypeString, value)
-	}
 	if value, ok := suuo.mutation.CreatedBy(); ok {
 		_spec.SetField(sysuser.FieldCreatedBy, field.TypeInt64, value)
 	}
 	if value, ok := suuo.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(sysuser.FieldCreatedBy, field.TypeInt64, value)
 	}
+	if suuo.mutation.CreatedByCleared() {
+		_spec.ClearField(sysuser.FieldCreatedBy, field.TypeInt64)
+	}
 	if value, ok := suuo.mutation.UpdatedBy(); ok {
 		_spec.SetField(sysuser.FieldUpdatedBy, field.TypeInt64, value)
 	}
 	if value, ok := suuo.mutation.AddedUpdatedBy(); ok {
 		_spec.AddField(sysuser.FieldUpdatedBy, field.TypeInt64, value)
+	}
+	if suuo.mutation.UpdatedByCleared() {
+		_spec.ClearField(sysuser.FieldUpdatedBy, field.TypeInt64)
 	}
 	if value, ok := suuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(sysuser.FieldUpdatedAt, field.TypeTime, value)
@@ -871,6 +993,51 @@ func (suuo *SysUserUpdateOne) sqlSave(ctx context.Context) (_node *SysUser, err 
 	}
 	if suuo.mutation.DeletedAtCleared() {
 		_spec.ClearField(sysuser.FieldDeletedAt, field.TypeTime)
+	}
+	if suuo.mutation.AccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suuo.mutation.RemovedAccountsIDs(); len(nodes) > 0 && !suuo.mutation.AccountsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suuo.mutation.AccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &SysUser{config: suuo.config}
 	_spec.Assign = _node.assignValues

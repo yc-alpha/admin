@@ -587,6 +587,36 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/login.v1.SendSmsCodeResponse'
+    /v1/userInfo:
+        get:
+            tags:
+                - UserService
+            description: 获取用户信息详情
+            operationId: UserService_GetUserInfo
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: string
+                - name: username
+                  in: query
+                  schema:
+                    type: string
+                - name: email
+                  in: query
+                  schema:
+                    type: string
+                - name: phone
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user_management.v1.GetUserInfoResponse'
     /v1/users:
         get:
             tags:
@@ -616,10 +646,6 @@ paths:
                   in: query
                   schema:
                     type: string
-                - name: nickname
-                  in: query
-                  schema:
-                    type: string
                 - name: fullname
                   in: query
                   schema:
@@ -641,13 +667,6 @@ paths:
                   schema:
                     type: string
                 - name: status
-                  in: query
-                  schema:
-                    type: array
-                    items:
-                        type: integer
-                        format: enum
-                - name: gender
                   in: query
                   schema:
                     type: array
@@ -680,36 +699,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/user_management.v1.CreateUserResponse'
     /v1/users/{id}:
-        get:
-            tags:
-                - UserService
-            description: 获取用户信息详情
-            operationId: UserService_GetUserInfo
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-                - name: username
-                  in: query
-                  schema:
-                    type: string
-                - name: email
-                  in: query
-                  schema:
-                    type: string
-                - name: phone
-                  in: query
-                  schema:
-                    type: string
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/user_management.v1.GetUserInfoResponse'
         put:
             tags:
                 - UserService
@@ -777,31 +766,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/user_management.v1.UpdateUserAccountsResponse'
-    /v1/users/{id}/attrs:
-        put:
-            tags:
-                - UserService
-            description: 更新用户属性
-            operationId: UserService_UpdateUserAttrs
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/user_management.v1.UpdateUserAttrsRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/user_management.v1.UpdateUserAttrsResponse'
     /v1/users/{id}/password:
         put:
             tags:
@@ -1408,10 +1372,6 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/user_management.v1.UserAccount'
-                userAttrs:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/user_management.v1.UserAttr'
         user_management.v1.CreateUserResponse:
             type: object
             properties:
@@ -1483,7 +1443,7 @@ components:
                 code:
                     type: integer
                     format: int32
-                data:
+                user:
                     $ref: '#/components/schemas/user_management.v1.User'
                 msg:
                     type: string
@@ -1593,15 +1553,11 @@ components:
                     type: string
                 username:
                     type: string
-                nickname:
-                    type: string
                 email:
                     type: string
                 phone:
                     type: string
-                post:
-                    type: string
-                avatarUrl:
+                avatar:
                     type: string
                 fullname:
                     type: string
@@ -1611,10 +1567,6 @@ components:
                 gender:
                     type: integer
                     format: enum
-                lastLoginIp:
-                    type: string
-                lastLoginAt:
-                    type: string
                 timezone:
                     type: string
                 language:
@@ -1696,25 +1648,6 @@ components:
                     format: int32
                 msg:
                     type: string
-        user_management.v1.UpdateUserAttrsRequest:
-            type: object
-            properties:
-                id:
-                    type: string
-                userAttrs:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/user_management.v1.UserAttr'
-        user_management.v1.UpdateUserAttrsResponse:
-            type: object
-            properties:
-                result:
-                    type: boolean
-                code:
-                    type: integer
-                    format: int32
-                msg:
-                    type: string
         user_management.v1.UpdateUserRequest:
             type: object
             properties:
@@ -1765,15 +1698,11 @@ components:
                     type: string
                 username:
                     type: string
-                nickname:
-                    type: string
                 email:
                     type: string
                 phone:
                     type: string
-                post:
-                    type: string
-                avatarUrl:
+                avatar:
                     type: string
                 fullname:
                     type: string
@@ -1783,10 +1712,6 @@ components:
                 gender:
                     type: integer
                     format: enum
-                lastLoginIp:
-                    type: string
-                lastLoginAt:
-                    type: string
                 timezone:
                     type: string
                 language:
@@ -1805,42 +1730,17 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/user_management.v1.UserAccount'
-                userAttrs:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/user_management.v1.UserAttr'
             description: 全部用户信息
         user_management.v1.UserAccount:
             type: object
             properties:
-                id:
-                    type: string
                 userId:
                     type: string
                 platform:
                     type: string
-                account:
+                identifier:
                     type: string
                 name:
-                    type: string
-                isActive:
-                    type: boolean
-                createdAt:
-                    type: string
-                updatedAt:
-                    type: string
-                deleted:
-                    type: boolean
-        user_management.v1.UserAttr:
-            type: object
-            properties:
-                id:
-                    type: string
-                userId:
-                    type: string
-                key:
-                    type: string
-                value:
                     type: string
                 createdAt:
                     type: string

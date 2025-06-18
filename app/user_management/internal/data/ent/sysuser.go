@@ -38,10 +38,6 @@ type SysUser struct {
 	Language string `json:"language,omitempty"`
 	// Preferred timezone of the user
 	Timezone string `json:"timezone,omitempty"`
-	// Timestamp of the last login by the user
-	LastLogin *time.Time `json:"last_login,omitempty"`
-	// IP address of the last login by the user
-	LastIP *string `json:"last_ip,omitempty"`
 	// User who created this record
 	CreatedBy *int64 `json:"created_by,omitempty"`
 	// User who last updated this record
@@ -51,8 +47,29 @@ type SysUser struct {
 	// Last update timestamp of the user record
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Timestamp when the user was deleted, if applicable
-	DeletedAt    *time.Time `json:"deleted_at,omitempty"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the SysUserQuery when eager-loading is set.
+	Edges        SysUserEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// SysUserEdges holds the relations/edges for other nodes in the graph.
+type SysUserEdges struct {
+	// Accounts holds the value of the accounts edge.
+	Accounts []*SysUserAccount `json:"accounts,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// AccountsOrErr returns the Accounts value or an error if the edge
+// was not loaded in eager-loading.
+func (e SysUserEdges) AccountsOrErr() ([]*SysUserAccount, error) {
+	if e.loadedTypes[0] {
+		return e.Accounts, nil
+	}
+	return nil, &NotLoadedError{edge: "accounts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -62,9 +79,9 @@ func (*SysUser) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case sysuser.FieldID, sysuser.FieldCreatedBy, sysuser.FieldUpdatedBy:
 			values[i] = new(sql.NullInt64)
-		case sysuser.FieldUsername, sysuser.FieldEmail, sysuser.FieldPhone, sysuser.FieldPassword, sysuser.FieldStatus, sysuser.FieldFullName, sysuser.FieldGender, sysuser.FieldAvatar, sysuser.FieldLanguage, sysuser.FieldTimezone, sysuser.FieldLastIP:
+		case sysuser.FieldUsername, sysuser.FieldEmail, sysuser.FieldPhone, sysuser.FieldPassword, sysuser.FieldStatus, sysuser.FieldFullName, sysuser.FieldGender, sysuser.FieldAvatar, sysuser.FieldLanguage, sysuser.FieldTimezone:
 			values[i] = new(sql.NullString)
-		case sysuser.FieldLastLogin, sysuser.FieldCreatedAt, sysuser.FieldUpdatedAt, sysuser.FieldDeletedAt:
+		case sysuser.FieldCreatedAt, sysuser.FieldUpdatedAt, sysuser.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -152,20 +169,6 @@ func (su *SysUser) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				su.Timezone = value.String
 			}
-		case sysuser.FieldLastLogin:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field last_login", values[i])
-			} else if value.Valid {
-				su.LastLogin = new(time.Time)
-				*su.LastLogin = value.Time
-			}
-		case sysuser.FieldLastIP:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field last_ip", values[i])
-			} else if value.Valid {
-				su.LastIP = new(string)
-				*su.LastIP = value.String
-			}
 		case sysuser.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
@@ -210,6 +213,11 @@ func (su *SysUser) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (su *SysUser) Value(name string) (ent.Value, error) {
 	return su.selectValues.Get(name)
+}
+
+// QueryAccounts queries the "accounts" edge of the SysUser entity.
+func (su *SysUser) QueryAccounts() *SysUserAccountQuery {
+	return NewSysUserClient(su.config).QueryAccounts(su)
 }
 
 // Update returns a builder for updating this SysUser.
@@ -271,16 +279,6 @@ func (su *SysUser) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("timezone=")
 	builder.WriteString(su.Timezone)
-	builder.WriteString(", ")
-	if v := su.LastLogin; v != nil {
-		builder.WriteString("last_login=")
-		builder.WriteString(v.Format(time.ANSIC))
-	}
-	builder.WriteString(", ")
-	if v := su.LastIP; v != nil {
-		builder.WriteString("last_ip=")
-		builder.WriteString(*v)
-	}
 	builder.WriteString(", ")
 	if v := su.CreatedBy; v != nil {
 		builder.WriteString("created_by=")

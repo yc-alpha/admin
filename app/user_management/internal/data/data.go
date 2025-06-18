@@ -9,18 +9,19 @@ import (
 	"github.com/go-kratos/kratos/v2/registry"
 	_ "github.com/lib/pq"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent"
+	_ "github.com/yc-alpha/admin/app/user_management/internal/data/ent/runtime"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/logger"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type Data struct {
-	client *ent.Client
+	Client *ent.Client
 }
 
 func NewData() *Data {
 	return &Data{
-		client: NewDBClient(),
+		Client: NewDBClient(),
 	}
 }
 
@@ -36,11 +37,15 @@ func NewDBClient() *ent.Client {
 		logger.Fatalf("failed opening connection to postgres: %v", err)
 	}
 	// defer client.Close()
+	return client
+}
+
+func (d *Data) Migrate() {
 	// Run the auto migration tool.
-	if err := client.Schema.Create(context.Background()); err != nil {
+	if err := d.Client.Schema.Create(context.Background()); err != nil {
 		logger.Fatalf("failed creating schema resources: %v", err)
 	}
-	return client
+	return
 }
 
 func NewRegistrar() registry.Registrar {

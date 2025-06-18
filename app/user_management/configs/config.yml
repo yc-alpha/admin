@@ -1,8 +1,8 @@
 node: 0
 server:
   http:
-    address: :8100
-    timeout: 10000
+    address: localhost:8100
+    timeout: 5000
   grpc:
     address: localhost:9100
     timeout: 5000

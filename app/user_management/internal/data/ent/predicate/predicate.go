@@ -8,3 +8,6 @@ import (
 
 // SysUser is the predicate function for sysuser builders.
 type SysUser func(*sql.Selector)
+
+// SysUserAccount is the predicate function for sysuseraccount builders.
+type SysUserAccount func(*sql.Selector)

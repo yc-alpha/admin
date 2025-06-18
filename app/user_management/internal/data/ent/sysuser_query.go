@@ -4,24 +4,29 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/predicate"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuseraccount"
 )
 
 // SysUserQuery is the builder for querying SysUser entities.
 type SysUserQuery struct {
 	config
-	ctx        *QueryContext
-	order      []sysuser.OrderOption
-	inters     []Interceptor
-	predicates []predicate.SysUser
+	ctx          *QueryContext
+	order        []sysuser.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.SysUser
+	withAccounts *SysUserAccountQuery
+	modifiers    []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +61,28 @@ func (suq *SysUserQuery) Unique(unique bool) *SysUserQuery {
 func (suq *SysUserQuery) Order(o ...sysuser.OrderOption) *SysUserQuery {
 	suq.order = append(suq.order, o...)
 	return suq
+}
+
+// QueryAccounts chains the current query on the "accounts" edge.
+func (suq *SysUserQuery) QueryAccounts() *SysUserAccountQuery {
+	query := (&SysUserAccountClient{config: suq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := suq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := suq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sysuser.Table, sysuser.FieldID, selector),
+			sqlgraph.To(sysuseraccount.Table, sysuseraccount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.AccountsTable, sysuser.AccountsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(suq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first SysUser entity from the query.
@@ -245,15 +272,27 @@ func (suq *SysUserQuery) Clone() *SysUserQuery {
 		return nil
 	}
 	return &SysUserQuery{
-		config:     suq.config,
-		ctx:        suq.ctx.Clone(),
-		order:      append([]sysuser.OrderOption{}, suq.order...),
-		inters:     append([]Interceptor{}, suq.inters...),
-		predicates: append([]predicate.SysUser{}, suq.predicates...),
+		config:       suq.config,
+		ctx:          suq.ctx.Clone(),
+		order:        append([]sysuser.OrderOption{}, suq.order...),
+		inters:       append([]Interceptor{}, suq.inters...),
+		predicates:   append([]predicate.SysUser{}, suq.predicates...),
+		withAccounts: suq.withAccounts.Clone(),
 		// clone intermediate query.
 		sql:  suq.sql.Clone(),
 		path: suq.path,
 	}
+}
+
+// WithAccounts tells the query-builder to eager-load the nodes that are connected to
+// the "accounts" edge. The optional arguments are used to configure the query builder of the edge.
+func (suq *SysUserQuery) WithAccounts(opts ...func(*SysUserAccountQuery)) *SysUserQuery {
+	query := (&SysUserAccountClient{config: suq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	suq.withAccounts = query
+	return suq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +371,11 @@ func (suq *SysUserQuery) prepareQuery(ctx context.Context) error {
 
 func (suq *SysUserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SysUser, error) {
 	var (
-		nodes = []*SysUser{}
-		_spec = suq.querySpec()
+		nodes       = []*SysUser{}
+		_spec       = suq.querySpec()
+		loadedTypes = [1]bool{
+			suq.withAccounts != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SysUser).scanValues(nil, columns)
@@ -341,7 +383,11 @@ func (suq *SysUserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sys
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &SysUser{config: suq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
+	}
+	if len(suq.modifiers) > 0 {
+		_spec.Modifiers = suq.modifiers
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
@@ -352,11 +398,52 @@ func (suq *SysUserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sys
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := suq.withAccounts; query != nil {
+		if err := suq.loadAccounts(ctx, query, nodes,
+			func(n *SysUser) { n.Edges.Accounts = []*SysUserAccount{} },
+			func(n *SysUser, e *SysUserAccount) { n.Edges.Accounts = append(n.Edges.Accounts, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (suq *SysUserQuery) loadAccounts(ctx context.Context, query *SysUserAccountQuery, nodes []*SysUser, init func(*SysUser), assign func(*SysUser, *SysUserAccount)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*SysUser)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(sysuseraccount.FieldUserID)
+	}
+	query.Where(predicate.SysUserAccount(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sysuser.AccountsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (suq *SysUserQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := suq.querySpec()
+	if len(suq.modifiers) > 0 {
+		_spec.Modifiers = suq.modifiers
+	}
 	_spec.Node.Columns = suq.ctx.Fields
 	if len(suq.ctx.Fields) > 0 {
 		_spec.Unique = suq.ctx.Unique != nil && *suq.ctx.Unique
@@ -419,6 +506,9 @@ func (suq *SysUserQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if suq.ctx.Unique != nil && *suq.ctx.Unique {
 		selector.Distinct()
 	}
+	for _, m := range suq.modifiers {
+		m(selector)
+	}
 	for _, p := range suq.predicates {
 		p(selector)
 	}
@@ -434,6 +524,32 @@ func (suq *SysUserQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (suq *SysUserQuery) ForUpdate(opts ...sql.LockOption) *SysUserQuery {
+	if suq.driver.Dialect() == dialect.Postgres {
+		suq.Unique(false)
+	}
+	suq.modifiers = append(suq.modifiers, func(s *sql.Selector) {
+		s.ForUpdate(opts...)
+	})
+	return suq
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (suq *SysUserQuery) ForShare(opts ...sql.LockOption) *SysUserQuery {
+	if suq.driver.Dialect() == dialect.Postgres {
+		suq.Unique(false)
+	}
+	suq.modifiers = append(suq.modifiers, func(s *sql.Selector) {
+		s.ForShare(opts...)
+	})
+	return suq
 }
 
 // SysUserGroupBy is the group-by builder for SysUser entities.

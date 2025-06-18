@@ -7,6 +7,7 @@ import (
 
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/schema"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuseraccount"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -89,11 +90,11 @@ func init() {
 	// sysuser.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
 	sysuser.TimezoneValidator = sysuserDescTimezone.Validators[0].(func(string) error)
 	// sysuserDescCreatedAt is the schema descriptor for created_at field.
-	sysuserDescCreatedAt := sysuserFields[15].Descriptor()
+	sysuserDescCreatedAt := sysuserFields[13].Descriptor()
 	// sysuser.DefaultCreatedAt holds the default value on creation for the created_at field.
 	sysuser.DefaultCreatedAt = sysuserDescCreatedAt.Default.(func() time.Time)
 	// sysuserDescUpdatedAt is the schema descriptor for updated_at field.
-	sysuserDescUpdatedAt := sysuserFields[16].Descriptor()
+	sysuserDescUpdatedAt := sysuserFields[14].Descriptor()
 	// sysuser.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	sysuser.DefaultUpdatedAt = sysuserDescUpdatedAt.Default.(func() time.Time)
 	// sysuser.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -102,6 +103,22 @@ func init() {
 	sysuserDescID := sysuserFields[0].Descriptor()
 	// sysuser.DefaultID holds the default value on creation for the id field.
 	sysuser.DefaultID = sysuserDescID.Default.(func() int64)
+	sysuseraccountFields := schema.SysUserAccount{}.Fields()
+	_ = sysuseraccountFields
+	// sysuseraccountDescUserID is the schema descriptor for user_id field.
+	sysuseraccountDescUserID := sysuseraccountFields[0].Descriptor()
+	// sysuseraccount.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	sysuseraccount.UserIDValidator = sysuseraccountDescUserID.Validators[0].(func(int64) error)
+	// sysuseraccountDescCreatedAt is the schema descriptor for created_at field.
+	sysuseraccountDescCreatedAt := sysuseraccountFields[4].Descriptor()
+	// sysuseraccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	sysuseraccount.DefaultCreatedAt = sysuseraccountDescCreatedAt.Default.(func() time.Time)
+	// sysuseraccountDescUpdatedAt is the schema descriptor for updated_at field.
+	sysuseraccountDescUpdatedAt := sysuseraccountFields[5].Descriptor()
+	// sysuseraccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	sysuseraccount.DefaultUpdatedAt = sysuseraccountDescUpdatedAt.Default.(func() time.Time)
+	// sysuseraccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	sysuseraccount.UpdateDefaultUpdatedAt = sysuseraccountDescUpdatedAt.UpdateDefault.(func() time.Time)
 }
 
 const (

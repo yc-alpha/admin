@@ -22,7 +22,6 @@ const (
 	UserService_CreateUser_FullMethodName         = "/user_management.v1.UserService/CreateUser"
 	UserService_DeleteUser_FullMethodName         = "/user_management.v1.UserService/DeleteUser"
 	UserService_UpdateUser_FullMethodName         = "/user_management.v1.UserService/UpdateUser"
-	UserService_UpdateUserAttrs_FullMethodName    = "/user_management.v1.UserService/UpdateUserAttrs"
 	UserService_UpdateUserAccounts_FullMethodName = "/user_management.v1.UserService/UpdateUserAccounts"
 	UserService_ChangePassword_FullMethodName     = "/user_management.v1.UserService/ChangePassword"
 	UserService_ListUsers_FullMethodName          = "/user_management.v1.UserService/ListUsers"
@@ -42,8 +41,6 @@ type UserServiceClient interface {
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
 	// 更新用户
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
-	// 更新用户属性
-	UpdateUserAttrs(ctx context.Context, in *UpdateUserAttrsRequest, opts ...grpc.CallOption) (*UpdateUserAttrsResponse, error)
 	// 更新用户关联账号
 	UpdateUserAccounts(ctx context.Context, in *UpdateUserAccountsRequest, opts ...grpc.CallOption) (*UpdateUserAccountsResponse, error)
 	// 修改用户密码
@@ -88,16 +85,6 @@ func (c *userServiceClient) UpdateUser(ctx context.Context, in *UpdateUserReques
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateUserResponse)
 	err := c.cc.Invoke(ctx, UserService_UpdateUser_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) UpdateUserAttrs(ctx context.Context, in *UpdateUserAttrsRequest, opts ...grpc.CallOption) (*UpdateUserAttrsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateUserAttrsResponse)
-	err := c.cc.Invoke(ctx, UserService_UpdateUserAttrs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +153,6 @@ type UserServiceServer interface {
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
 	// 更新用户
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
-	// 更新用户属性
-	UpdateUserAttrs(context.Context, *UpdateUserAttrsRequest) (*UpdateUserAttrsResponse, error)
 	// 更新用户关联账号
 	UpdateUserAccounts(context.Context, *UpdateUserAccountsRequest) (*UpdateUserAccountsResponse, error)
 	// 修改用户密码
@@ -196,9 +181,6 @@ func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserReq
 }
 func (UnimplementedUserServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
-}
-func (UnimplementedUserServiceServer) UpdateUserAttrs(context.Context, *UpdateUserAttrsRequest) (*UpdateUserAttrsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserAttrs not implemented")
 }
 func (UnimplementedUserServiceServer) UpdateUserAccounts(context.Context, *UpdateUserAccountsRequest) (*UpdateUserAccountsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserAccounts not implemented")
@@ -286,24 +268,6 @@ func _UserService_UpdateUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).UpdateUser(ctx, req.(*UpdateUserRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_UpdateUserAttrs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateUserAttrsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).UpdateUserAttrs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_UpdateUserAttrs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UpdateUserAttrs(ctx, req.(*UpdateUserAttrsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -416,10 +380,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateUser",
 			Handler:    _UserService_UpdateUser_Handler,
-		},
-		{
-			MethodName: "UpdateUserAttrs",
-			Handler:    _UserService_UpdateUserAttrs_Handler,
 		},
 		{
 			MethodName: "UpdateUserAccounts",

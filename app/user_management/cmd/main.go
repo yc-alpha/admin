@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/go-kratos/kratos/v2"
-	"github.com/yc-alpha/admin/app/user_management/internal/data"
+	usermanagement "github.com/yc-alpha/admin/app/user_management"
 	"github.com/yc-alpha/admin/app/user_management/internal/server"
 	"github.com/yc-alpha/admin/common/snowflake"
 	"github.com/yc-alpha/config"
@@ -39,15 +39,14 @@ func main() {
 
 	httpServer := server.NewHTTPServer()
 	grpcServer := server.NewGRPCServer()
-	data.NewData()
-	//initServer(httpServer, grpcServer, data.NewDataBase())
+	usermanagement.RegisteApplication(httpServer, grpcServer)
 	app := kratos.New(
 		kratos.ID(uid),
 		kratos.Name(Name),
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
 		kratos.Server(httpServer, grpcServer),
-		kratos.Registrar(data.NewRegistrar()),
+		// kratos.Registrar(data.NewRegistrar()),
 	)
 
 	if err := app.Run(); err != nil {

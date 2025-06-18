@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/predicate"
 )
 
@@ -92,16 +93,6 @@ func Language(v string) predicate.SysUser {
 // Timezone applies equality check predicate on the "timezone" field. It's identical to TimezoneEQ.
 func Timezone(v string) predicate.SysUser {
 	return predicate.SysUser(sql.FieldEQ(FieldTimezone, v))
-}
-
-// LastLogin applies equality check predicate on the "last_login" field. It's identical to LastLoginEQ.
-func LastLogin(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldEQ(FieldLastLogin, v))
-}
-
-// LastIP applies equality check predicate on the "last_ip" field. It's identical to LastIPEQ.
-func LastIP(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldEQ(FieldLastIP, v))
 }
 
 // CreatedBy applies equality check predicate on the "created_by" field. It's identical to CreatedByEQ.
@@ -464,6 +455,16 @@ func FullNameHasSuffix(v string) predicate.SysUser {
 	return predicate.SysUser(sql.FieldHasSuffix(FieldFullName, v))
 }
 
+// FullNameIsNil applies the IsNil predicate on the "full_name" field.
+func FullNameIsNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldIsNull(FieldFullName))
+}
+
+// FullNameNotNil applies the NotNil predicate on the "full_name" field.
+func FullNameNotNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldNotNull(FieldFullName))
+}
+
 // FullNameEqualFold applies the EqualFold predicate on the "full_name" field.
 func FullNameEqualFold(v string) predicate.SysUser {
 	return predicate.SysUser(sql.FieldEqualFold(FieldFullName, v))
@@ -547,6 +548,16 @@ func AvatarHasPrefix(v string) predicate.SysUser {
 // AvatarHasSuffix applies the HasSuffix predicate on the "avatar" field.
 func AvatarHasSuffix(v string) predicate.SysUser {
 	return predicate.SysUser(sql.FieldHasSuffix(FieldAvatar, v))
+}
+
+// AvatarIsNil applies the IsNil predicate on the "avatar" field.
+func AvatarIsNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldIsNull(FieldAvatar))
+}
+
+// AvatarNotNil applies the NotNil predicate on the "avatar" field.
+func AvatarNotNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldNotNull(FieldAvatar))
 }
 
 // AvatarEqualFold applies the EqualFold predicate on the "avatar" field.
@@ -689,111 +700,6 @@ func TimezoneContainsFold(v string) predicate.SysUser {
 	return predicate.SysUser(sql.FieldContainsFold(FieldTimezone, v))
 }
 
-// LastLoginEQ applies the EQ predicate on the "last_login" field.
-func LastLoginEQ(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldEQ(FieldLastLogin, v))
-}
-
-// LastLoginNEQ applies the NEQ predicate on the "last_login" field.
-func LastLoginNEQ(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldNEQ(FieldLastLogin, v))
-}
-
-// LastLoginIn applies the In predicate on the "last_login" field.
-func LastLoginIn(vs ...time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldIn(FieldLastLogin, vs...))
-}
-
-// LastLoginNotIn applies the NotIn predicate on the "last_login" field.
-func LastLoginNotIn(vs ...time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldNotIn(FieldLastLogin, vs...))
-}
-
-// LastLoginGT applies the GT predicate on the "last_login" field.
-func LastLoginGT(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldGT(FieldLastLogin, v))
-}
-
-// LastLoginGTE applies the GTE predicate on the "last_login" field.
-func LastLoginGTE(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldGTE(FieldLastLogin, v))
-}
-
-// LastLoginLT applies the LT predicate on the "last_login" field.
-func LastLoginLT(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldLT(FieldLastLogin, v))
-}
-
-// LastLoginLTE applies the LTE predicate on the "last_login" field.
-func LastLoginLTE(v time.Time) predicate.SysUser {
-	return predicate.SysUser(sql.FieldLTE(FieldLastLogin, v))
-}
-
-// LastIPEQ applies the EQ predicate on the "last_ip" field.
-func LastIPEQ(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldEQ(FieldLastIP, v))
-}
-
-// LastIPNEQ applies the NEQ predicate on the "last_ip" field.
-func LastIPNEQ(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldNEQ(FieldLastIP, v))
-}
-
-// LastIPIn applies the In predicate on the "last_ip" field.
-func LastIPIn(vs ...string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldIn(FieldLastIP, vs...))
-}
-
-// LastIPNotIn applies the NotIn predicate on the "last_ip" field.
-func LastIPNotIn(vs ...string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldNotIn(FieldLastIP, vs...))
-}
-
-// LastIPGT applies the GT predicate on the "last_ip" field.
-func LastIPGT(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldGT(FieldLastIP, v))
-}
-
-// LastIPGTE applies the GTE predicate on the "last_ip" field.
-func LastIPGTE(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldGTE(FieldLastIP, v))
-}
-
-// LastIPLT applies the LT predicate on the "last_ip" field.
-func LastIPLT(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldLT(FieldLastIP, v))
-}
-
-// LastIPLTE applies the LTE predicate on the "last_ip" field.
-func LastIPLTE(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldLTE(FieldLastIP, v))
-}
-
-// LastIPContains applies the Contains predicate on the "last_ip" field.
-func LastIPContains(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldContains(FieldLastIP, v))
-}
-
-// LastIPHasPrefix applies the HasPrefix predicate on the "last_ip" field.
-func LastIPHasPrefix(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldHasPrefix(FieldLastIP, v))
-}
-
-// LastIPHasSuffix applies the HasSuffix predicate on the "last_ip" field.
-func LastIPHasSuffix(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldHasSuffix(FieldLastIP, v))
-}
-
-// LastIPEqualFold applies the EqualFold predicate on the "last_ip" field.
-func LastIPEqualFold(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldEqualFold(FieldLastIP, v))
-}
-
-// LastIPContainsFold applies the ContainsFold predicate on the "last_ip" field.
-func LastIPContainsFold(v string) predicate.SysUser {
-	return predicate.SysUser(sql.FieldContainsFold(FieldLastIP, v))
-}
-
 // CreatedByEQ applies the EQ predicate on the "created_by" field.
 func CreatedByEQ(v int64) predicate.SysUser {
 	return predicate.SysUser(sql.FieldEQ(FieldCreatedBy, v))
@@ -834,6 +740,16 @@ func CreatedByLTE(v int64) predicate.SysUser {
 	return predicate.SysUser(sql.FieldLTE(FieldCreatedBy, v))
 }
 
+// CreatedByIsNil applies the IsNil predicate on the "created_by" field.
+func CreatedByIsNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldIsNull(FieldCreatedBy))
+}
+
+// CreatedByNotNil applies the NotNil predicate on the "created_by" field.
+func CreatedByNotNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldNotNull(FieldCreatedBy))
+}
+
 // UpdatedByEQ applies the EQ predicate on the "updated_by" field.
 func UpdatedByEQ(v int64) predicate.SysUser {
 	return predicate.SysUser(sql.FieldEQ(FieldUpdatedBy, v))
@@ -872,6 +788,16 @@ func UpdatedByLT(v int64) predicate.SysUser {
 // UpdatedByLTE applies the LTE predicate on the "updated_by" field.
 func UpdatedByLTE(v int64) predicate.SysUser {
 	return predicate.SysUser(sql.FieldLTE(FieldUpdatedBy, v))
+}
+
+// UpdatedByIsNil applies the IsNil predicate on the "updated_by" field.
+func UpdatedByIsNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldIsNull(FieldUpdatedBy))
+}
+
+// UpdatedByNotNil applies the NotNil predicate on the "updated_by" field.
+func UpdatedByNotNil() predicate.SysUser {
+	return predicate.SysUser(sql.FieldNotNull(FieldUpdatedBy))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -1002,6 +928,29 @@ func DeletedAtIsNil() predicate.SysUser {
 // DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
 func DeletedAtNotNil() predicate.SysUser {
 	return predicate.SysUser(sql.FieldNotNull(FieldDeletedAt))
+}
+
+// HasAccounts applies the HasEdge predicate on the "accounts" edge.
+func HasAccounts() predicate.SysUser {
+	return predicate.SysUser(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AccountsTable, AccountsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccountsWith applies the HasEdge predicate on the "accounts" edge with a given conditions (other predicates).
+func HasAccountsWith(preds ...predicate.SysUserAccount) predicate.SysUser {
+	return predicate.SysUser(func(s *sql.Selector) {
+		step := newAccountsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

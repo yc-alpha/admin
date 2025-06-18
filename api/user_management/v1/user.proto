@@ -28,13 +28,6 @@ service UserService {
       body: "*"
     };
   }
-  // 更新用户属性
-  rpc UpdateUserAttrs (UpdateUserAttrsRequest) returns (UpdateUserAttrsResponse) {
-    option (google.api.http) = {
-      put: "/v1/users/{id}/attrs",
-      body: "*"
-    };
-  }
   // 更新用户关联账号
   rpc UpdateUserAccounts (UpdateUserAccountsRequest) returns (UpdateUserAccountsResponse) {
     option (google.api.http) = {
@@ -58,7 +51,7 @@ service UserService {
   // 获取用户信息详情
   rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoResponse) {
     option (google.api.http) = {
-      get: "/v1/users/{id}"
+      get: "/v1/userInfo"
     };
   }
   // 验证用户密码
@@ -86,67 +79,46 @@ enum Gender {
 message User {
   string id = 1;
   string username = 2;
-  string nickname = 3;
-  string email = 4;
-  string phone = 5;
-  string post = 6;
-  string avatar_url = 7;
-  string fullname = 8;
-  UserStatus status = 9;
-  Gender gender = 10;
-  string last_login_ip = 11;
-  string last_login_at = 12;
-  string timezone = 13;
-  string language = 14;
-  string created_by = 15;
-  string updated_by = 16;
-  string created_at = 17;
-  string updated_at = 18;
-  bool deleted = 19; // 软删除标记
+  string email = 3;
+  string phone = 4;
+  string avatar = 5;
+  string fullname = 6;
+  UserStatus status = 7;
+  Gender gender = 8;
+  string timezone = 9;
+  string language = 10;
+  string created_by = 11;
+  string updated_by = 12;
+  string created_at = 13;
+  string updated_at = 14;
+  bool deleted = 15; // 软删除标记
 
-  repeated UserAccount user_accounts = 20;
-  repeated UserAttr user_attrs = 21;
+  repeated UserAccount user_accounts = 19;
 }
 
 message SimpleUser {
   string id = 1;
   string username = 2;
-  string nickname = 3;
-  string email = 4;
-  string phone = 5;
-  string post = 6;
-  string avatar_url = 7;
-  string fullname = 8;
-  UserStatus status = 9;
-  Gender gender = 10;
-  string last_login_ip = 11;
-  string last_login_at = 12;
-  string timezone = 13;
-  string language = 14;
-  string created_by = 15;
-  string updated_by = 16;
-  string created_at = 17;
-  string updated_at = 18;
-  bool deleted = 19; // 软删除标记
+  string email = 3;
+  string phone = 4;
+  string avatar = 5;
+  string fullname = 6;
+  UserStatus status = 7;
+  Gender gender = 8;
+  string timezone = 9;
+  string language = 10;
+  string created_by = 11;
+  string updated_by = 12;
+  string created_at = 13;
+  string updated_at = 14;
+  bool deleted = 15; // 软删除标记
 }
 
 message UserAccount {
-  uint64 id = 1;
-  string user_id = 2;
-  string platform = 3;
-  string account = 4;
-  string name = 5;
-  bool is_active = 6;
-  string created_at = 7;
-  string updated_at = 8;
-  bool deleted = 9;
-}
-
-message UserAttr {
-  uint64 id = 1;
-  string user_id = 2;
-  string key = 3;
-  string value = 4;
+  string user_id = 1;
+  string platform = 2;
+  string identifier = 3;
+  string name = 4;
   string created_at = 5;
   string updated_at = 6;
 }
@@ -166,7 +138,6 @@ message CreateUserRequest {
   string last_login_ip = 12;
   string last_login_at = 13;
   repeated UserAccount user_accounts = 14;
-  repeated UserAttr user_attrs = 15;
 }
 
 message CreateUserResponse {
@@ -210,17 +181,6 @@ message UpdateUserResponse {
 }
 
 
-message UpdateUserAttrsRequest {
-  string id = 1;
-  repeated UserAttr user_attrs = 2;
-}
-
-message UpdateUserAttrsResponse {
-  bool result = 1;
-  int32 code = 2;
-  string msg = 3;
-}
-
 message UpdateUserAccountsRequest {
   string id = 1;
   repeated UserAccount user_accounts = 2;
@@ -238,14 +198,12 @@ message ListUsersRequest {
   string order = 3;
   bool is_desc = 4;
   string username = 5;
-  string nickname = 6;
-  string fullname = 7;
-  string email = 8;
-  string phone = 9;
-  string post = 10;
-  string filter = 11;
-  repeated UserStatus status = 12;
-  repeated Gender gender = 13;
+  string fullname = 6;
+  string email = 7;
+  string phone = 8;
+  string post = 9;
+  string filter = 10;
+  repeated UserStatus status = 11;
 }
 
 
@@ -273,7 +231,7 @@ message GetUserInfoRequest {
 message GetUserInfoResponse {
   bool result = 1;
   int32 code = 2;
-  User data = 3;
+  User user = 3;
   string msg = 4;
 }
 

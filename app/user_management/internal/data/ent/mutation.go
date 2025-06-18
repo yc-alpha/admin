@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/predicate"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuseraccount"
 )
 
 const (
@@ -24,38 +25,40 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeSysUser = "SysUser"
+	TypeSysUser        = "SysUser"
+	TypeSysUserAccount = "SysUserAccount"
 )
 
 // SysUserMutation represents an operation that mutates the SysUser nodes in the graph.
 type SysUserMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int64
-	username      *string
-	email         *string
-	phone         *string
-	password      *string
-	status        *sysuser.Status
-	full_name     *string
-	gender        *sysuser.Gender
-	avatar        *string
-	language      *string
-	timezone      *string
-	last_login    *time.Time
-	last_ip       *string
-	created_by    *int64
-	addcreated_by *int64
-	updated_by    *int64
-	addupdated_by *int64
-	created_at    *time.Time
-	updated_at    *time.Time
-	deleted_at    *time.Time
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*SysUser, error)
-	predicates    []predicate.SysUser
+	op              Op
+	typ             string
+	id              *int64
+	username        *string
+	email           *string
+	phone           *string
+	password        *string
+	status          *sysuser.Status
+	full_name       *string
+	gender          *sysuser.Gender
+	avatar          *string
+	language        *string
+	timezone        *string
+	created_by      *int64
+	addcreated_by   *int64
+	updated_by      *int64
+	addupdated_by   *int64
+	created_at      *time.Time
+	updated_at      *time.Time
+	deleted_at      *time.Time
+	clearedFields   map[string]struct{}
+	accounts        map[int]struct{}
+	removedaccounts map[int]struct{}
+	clearedaccounts bool
+	done            bool
+	oldValue        func(context.Context) (*SysUser, error)
+	predicates      []predicate.SysUser
 }
 
 var _ ent.Mutation = (*SysUserMutation)(nil)
@@ -373,9 +376,22 @@ func (m *SysUserMutation) OldFullName(ctx context.Context) (v *string, err error
 	return oldValue.FullName, nil
 }
 
+// ClearFullName clears the value of the "full_name" field.
+func (m *SysUserMutation) ClearFullName() {
+	m.full_name = nil
+	m.clearedFields[sysuser.FieldFullName] = struct{}{}
+}
+
+// FullNameCleared returns if the "full_name" field was cleared in this mutation.
+func (m *SysUserMutation) FullNameCleared() bool {
+	_, ok := m.clearedFields[sysuser.FieldFullName]
+	return ok
+}
+
 // ResetFullName resets all changes to the "full_name" field.
 func (m *SysUserMutation) ResetFullName() {
 	m.full_name = nil
+	delete(m.clearedFields, sysuser.FieldFullName)
 }
 
 // SetGender sets the "gender" field.
@@ -445,9 +461,22 @@ func (m *SysUserMutation) OldAvatar(ctx context.Context) (v *string, err error) 
 	return oldValue.Avatar, nil
 }
 
+// ClearAvatar clears the value of the "avatar" field.
+func (m *SysUserMutation) ClearAvatar() {
+	m.avatar = nil
+	m.clearedFields[sysuser.FieldAvatar] = struct{}{}
+}
+
+// AvatarCleared returns if the "avatar" field was cleared in this mutation.
+func (m *SysUserMutation) AvatarCleared() bool {
+	_, ok := m.clearedFields[sysuser.FieldAvatar]
+	return ok
+}
+
 // ResetAvatar resets all changes to the "avatar" field.
 func (m *SysUserMutation) ResetAvatar() {
 	m.avatar = nil
+	delete(m.clearedFields, sysuser.FieldAvatar)
 }
 
 // SetLanguage sets the "language" field.
@@ -522,78 +551,6 @@ func (m *SysUserMutation) ResetTimezone() {
 	m.timezone = nil
 }
 
-// SetLastLogin sets the "last_login" field.
-func (m *SysUserMutation) SetLastLogin(t time.Time) {
-	m.last_login = &t
-}
-
-// LastLogin returns the value of the "last_login" field in the mutation.
-func (m *SysUserMutation) LastLogin() (r time.Time, exists bool) {
-	v := m.last_login
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLastLogin returns the old "last_login" field's value of the SysUser entity.
-// If the SysUser object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SysUserMutation) OldLastLogin(ctx context.Context) (v *time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLastLogin is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLastLogin requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLastLogin: %w", err)
-	}
-	return oldValue.LastLogin, nil
-}
-
-// ResetLastLogin resets all changes to the "last_login" field.
-func (m *SysUserMutation) ResetLastLogin() {
-	m.last_login = nil
-}
-
-// SetLastIP sets the "last_ip" field.
-func (m *SysUserMutation) SetLastIP(s string) {
-	m.last_ip = &s
-}
-
-// LastIP returns the value of the "last_ip" field in the mutation.
-func (m *SysUserMutation) LastIP() (r string, exists bool) {
-	v := m.last_ip
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLastIP returns the old "last_ip" field's value of the SysUser entity.
-// If the SysUser object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SysUserMutation) OldLastIP(ctx context.Context) (v *string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLastIP is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLastIP requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLastIP: %w", err)
-	}
-	return oldValue.LastIP, nil
-}
-
-// ResetLastIP resets all changes to the "last_ip" field.
-func (m *SysUserMutation) ResetLastIP() {
-	m.last_ip = nil
-}
-
 // SetCreatedBy sets the "created_by" field.
 func (m *SysUserMutation) SetCreatedBy(i int64) {
 	m.created_by = &i
@@ -644,10 +601,24 @@ func (m *SysUserMutation) AddedCreatedBy() (r int64, exists bool) {
 	return *v, true
 }
 
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *SysUserMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.addcreated_by = nil
+	m.clearedFields[sysuser.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *SysUserMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[sysuser.FieldCreatedBy]
+	return ok
+}
+
 // ResetCreatedBy resets all changes to the "created_by" field.
 func (m *SysUserMutation) ResetCreatedBy() {
 	m.created_by = nil
 	m.addcreated_by = nil
+	delete(m.clearedFields, sysuser.FieldCreatedBy)
 }
 
 // SetUpdatedBy sets the "updated_by" field.
@@ -700,10 +671,24 @@ func (m *SysUserMutation) AddedUpdatedBy() (r int64, exists bool) {
 	return *v, true
 }
 
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *SysUserMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.addupdated_by = nil
+	m.clearedFields[sysuser.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *SysUserMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[sysuser.FieldUpdatedBy]
+	return ok
+}
+
 // ResetUpdatedBy resets all changes to the "updated_by" field.
 func (m *SysUserMutation) ResetUpdatedBy() {
 	m.updated_by = nil
 	m.addupdated_by = nil
+	delete(m.clearedFields, sysuser.FieldUpdatedBy)
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -827,6 +812,60 @@ func (m *SysUserMutation) ResetDeletedAt() {
 	delete(m.clearedFields, sysuser.FieldDeletedAt)
 }
 
+// AddAccountIDs adds the "accounts" edge to the SysUserAccount entity by ids.
+func (m *SysUserMutation) AddAccountIDs(ids ...int) {
+	if m.accounts == nil {
+		m.accounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.accounts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAccounts clears the "accounts" edge to the SysUserAccount entity.
+func (m *SysUserMutation) ClearAccounts() {
+	m.clearedaccounts = true
+}
+
+// AccountsCleared reports if the "accounts" edge to the SysUserAccount entity was cleared.
+func (m *SysUserMutation) AccountsCleared() bool {
+	return m.clearedaccounts
+}
+
+// RemoveAccountIDs removes the "accounts" edge to the SysUserAccount entity by IDs.
+func (m *SysUserMutation) RemoveAccountIDs(ids ...int) {
+	if m.removedaccounts == nil {
+		m.removedaccounts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.accounts, ids[i])
+		m.removedaccounts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAccounts returns the removed IDs of the "accounts" edge to the SysUserAccount entity.
+func (m *SysUserMutation) RemovedAccountsIDs() (ids []int) {
+	for id := range m.removedaccounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AccountsIDs returns the "accounts" edge IDs in the mutation.
+func (m *SysUserMutation) AccountsIDs() (ids []int) {
+	for id := range m.accounts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAccounts resets all changes to the "accounts" edge.
+func (m *SysUserMutation) ResetAccounts() {
+	m.accounts = nil
+	m.clearedaccounts = false
+	m.removedaccounts = nil
+}
+
 // Where appends a list predicates to the SysUserMutation builder.
 func (m *SysUserMutation) Where(ps ...predicate.SysUser) {
 	m.predicates = append(m.predicates, ps...)
@@ -861,7 +900,7 @@ func (m *SysUserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SysUserMutation) Fields() []string {
-	fields := make([]string, 0, 17)
+	fields := make([]string, 0, 15)
 	if m.username != nil {
 		fields = append(fields, sysuser.FieldUsername)
 	}
@@ -891,12 +930,6 @@ func (m *SysUserMutation) Fields() []string {
 	}
 	if m.timezone != nil {
 		fields = append(fields, sysuser.FieldTimezone)
-	}
-	if m.last_login != nil {
-		fields = append(fields, sysuser.FieldLastLogin)
-	}
-	if m.last_ip != nil {
-		fields = append(fields, sysuser.FieldLastIP)
 	}
 	if m.created_by != nil {
 		fields = append(fields, sysuser.FieldCreatedBy)
@@ -941,10 +974,6 @@ func (m *SysUserMutation) Field(name string) (ent.Value, bool) {
 		return m.Language()
 	case sysuser.FieldTimezone:
 		return m.Timezone()
-	case sysuser.FieldLastLogin:
-		return m.LastLogin()
-	case sysuser.FieldLastIP:
-		return m.LastIP()
 	case sysuser.FieldCreatedBy:
 		return m.CreatedBy()
 	case sysuser.FieldUpdatedBy:
@@ -984,10 +1013,6 @@ func (m *SysUserMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldLanguage(ctx)
 	case sysuser.FieldTimezone:
 		return m.OldTimezone(ctx)
-	case sysuser.FieldLastLogin:
-		return m.OldLastLogin(ctx)
-	case sysuser.FieldLastIP:
-		return m.OldLastIP(ctx)
 	case sysuser.FieldCreatedBy:
 		return m.OldCreatedBy(ctx)
 	case sysuser.FieldUpdatedBy:
@@ -1076,20 +1101,6 @@ func (m *SysUserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTimezone(v)
-		return nil
-	case sysuser.FieldLastLogin:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLastLogin(v)
-		return nil
-	case sysuser.FieldLastIP:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLastIP(v)
 		return nil
 	case sysuser.FieldCreatedBy:
 		v, ok := value.(int64)
@@ -1183,6 +1194,18 @@ func (m *SysUserMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *SysUserMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(sysuser.FieldFullName) {
+		fields = append(fields, sysuser.FieldFullName)
+	}
+	if m.FieldCleared(sysuser.FieldAvatar) {
+		fields = append(fields, sysuser.FieldAvatar)
+	}
+	if m.FieldCleared(sysuser.FieldCreatedBy) {
+		fields = append(fields, sysuser.FieldCreatedBy)
+	}
+	if m.FieldCleared(sysuser.FieldUpdatedBy) {
+		fields = append(fields, sysuser.FieldUpdatedBy)
+	}
 	if m.FieldCleared(sysuser.FieldDeletedAt) {
 		fields = append(fields, sysuser.FieldDeletedAt)
 	}
@@ -1200,6 +1223,18 @@ func (m *SysUserMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *SysUserMutation) ClearField(name string) error {
 	switch name {
+	case sysuser.FieldFullName:
+		m.ClearFullName()
+		return nil
+	case sysuser.FieldAvatar:
+		m.ClearAvatar()
+		return nil
+	case sysuser.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case sysuser.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
 	case sysuser.FieldDeletedAt:
 		m.ClearDeletedAt()
 		return nil
@@ -1241,12 +1276,6 @@ func (m *SysUserMutation) ResetField(name string) error {
 	case sysuser.FieldTimezone:
 		m.ResetTimezone()
 		return nil
-	case sysuser.FieldLastLogin:
-		m.ResetLastLogin()
-		return nil
-	case sysuser.FieldLastIP:
-		m.ResetLastIP()
-		return nil
 	case sysuser.FieldCreatedBy:
 		m.ResetCreatedBy()
 		return nil
@@ -1268,48 +1297,813 @@ func (m *SysUserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SysUserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.accounts != nil {
+		edges = append(edges, sysuser.EdgeAccounts)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *SysUserMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case sysuser.EdgeAccounts:
+		ids := make([]ent.Value, 0, len(m.accounts))
+		for id := range m.accounts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *SysUserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedaccounts != nil {
+		edges = append(edges, sysuser.EdgeAccounts)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *SysUserMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case sysuser.EdgeAccounts:
+		ids := make([]ent.Value, 0, len(m.removedaccounts))
+		for id := range m.removedaccounts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SysUserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedaccounts {
+		edges = append(edges, sysuser.EdgeAccounts)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *SysUserMutation) EdgeCleared(name string) bool {
+	switch name {
+	case sysuser.EdgeAccounts:
+		return m.clearedaccounts
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *SysUserMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown SysUser unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *SysUserMutation) ResetEdge(name string) error {
+	switch name {
+	case sysuser.EdgeAccounts:
+		m.ResetAccounts()
+		return nil
+	}
 	return fmt.Errorf("unknown SysUser edge %s", name)
+}
+
+// SysUserAccountMutation represents an operation that mutates the SysUserAccount nodes in the graph.
+type SysUserAccountMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	platform      *string
+	identifier    *string
+	name          *string
+	created_at    *time.Time
+	updated_at    *time.Time
+	deleted_at    *time.Time
+	clearedFields map[string]struct{}
+	user          *int64
+	cleareduser   bool
+	done          bool
+	oldValue      func(context.Context) (*SysUserAccount, error)
+	predicates    []predicate.SysUserAccount
+}
+
+var _ ent.Mutation = (*SysUserAccountMutation)(nil)
+
+// sysuseraccountOption allows management of the mutation configuration using functional options.
+type sysuseraccountOption func(*SysUserAccountMutation)
+
+// newSysUserAccountMutation creates new mutation for the SysUserAccount entity.
+func newSysUserAccountMutation(c config, op Op, opts ...sysuseraccountOption) *SysUserAccountMutation {
+	m := &SysUserAccountMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeSysUserAccount,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withSysUserAccountID sets the ID field of the mutation.
+func withSysUserAccountID(id int) sysuseraccountOption {
+	return func(m *SysUserAccountMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *SysUserAccount
+		)
+		m.oldValue = func(ctx context.Context) (*SysUserAccount, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().SysUserAccount.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withSysUserAccount sets the old SysUserAccount of the mutation.
+func withSysUserAccount(node *SysUserAccount) sysuseraccountOption {
+	return func(m *SysUserAccountMutation) {
+		m.oldValue = func(context.Context) (*SysUserAccount, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m SysUserAccountMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m SysUserAccountMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *SysUserAccountMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *SysUserAccountMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().SysUserAccount.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUserID sets the "user_id" field.
+func (m *SysUserAccountMutation) SetUserID(i int64) {
+	m.user = &i
+}
+
+// UserID returns the value of the "user_id" field in the mutation.
+func (m *SysUserAccountMutation) UserID() (r int64, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUserID returns the old "user_id" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldUserID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+	}
+	return oldValue.UserID, nil
+}
+
+// ResetUserID resets all changes to the "user_id" field.
+func (m *SysUserAccountMutation) ResetUserID() {
+	m.user = nil
+}
+
+// SetPlatform sets the "platform" field.
+func (m *SysUserAccountMutation) SetPlatform(s string) {
+	m.platform = &s
+}
+
+// Platform returns the value of the "platform" field in the mutation.
+func (m *SysUserAccountMutation) Platform() (r string, exists bool) {
+	v := m.platform
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlatform returns the old "platform" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldPlatform(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlatform is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlatform requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlatform: %w", err)
+	}
+	return oldValue.Platform, nil
+}
+
+// ResetPlatform resets all changes to the "platform" field.
+func (m *SysUserAccountMutation) ResetPlatform() {
+	m.platform = nil
+}
+
+// SetIdentifier sets the "identifier" field.
+func (m *SysUserAccountMutation) SetIdentifier(s string) {
+	m.identifier = &s
+}
+
+// Identifier returns the value of the "identifier" field in the mutation.
+func (m *SysUserAccountMutation) Identifier() (r string, exists bool) {
+	v := m.identifier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIdentifier returns the old "identifier" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldIdentifier(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIdentifier requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
+	}
+	return oldValue.Identifier, nil
+}
+
+// ResetIdentifier resets all changes to the "identifier" field.
+func (m *SysUserAccountMutation) ResetIdentifier() {
+	m.identifier = nil
+}
+
+// SetName sets the "name" field.
+func (m *SysUserAccountMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *SysUserAccountMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldName(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *SysUserAccountMutation) ResetName() {
+	m.name = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *SysUserAccountMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *SysUserAccountMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *SysUserAccountMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *SysUserAccountMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *SysUserAccountMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *SysUserAccountMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *SysUserAccountMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *SysUserAccountMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the SysUserAccount entity.
+// If the SysUserAccount object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SysUserAccountMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *SysUserAccountMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[sysuseraccount.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *SysUserAccountMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[sysuseraccount.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *SysUserAccountMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, sysuseraccount.FieldDeletedAt)
+}
+
+// ClearUser clears the "user" edge to the SysUser entity.
+func (m *SysUserAccountMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[sysuseraccount.FieldUserID] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the SysUser entity was cleared.
+func (m *SysUserAccountMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *SysUserAccountMutation) UserIDs() (ids []int64) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *SysUserAccountMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the SysUserAccountMutation builder.
+func (m *SysUserAccountMutation) Where(ps ...predicate.SysUserAccount) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the SysUserAccountMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *SysUserAccountMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.SysUserAccount, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *SysUserAccountMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *SysUserAccountMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (SysUserAccount).
+func (m *SysUserAccountMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *SysUserAccountMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.user != nil {
+		fields = append(fields, sysuseraccount.FieldUserID)
+	}
+	if m.platform != nil {
+		fields = append(fields, sysuseraccount.FieldPlatform)
+	}
+	if m.identifier != nil {
+		fields = append(fields, sysuseraccount.FieldIdentifier)
+	}
+	if m.name != nil {
+		fields = append(fields, sysuseraccount.FieldName)
+	}
+	if m.created_at != nil {
+		fields = append(fields, sysuseraccount.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, sysuseraccount.FieldUpdatedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, sysuseraccount.FieldDeletedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *SysUserAccountMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case sysuseraccount.FieldUserID:
+		return m.UserID()
+	case sysuseraccount.FieldPlatform:
+		return m.Platform()
+	case sysuseraccount.FieldIdentifier:
+		return m.Identifier()
+	case sysuseraccount.FieldName:
+		return m.Name()
+	case sysuseraccount.FieldCreatedAt:
+		return m.CreatedAt()
+	case sysuseraccount.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case sysuseraccount.FieldDeletedAt:
+		return m.DeletedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *SysUserAccountMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case sysuseraccount.FieldUserID:
+		return m.OldUserID(ctx)
+	case sysuseraccount.FieldPlatform:
+		return m.OldPlatform(ctx)
+	case sysuseraccount.FieldIdentifier:
+		return m.OldIdentifier(ctx)
+	case sysuseraccount.FieldName:
+		return m.OldName(ctx)
+	case sysuseraccount.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case sysuseraccount.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case sysuseraccount.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown SysUserAccount field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SysUserAccountMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case sysuseraccount.FieldUserID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUserID(v)
+		return nil
+	case sysuseraccount.FieldPlatform:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlatform(v)
+		return nil
+	case sysuseraccount.FieldIdentifier:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIdentifier(v)
+		return nil
+	case sysuseraccount.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case sysuseraccount.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case sysuseraccount.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case sysuseraccount.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown SysUserAccount field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *SysUserAccountMutation) AddedFields() []string {
+	var fields []string
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *SysUserAccountMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *SysUserAccountMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown SysUserAccount numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *SysUserAccountMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(sysuseraccount.FieldDeletedAt) {
+		fields = append(fields, sysuseraccount.FieldDeletedAt)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *SysUserAccountMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *SysUserAccountMutation) ClearField(name string) error {
+	switch name {
+	case sysuseraccount.FieldDeletedAt:
+		m.ClearDeletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SysUserAccount nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *SysUserAccountMutation) ResetField(name string) error {
+	switch name {
+	case sysuseraccount.FieldUserID:
+		m.ResetUserID()
+		return nil
+	case sysuseraccount.FieldPlatform:
+		m.ResetPlatform()
+		return nil
+	case sysuseraccount.FieldIdentifier:
+		m.ResetIdentifier()
+		return nil
+	case sysuseraccount.FieldName:
+		m.ResetName()
+		return nil
+	case sysuseraccount.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case sysuseraccount.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case sysuseraccount.FieldDeletedAt:
+		m.ResetDeletedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown SysUserAccount field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *SysUserAccountMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.user != nil {
+		edges = append(edges, sysuseraccount.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *SysUserAccountMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case sysuseraccount.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *SysUserAccountMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *SysUserAccountMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *SysUserAccountMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.cleareduser {
+		edges = append(edges, sysuseraccount.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *SysUserAccountMutation) EdgeCleared(name string) bool {
+	switch name {
+	case sysuseraccount.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *SysUserAccountMutation) ClearEdge(name string) error {
+	switch name {
+	case sysuseraccount.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown SysUserAccount unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *SysUserAccountMutation) ResetEdge(name string) error {
+	switch name {
+	case sysuseraccount.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown SysUserAccount edge %s", name)
 }

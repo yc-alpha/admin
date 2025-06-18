@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuseraccount"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -73,7 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			sysuser.Table: sysuser.ValidColumn,
+			sysuser.Table:        sysuser.ValidColumn,
+			sysuseraccount.Table: sysuseraccount.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/user_management/internal/data/ent/sysuseraccount"
 )
 
 // SysUserCreate is the builder for creating a SysUser entity.
@@ -18,6 +20,7 @@ type SysUserCreate struct {
 	config
 	mutation *SysUserMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetUsername sets the "username" field.
@@ -64,6 +67,14 @@ func (suc *SysUserCreate) SetFullName(s string) *SysUserCreate {
 	return suc
 }
 
+// SetNillableFullName sets the "full_name" field if the given value is not nil.
+func (suc *SysUserCreate) SetNillableFullName(s *string) *SysUserCreate {
+	if s != nil {
+		suc.SetFullName(*s)
+	}
+	return suc
+}
+
 // SetGender sets the "gender" field.
 func (suc *SysUserCreate) SetGender(s sysuser.Gender) *SysUserCreate {
 	suc.mutation.SetGender(s)
@@ -81,6 +92,14 @@ func (suc *SysUserCreate) SetNillableGender(s *sysuser.Gender) *SysUserCreate {
 // SetAvatar sets the "avatar" field.
 func (suc *SysUserCreate) SetAvatar(s string) *SysUserCreate {
 	suc.mutation.SetAvatar(s)
+	return suc
+}
+
+// SetNillableAvatar sets the "avatar" field if the given value is not nil.
+func (suc *SysUserCreate) SetNillableAvatar(s *string) *SysUserCreate {
+	if s != nil {
+		suc.SetAvatar(*s)
+	}
 	return suc
 }
 
@@ -112,27 +131,31 @@ func (suc *SysUserCreate) SetNillableTimezone(s *string) *SysUserCreate {
 	return suc
 }
 
-// SetLastLogin sets the "last_login" field.
-func (suc *SysUserCreate) SetLastLogin(t time.Time) *SysUserCreate {
-	suc.mutation.SetLastLogin(t)
-	return suc
-}
-
-// SetLastIP sets the "last_ip" field.
-func (suc *SysUserCreate) SetLastIP(s string) *SysUserCreate {
-	suc.mutation.SetLastIP(s)
-	return suc
-}
-
 // SetCreatedBy sets the "created_by" field.
 func (suc *SysUserCreate) SetCreatedBy(i int64) *SysUserCreate {
 	suc.mutation.SetCreatedBy(i)
 	return suc
 }
 
+// SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
+func (suc *SysUserCreate) SetNillableCreatedBy(i *int64) *SysUserCreate {
+	if i != nil {
+		suc.SetCreatedBy(*i)
+	}
+	return suc
+}
+
 // SetUpdatedBy sets the "updated_by" field.
 func (suc *SysUserCreate) SetUpdatedBy(i int64) *SysUserCreate {
 	suc.mutation.SetUpdatedBy(i)
+	return suc
+}
+
+// SetNillableUpdatedBy sets the "updated_by" field if the given value is not nil.
+func (suc *SysUserCreate) SetNillableUpdatedBy(i *int64) *SysUserCreate {
+	if i != nil {
+		suc.SetUpdatedBy(*i)
+	}
 	return suc
 }
 
@@ -190,6 +213,21 @@ func (suc *SysUserCreate) SetNillableID(i *int64) *SysUserCreate {
 		suc.SetID(*i)
 	}
 	return suc
+}
+
+// AddAccountIDs adds the "accounts" edge to the SysUserAccount entity by IDs.
+func (suc *SysUserCreate) AddAccountIDs(ids ...int) *SysUserCreate {
+	suc.mutation.AddAccountIDs(ids...)
+	return suc
+}
+
+// AddAccounts adds the "accounts" edges to the SysUserAccount entity.
+func (suc *SysUserCreate) AddAccounts(s ...*SysUserAccount) *SysUserCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return suc.AddAccountIDs(ids...)
 }
 
 // Mutation returns the SysUserMutation object of the builder.
@@ -311,9 +349,6 @@ func (suc *SysUserCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "SysUser.status": %w`, err)}
 		}
 	}
-	if _, ok := suc.mutation.FullName(); !ok {
-		return &ValidationError{Name: "full_name", err: errors.New(`ent: missing required field "SysUser.full_name"`)}
-	}
 	if _, ok := suc.mutation.Gender(); !ok {
 		return &ValidationError{Name: "gender", err: errors.New(`ent: missing required field "SysUser.gender"`)}
 	}
@@ -321,9 +356,6 @@ func (suc *SysUserCreate) check() error {
 		if err := sysuser.GenderValidator(v); err != nil {
 			return &ValidationError{Name: "gender", err: fmt.Errorf(`ent: validator failed for field "SysUser.gender": %w`, err)}
 		}
-	}
-	if _, ok := suc.mutation.Avatar(); !ok {
-		return &ValidationError{Name: "avatar", err: errors.New(`ent: missing required field "SysUser.avatar"`)}
 	}
 	if _, ok := suc.mutation.Language(); !ok {
 		return &ValidationError{Name: "language", err: errors.New(`ent: missing required field "SysUser.language"`)}
@@ -340,18 +372,6 @@ func (suc *SysUserCreate) check() error {
 		if err := sysuser.TimezoneValidator(v); err != nil {
 			return &ValidationError{Name: "timezone", err: fmt.Errorf(`ent: validator failed for field "SysUser.timezone": %w`, err)}
 		}
-	}
-	if _, ok := suc.mutation.LastLogin(); !ok {
-		return &ValidationError{Name: "last_login", err: errors.New(`ent: missing required field "SysUser.last_login"`)}
-	}
-	if _, ok := suc.mutation.LastIP(); !ok {
-		return &ValidationError{Name: "last_ip", err: errors.New(`ent: missing required field "SysUser.last_ip"`)}
-	}
-	if _, ok := suc.mutation.CreatedBy(); !ok {
-		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "SysUser.created_by"`)}
-	}
-	if _, ok := suc.mutation.UpdatedBy(); !ok {
-		return &ValidationError{Name: "updated_by", err: errors.New(`ent: missing required field "SysUser.updated_by"`)}
 	}
 	if _, ok := suc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SysUser.created_at"`)}
@@ -387,6 +407,7 @@ func (suc *SysUserCreate) createSpec() (*SysUser, *sqlgraph.CreateSpec) {
 		_node = &SysUser{config: suc.config}
 		_spec = sqlgraph.NewCreateSpec(sysuser.Table, sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64))
 	)
+	_spec.OnConflict = suc.conflict
 	if id, ok := suc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -431,14 +452,6 @@ func (suc *SysUserCreate) createSpec() (*SysUser, *sqlgraph.CreateSpec) {
 		_spec.SetField(sysuser.FieldTimezone, field.TypeString, value)
 		_node.Timezone = value
 	}
-	if value, ok := suc.mutation.LastLogin(); ok {
-		_spec.SetField(sysuser.FieldLastLogin, field.TypeTime, value)
-		_node.LastLogin = &value
-	}
-	if value, ok := suc.mutation.LastIP(); ok {
-		_spec.SetField(sysuser.FieldLastIP, field.TypeString, value)
-		_node.LastIP = &value
-	}
 	if value, ok := suc.mutation.CreatedBy(); ok {
 		_spec.SetField(sysuser.FieldCreatedBy, field.TypeInt64, value)
 		_node.CreatedBy = &value
@@ -459,7 +472,611 @@ func (suc *SysUserCreate) createSpec() (*SysUser, *sqlgraph.CreateSpec) {
 		_spec.SetField(sysuser.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
+	if nodes := suc.mutation.AccountsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.AccountsTable,
+			Columns: []string{sysuser.AccountsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.SysUser.Create().
+//		SetUsername(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SysUserUpsert) {
+//			SetUsername(v+v).
+//		}).
+//		Exec(ctx)
+func (suc *SysUserCreate) OnConflict(opts ...sql.ConflictOption) *SysUserUpsertOne {
+	suc.conflict = opts
+	return &SysUserUpsertOne{
+		create: suc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.SysUser.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (suc *SysUserCreate) OnConflictColumns(columns ...string) *SysUserUpsertOne {
+	suc.conflict = append(suc.conflict, sql.ConflictColumns(columns...))
+	return &SysUserUpsertOne{
+		create: suc,
+	}
+}
+
+type (
+	// SysUserUpsertOne is the builder for "upsert"-ing
+	//  one SysUser node.
+	SysUserUpsertOne struct {
+		create *SysUserCreate
+	}
+
+	// SysUserUpsert is the "OnConflict" setter.
+	SysUserUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUsername sets the "username" field.
+func (u *SysUserUpsert) SetUsername(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldUsername, v)
+	return u
+}
+
+// UpdateUsername sets the "username" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateUsername() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldUsername)
+	return u
+}
+
+// SetEmail sets the "email" field.
+func (u *SysUserUpsert) SetEmail(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldEmail, v)
+	return u
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateEmail() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldEmail)
+	return u
+}
+
+// SetPhone sets the "phone" field.
+func (u *SysUserUpsert) SetPhone(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldPhone, v)
+	return u
+}
+
+// UpdatePhone sets the "phone" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdatePhone() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldPhone)
+	return u
+}
+
+// SetPassword sets the "password" field.
+func (u *SysUserUpsert) SetPassword(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldPassword, v)
+	return u
+}
+
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdatePassword() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldPassword)
+	return u
+}
+
+// SetStatus sets the "status" field.
+func (u *SysUserUpsert) SetStatus(v sysuser.Status) *SysUserUpsert {
+	u.Set(sysuser.FieldStatus, v)
+	return u
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateStatus() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldStatus)
+	return u
+}
+
+// SetFullName sets the "full_name" field.
+func (u *SysUserUpsert) SetFullName(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldFullName, v)
+	return u
+}
+
+// UpdateFullName sets the "full_name" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateFullName() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldFullName)
+	return u
+}
+
+// ClearFullName clears the value of the "full_name" field.
+func (u *SysUserUpsert) ClearFullName() *SysUserUpsert {
+	u.SetNull(sysuser.FieldFullName)
+	return u
+}
+
+// SetGender sets the "gender" field.
+func (u *SysUserUpsert) SetGender(v sysuser.Gender) *SysUserUpsert {
+	u.Set(sysuser.FieldGender, v)
+	return u
+}
+
+// UpdateGender sets the "gender" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateGender() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldGender)
+	return u
+}
+
+// SetAvatar sets the "avatar" field.
+func (u *SysUserUpsert) SetAvatar(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldAvatar, v)
+	return u
+}
+
+// UpdateAvatar sets the "avatar" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateAvatar() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldAvatar)
+	return u
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (u *SysUserUpsert) ClearAvatar() *SysUserUpsert {
+	u.SetNull(sysuser.FieldAvatar)
+	return u
+}
+
+// SetLanguage sets the "language" field.
+func (u *SysUserUpsert) SetLanguage(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldLanguage, v)
+	return u
+}
+
+// UpdateLanguage sets the "language" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateLanguage() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldLanguage)
+	return u
+}
+
+// SetTimezone sets the "timezone" field.
+func (u *SysUserUpsert) SetTimezone(v string) *SysUserUpsert {
+	u.Set(sysuser.FieldTimezone, v)
+	return u
+}
+
+// UpdateTimezone sets the "timezone" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateTimezone() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldTimezone)
+	return u
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (u *SysUserUpsert) SetCreatedBy(v int64) *SysUserUpsert {
+	u.Set(sysuser.FieldCreatedBy, v)
+	return u
+}
+
+// UpdateCreatedBy sets the "created_by" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateCreatedBy() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldCreatedBy)
+	return u
+}
+
+// AddCreatedBy adds v to the "created_by" field.
+func (u *SysUserUpsert) AddCreatedBy(v int64) *SysUserUpsert {
+	u.Add(sysuser.FieldCreatedBy, v)
+	return u
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (u *SysUserUpsert) ClearCreatedBy() *SysUserUpsert {
+	u.SetNull(sysuser.FieldCreatedBy)
+	return u
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (u *SysUserUpsert) SetUpdatedBy(v int64) *SysUserUpsert {
+	u.Set(sysuser.FieldUpdatedBy, v)
+	return u
+}
+
+// UpdateUpdatedBy sets the "updated_by" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateUpdatedBy() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldUpdatedBy)
+	return u
+}
+
+// AddUpdatedBy adds v to the "updated_by" field.
+func (u *SysUserUpsert) AddUpdatedBy(v int64) *SysUserUpsert {
+	u.Add(sysuser.FieldUpdatedBy, v)
+	return u
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (u *SysUserUpsert) ClearUpdatedBy() *SysUserUpsert {
+	u.SetNull(sysuser.FieldUpdatedBy)
+	return u
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SysUserUpsert) SetUpdatedAt(v time.Time) *SysUserUpsert {
+	u.Set(sysuser.FieldUpdatedAt, v)
+	return u
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateUpdatedAt() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldUpdatedAt)
+	return u
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SysUserUpsert) SetDeletedAt(v time.Time) *SysUserUpsert {
+	u.Set(sysuser.FieldDeletedAt, v)
+	return u
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SysUserUpsert) UpdateDeletedAt() *SysUserUpsert {
+	u.SetExcluded(sysuser.FieldDeletedAt)
+	return u
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SysUserUpsert) ClearDeletedAt() *SysUserUpsert {
+	u.SetNull(sysuser.FieldDeletedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.SysUser.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(sysuser.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SysUserUpsertOne) UpdateNewValues() *SysUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(sysuser.FieldID)
+		}
+		if _, exists := u.create.mutation.CreatedAt(); exists {
+			s.SetIgnore(sysuser.FieldCreatedAt)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.SysUser.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *SysUserUpsertOne) Ignore() *SysUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SysUserUpsertOne) DoNothing() *SysUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SysUserCreate.OnConflict
+// documentation for more info.
+func (u *SysUserUpsertOne) Update(set func(*SysUserUpsert)) *SysUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SysUserUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUsername sets the "username" field.
+func (u *SysUserUpsertOne) SetUsername(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetUsername(v)
+	})
+}
+
+// UpdateUsername sets the "username" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateUsername() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateUsername()
+	})
+}
+
+// SetEmail sets the "email" field.
+func (u *SysUserUpsertOne) SetEmail(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateEmail() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateEmail()
+	})
+}
+
+// SetPhone sets the "phone" field.
+func (u *SysUserUpsertOne) SetPhone(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetPhone(v)
+	})
+}
+
+// UpdatePhone sets the "phone" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdatePhone() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdatePhone()
+	})
+}
+
+// SetPassword sets the "password" field.
+func (u *SysUserUpsertOne) SetPassword(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetPassword(v)
+	})
+}
+
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdatePassword() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdatePassword()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *SysUserUpsertOne) SetStatus(v sysuser.Status) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateStatus() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// SetFullName sets the "full_name" field.
+func (u *SysUserUpsertOne) SetFullName(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetFullName(v)
+	})
+}
+
+// UpdateFullName sets the "full_name" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateFullName() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateFullName()
+	})
+}
+
+// ClearFullName clears the value of the "full_name" field.
+func (u *SysUserUpsertOne) ClearFullName() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearFullName()
+	})
+}
+
+// SetGender sets the "gender" field.
+func (u *SysUserUpsertOne) SetGender(v sysuser.Gender) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetGender(v)
+	})
+}
+
+// UpdateGender sets the "gender" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateGender() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateGender()
+	})
+}
+
+// SetAvatar sets the "avatar" field.
+func (u *SysUserUpsertOne) SetAvatar(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetAvatar(v)
+	})
+}
+
+// UpdateAvatar sets the "avatar" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateAvatar() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateAvatar()
+	})
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (u *SysUserUpsertOne) ClearAvatar() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearAvatar()
+	})
+}
+
+// SetLanguage sets the "language" field.
+func (u *SysUserUpsertOne) SetLanguage(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetLanguage(v)
+	})
+}
+
+// UpdateLanguage sets the "language" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateLanguage() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateLanguage()
+	})
+}
+
+// SetTimezone sets the "timezone" field.
+func (u *SysUserUpsertOne) SetTimezone(v string) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetTimezone(v)
+	})
+}
+
+// UpdateTimezone sets the "timezone" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateTimezone() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateTimezone()
+	})
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (u *SysUserUpsertOne) SetCreatedBy(v int64) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetCreatedBy(v)
+	})
+}
+
+// AddCreatedBy adds v to the "created_by" field.
+func (u *SysUserUpsertOne) AddCreatedBy(v int64) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.AddCreatedBy(v)
+	})
+}
+
+// UpdateCreatedBy sets the "created_by" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateCreatedBy() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateCreatedBy()
+	})
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (u *SysUserUpsertOne) ClearCreatedBy() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearCreatedBy()
+	})
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (u *SysUserUpsertOne) SetUpdatedBy(v int64) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetUpdatedBy(v)
+	})
+}
+
+// AddUpdatedBy adds v to the "updated_by" field.
+func (u *SysUserUpsertOne) AddUpdatedBy(v int64) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.AddUpdatedBy(v)
+	})
+}
+
+// UpdateUpdatedBy sets the "updated_by" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateUpdatedBy() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateUpdatedBy()
+	})
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (u *SysUserUpsertOne) ClearUpdatedBy() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearUpdatedBy()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SysUserUpsertOne) SetUpdatedAt(v time.Time) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateUpdatedAt() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SysUserUpsertOne) SetDeletedAt(v time.Time) *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SysUserUpsertOne) UpdateDeletedAt() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SysUserUpsertOne) ClearDeletedAt() *SysUserUpsertOne {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *SysUserUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SysUserCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SysUserUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *SysUserUpsertOne) ID(ctx context.Context) (id int64, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *SysUserUpsertOne) IDX(ctx context.Context) int64 {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // SysUserCreateBulk is the builder for creating many SysUser entities in bulk.
@@ -467,6 +1084,7 @@ type SysUserCreateBulk struct {
 	config
 	err      error
 	builders []*SysUserCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the SysUser entities in the database.
@@ -496,6 +1114,7 @@ func (sucb *SysUserCreateBulk) Save(ctx context.Context) ([]*SysUser, error) {
 					_, err = mutators[i+1].Mutate(root, sucb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = sucb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, sucb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -546,6 +1165,368 @@ func (sucb *SysUserCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (sucb *SysUserCreateBulk) ExecX(ctx context.Context) {
 	if err := sucb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.SysUser.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.SysUserUpsert) {
+//			SetUsername(v+v).
+//		}).
+//		Exec(ctx)
+func (sucb *SysUserCreateBulk) OnConflict(opts ...sql.ConflictOption) *SysUserUpsertBulk {
+	sucb.conflict = opts
+	return &SysUserUpsertBulk{
+		create: sucb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.SysUser.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (sucb *SysUserCreateBulk) OnConflictColumns(columns ...string) *SysUserUpsertBulk {
+	sucb.conflict = append(sucb.conflict, sql.ConflictColumns(columns...))
+	return &SysUserUpsertBulk{
+		create: sucb,
+	}
+}
+
+// SysUserUpsertBulk is the builder for "upsert"-ing
+// a bulk of SysUser nodes.
+type SysUserUpsertBulk struct {
+	create *SysUserCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.SysUser.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(sysuser.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *SysUserUpsertBulk) UpdateNewValues() *SysUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(sysuser.FieldID)
+			}
+			if _, exists := b.mutation.CreatedAt(); exists {
+				s.SetIgnore(sysuser.FieldCreatedAt)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.SysUser.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *SysUserUpsertBulk) Ignore() *SysUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *SysUserUpsertBulk) DoNothing() *SysUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the SysUserCreateBulk.OnConflict
+// documentation for more info.
+func (u *SysUserUpsertBulk) Update(set func(*SysUserUpsert)) *SysUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&SysUserUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUsername sets the "username" field.
+func (u *SysUserUpsertBulk) SetUsername(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetUsername(v)
+	})
+}
+
+// UpdateUsername sets the "username" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateUsername() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateUsername()
+	})
+}
+
+// SetEmail sets the "email" field.
+func (u *SysUserUpsertBulk) SetEmail(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateEmail() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateEmail()
+	})
+}
+
+// SetPhone sets the "phone" field.
+func (u *SysUserUpsertBulk) SetPhone(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetPhone(v)
+	})
+}
+
+// UpdatePhone sets the "phone" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdatePhone() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdatePhone()
+	})
+}
+
+// SetPassword sets the "password" field.
+func (u *SysUserUpsertBulk) SetPassword(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetPassword(v)
+	})
+}
+
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdatePassword() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdatePassword()
+	})
+}
+
+// SetStatus sets the "status" field.
+func (u *SysUserUpsertBulk) SetStatus(v sysuser.Status) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetStatus(v)
+	})
+}
+
+// UpdateStatus sets the "status" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateStatus() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateStatus()
+	})
+}
+
+// SetFullName sets the "full_name" field.
+func (u *SysUserUpsertBulk) SetFullName(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetFullName(v)
+	})
+}
+
+// UpdateFullName sets the "full_name" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateFullName() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateFullName()
+	})
+}
+
+// ClearFullName clears the value of the "full_name" field.
+func (u *SysUserUpsertBulk) ClearFullName() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearFullName()
+	})
+}
+
+// SetGender sets the "gender" field.
+func (u *SysUserUpsertBulk) SetGender(v sysuser.Gender) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetGender(v)
+	})
+}
+
+// UpdateGender sets the "gender" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateGender() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateGender()
+	})
+}
+
+// SetAvatar sets the "avatar" field.
+func (u *SysUserUpsertBulk) SetAvatar(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetAvatar(v)
+	})
+}
+
+// UpdateAvatar sets the "avatar" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateAvatar() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateAvatar()
+	})
+}
+
+// ClearAvatar clears the value of the "avatar" field.
+func (u *SysUserUpsertBulk) ClearAvatar() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearAvatar()
+	})
+}
+
+// SetLanguage sets the "language" field.
+func (u *SysUserUpsertBulk) SetLanguage(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetLanguage(v)
+	})
+}
+
+// UpdateLanguage sets the "language" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateLanguage() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateLanguage()
+	})
+}
+
+// SetTimezone sets the "timezone" field.
+func (u *SysUserUpsertBulk) SetTimezone(v string) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetTimezone(v)
+	})
+}
+
+// UpdateTimezone sets the "timezone" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateTimezone() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateTimezone()
+	})
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (u *SysUserUpsertBulk) SetCreatedBy(v int64) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetCreatedBy(v)
+	})
+}
+
+// AddCreatedBy adds v to the "created_by" field.
+func (u *SysUserUpsertBulk) AddCreatedBy(v int64) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.AddCreatedBy(v)
+	})
+}
+
+// UpdateCreatedBy sets the "created_by" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateCreatedBy() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateCreatedBy()
+	})
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (u *SysUserUpsertBulk) ClearCreatedBy() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearCreatedBy()
+	})
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (u *SysUserUpsertBulk) SetUpdatedBy(v int64) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetUpdatedBy(v)
+	})
+}
+
+// AddUpdatedBy adds v to the "updated_by" field.
+func (u *SysUserUpsertBulk) AddUpdatedBy(v int64) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.AddUpdatedBy(v)
+	})
+}
+
+// UpdateUpdatedBy sets the "updated_by" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateUpdatedBy() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateUpdatedBy()
+	})
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (u *SysUserUpsertBulk) ClearUpdatedBy() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearUpdatedBy()
+	})
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (u *SysUserUpsertBulk) SetUpdatedAt(v time.Time) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetUpdatedAt(v)
+	})
+}
+
+// UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateUpdatedAt() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateUpdatedAt()
+	})
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (u *SysUserUpsertBulk) SetDeletedAt(v time.Time) *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.SetDeletedAt(v)
+	})
+}
+
+// UpdateDeletedAt sets the "deleted_at" field to the value that was provided on create.
+func (u *SysUserUpsertBulk) UpdateDeletedAt() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.UpdateDeletedAt()
+	})
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (u *SysUserUpsertBulk) ClearDeletedAt() *SysUserUpsertBulk {
+	return u.Update(func(s *SysUserUpsert) {
+		s.ClearDeletedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *SysUserUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the SysUserCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for SysUserCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *SysUserUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

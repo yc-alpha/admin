@@ -15,16 +15,14 @@ var (
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "phone", Type: field.TypeString, Unique: true, Size: 16},
 		{Name: "password", Type: field.TypeString},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled", "pending"}, Default: "pending"},
-		{Name: "full_name", Type: field.TypeString},
-		{Name: "gender", Type: field.TypeEnum, Enums: []string{"male", "female", "unknown"}, Default: "unknown"},
-		{Name: "avatar", Type: field.TypeString},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"ACTIVE", "DISABLED", "PENDING"}, Default: "PENDING"},
+		{Name: "full_name", Type: field.TypeString, Nullable: true},
+		{Name: "gender", Type: field.TypeEnum, Enums: []string{"MALE", "FEMALE", "UNKNOWN"}, Default: "UNKNOWN"},
+		{Name: "avatar", Type: field.TypeString, Nullable: true},
 		{Name: "language", Type: field.TypeString, Default: "en"},
 		{Name: "timezone", Type: field.TypeString, Default: "Asia/Shanghai"},
-		{Name: "last_login", Type: field.TypeTime},
-		{Name: "last_ip", Type: field.TypeString},
-		{Name: "created_by", Type: field.TypeInt64},
-		{Name: "updated_by", Type: field.TypeInt64},
+		{Name: "created_by", Type: field.TypeInt64, Nullable: true},
+		{Name: "updated_by", Type: field.TypeInt64, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
@@ -35,11 +33,50 @@ var (
 		Columns:    SysUsersColumns,
 		PrimaryKey: []*schema.Column{SysUsersColumns[0]},
 	}
+	// SysUserAccountsColumns holds the columns for the "sys_user_accounts" table.
+	SysUserAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "platform", Type: field.TypeString},
+		{Name: "identifier", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "user_id", Type: field.TypeInt64},
+	}
+	// SysUserAccountsTable holds the schema information for the "sys_user_accounts" table.
+	SysUserAccountsTable = &schema.Table{
+		Name:       "sys_user_accounts",
+		Columns:    SysUserAccountsColumns,
+		PrimaryKey: []*schema.Column{SysUserAccountsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sys_user_accounts_sys_users_accounts",
+				Columns:    []*schema.Column{SysUserAccountsColumns[7]},
+				RefColumns: []*schema.Column{SysUsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "sysuseraccount_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{SysUserAccountsColumns[7]},
+			},
+			{
+				Name:    "sysuseraccount_platform_identifier",
+				Unique:  true,
+				Columns: []*schema.Column{SysUserAccountsColumns[1], SysUserAccountsColumns[2]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		SysUsersTable,
+		SysUserAccountsTable,
 	}
 )
 
 func init() {
+	SysUserAccountsTable.ForeignKeys[0].RefTable = SysUsersTable
 }
