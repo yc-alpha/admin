@@ -2,17 +2,29 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/url"
+	"reflect"
+
 	"slices"
 	"strconv"
 	"time"
+
+	"net/http"
 
 	"entgo.io/ent/dialect/sql"
 	v1 "github.com/yc-alpha/admin/api/admin/v1"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/common/excel"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/variant"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type UserService struct {
@@ -24,6 +36,14 @@ func NewUserService(client *ent.Client) *UserService {
 	return &UserService{
 		client: client,
 	}
+}
+
+type filterBo struct {
+	Username string          `json:"username"`
+	Email    string          `json:"email"`
+	Phone    string          `json:"phone"`
+	Filter   string          `json:"filter"`
+	Status   []v1.UserStatus `json:"status"`
 }
 
 func convertUserAccountToProto(account *ent.SysUserAccount) *v1.UserAccount {
@@ -279,33 +299,43 @@ func (s *UserService) GetUserInfo(ctx context.Context, req *v1.GetUserInfoReques
 	}, nil
 }
 
+func filterFunc(bo *filterBo, query *ent.SysUserQuery) {
+	if bo.Username != "" {
+		query.Where(sysuser.UsernameContains(bo.Username))
+	}
+	if bo.Email != "" {
+		query.Where(sysuser.EmailContains(bo.Email))
+	}
+	if bo.Phone != "" {
+		query.Where(sysuser.PhoneContains(bo.Phone))
+	}
+	if bo.Filter != "" {
+		query.Where(sysuser.Or(
+			sysuser.UsernameContains(bo.Username),
+			sysuser.EmailContains(bo.Email),
+			sysuser.PhoneContains(bo.Phone),
+		))
+	}
+	if len(bo.Status) > 0 && len(bo.Status) < 3 {
+		s := []sysuser.Status{}
+		for _, status := range bo.Status {
+			s = append(s, sysuser.Status(status.String()))
+		}
+		query.Where(sysuser.StatusIn(s...))
+	}
+}
+
 // ListUsers retrieves a list of users based on the provided filters and pagination.
 func (s *UserService) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
 	q := s.client.SysUser.Query()
 
-	if req.GetUsername() != "" {
-		q.Where(sysuser.UsernameContains(req.GetUsername()))
-	}
-	if req.GetEmail() != "" {
-		q.Where(sysuser.EmailContains(req.GetEmail()))
-	}
-	if req.GetPhone() != "" {
-		q.Where(sysuser.PhoneContains(req.GetPhone()))
-	}
-	if req.GetFilter() != "" {
-		q.Where(sysuser.Or(
-			sysuser.UsernameContains(req.GetUsername()),
-			sysuser.EmailContains(req.GetEmail()),
-			sysuser.PhoneContains(req.GetPhone()),
-		))
-	}
-	if len(req.GetStatus()) > 0 && len(req.GetStatus()) < 3 {
-		s := []sysuser.Status{}
-		for _, status := range req.GetStatus() {
-			s = append(s, sysuser.Status(status.String()))
-		}
-		q.Where(sysuser.StatusIn(s...))
-	}
+	filterFunc(&filterBo{
+		Username: req.GetUsername(),
+		Email:    req.GetEmail(),
+		Phone:    req.GetPhone(),
+		Filter:   req.GetFilter(),
+		Status:   req.GetStatus(),
+	}, q)
 	// 排序参数
 	allowedOrderFields := []string{
 		sysuser.FieldUsername,
@@ -352,4 +382,141 @@ func (s *UserService) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (
 		},
 		Msg: "users retrieved successfully",
 	}, nil
+}
+
+func (s *UserService) ChangePassword(ctx context.Context, req *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
+
+	oldPwd := req.GetOldPassword()
+	newPwd := req.GetNewPassword()
+	userId := variant.New(req.GetId()).ToInt64()
+	updateOne := s.client.SysUser.UpdateOneID(userId)
+
+	ok, err := s.checkPassword(ctx, userId, oldPwd)
+	if err != nil {
+		return &v1.ChangePasswordResponse{Result: false, Code: 500, Msg: fmt.Sprintf("failed to verify old password: %s", err)}, nil
+	}
+	if !ok {
+		return &v1.ChangePasswordResponse{Result: false, Code: 500, Msg: "old password is incorrect"}, nil
+	}
+	// 更新密码
+	err = updateOne.SetPassword(newPwd).Exec(ctx)
+	if err != nil {
+		return &v1.ChangePasswordResponse{Result: false, Code: 500, Msg: fmt.Sprintf("failed to update user password: %s", err)}, nil
+	}
+	return &v1.ChangePasswordResponse{Result: true, Code: 200, Msg: "success"}, nil
+}
+
+func (s *UserService) checkPassword(ctx context.Context, userID int64, password string) (bool, error) {
+
+	user, err := s.client.SysUser.Get(ctx, userID)
+	if err != nil {
+		return false, fmt.Errorf("failed to fetch user password: %w", err)
+	}
+
+	if *user.Password == "" {
+		return false, errors.New("user password not set")
+	}
+
+	// check password
+	err = bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return false, nil // password not match
+		}
+		return false, fmt.Errorf("failed to verify password: %w", err)
+	}
+
+	return true, nil
+}
+
+func (s *UserService) CheckPassword(ctx context.Context, req *v1.CheckPasswordRequest) (*v1.CheckPasswordResponse, error) {
+
+	ok, err := s.checkPassword(ctx, variant.New(req.GetId()).ToInt64(), req.GetPassword())
+
+	if err != nil {
+		return &v1.CheckPasswordResponse{Result: false, Code: 500, Msg: err.Error()}, nil
+	}
+	return &v1.CheckPasswordResponse{Result: ok, Code: 200, Msg: ""}, nil
+}
+
+func (s *UserService) ExportUser(resp http.ResponseWriter, req *http.Request) {
+
+	raw, err := req.GetBody()
+	if err != nil {
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	bodyBytes, err := io.ReadAll(raw)
+	if err != nil {
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type Body struct {
+		Ids     []string  `json:"ids"`
+		Columns []string  `json:"columns"`
+		Labels  []string  `json:"labels"`
+		Params  *filterBo `json:"params"`
+	}
+	var body Body
+	if err = json.Unmarshal(bodyBytes, &body); err != nil {
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	query := s.client.SysUser.Query()
+	if len(body.Ids) > 0 {
+		var ids []int64
+		for _, id := range body.Ids {
+			ids = append(ids, variant.New(id).ToInt64())
+		}
+		query.Where(sysuser.IDIn(ids...))
+	} else {
+		filterFunc(body.Params, query)
+	}
+
+	users, err := query.Select(body.Columns...).All(req.Context())
+	if err != nil {
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// 表头
+	var headers = body.Columns
+	if len(body.Labels) > 0 {
+		headers = body.Labels
+	}
+	// 使用反射获取字段值
+	var results [][]any
+	for _, user := range users {
+		row := make([]any, len(body.Columns))
+		val := reflect.ValueOf(user).Elem()
+		for i, col := range body.Columns {
+			field := val.FieldByNameFunc(func(name string) bool {
+				return cases.Title(language.Und).String(col) == name
+			})
+			if field.IsValid() {
+				row[i] = field.Interface()
+			} else {
+				row[i] = nil
+			}
+		}
+		results = append(results, row)
+	}
+
+	e := excel.New()
+	if err = e.AddSheet("用户列表", headers, &results); err != nil {
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// 写入到内存中的 buffer
+	buf, err := e.WriteToBuffer()
+	if err != nil {
+		http.Error(resp, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	content := buf.Bytes()
+	fileName := fmt.Sprintf("导出用户(%d).xlsx", time.Now().Unix())
+	resp.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	resp.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(fileName))
+	resp.Header().Set("Content-Length", strconv.Itoa(len(content)))
 }

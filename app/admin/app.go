@@ -17,6 +17,7 @@ func RegisteApplication(http *http.Server, grpc *grpc.Server) {
 
 	// Register HTTP services
 	v1.RegisterUserServiceHTTPServer(http, userService)
+	http.HandleFunc("/v1/users/export", userService.ExportUser)
 
 	// Register gRPC services
 	v1.RegisterUserServiceServer(grpc, userService)
