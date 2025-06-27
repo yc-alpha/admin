@@ -818,6 +818,42 @@ paths:
                                 $ref: '#/components/schemas/user_management.v1.CheckPasswordResponse'
 components:
     schemas:
+        admin.v1.ChangePasswordRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                oldPassword:
+                    type: string
+                newPassword:
+                    type: string
+        admin.v1.ChangePasswordResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        admin.v1.CheckPasswordRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                password:
+                    type: string
+        admin.v1.CheckPasswordResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
         admin.v1.CreateMenuRequest:
             type: object
             properties:
@@ -853,18 +889,87 @@ components:
                 id:
                     type: string
             description: 创建菜单响应
+        admin.v1.CreateUserRequest:
+            type: object
+            properties:
+                username:
+                    type: string
+                nickname:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                post:
+                    type: string
+                password:
+                    type: string
+                fullname:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                timezone:
+                    type: string
+                language:
+                    type: string
+                lastLoginIp:
+                    type: string
+                lastLoginAt:
+                    type: string
+                userAccounts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.UserAccount'
+        admin.v1.CreateUserResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                user:
+                    $ref: '#/components/schemas/admin.v1.User'
+                msg:
+                    type: string
         admin.v1.DeleteMenuResponse:
             type: object
             properties:
                 success:
                     type: boolean
             description: 删除菜单响应
+        admin.v1.DeleteUserResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
         admin.v1.GetMenuResponse:
             type: object
             properties:
                 menu:
                     $ref: '#/components/schemas/admin.v1.Menu'
             description: 获取菜单详情响应
+        admin.v1.GetUserInfoResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                user:
+                    $ref: '#/components/schemas/admin.v1.User'
+                msg:
+                    type: string
         admin.v1.ListMenuResponse:
             type: object
             properties:
@@ -876,6 +981,34 @@ components:
                     type: integer
                     format: int32
             description: 获取菜单列表响应
+        admin.v1.ListUsersResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                data:
+                    $ref: '#/components/schemas/admin.v1.ListUsersResponse_PageResult'
+                msg:
+                    type: string
+        admin.v1.ListUsersResponse_PageResult:
+            type: object
+            properties:
+                total:
+                    type: integer
+                    format: int32
+                users:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.SimpleUser'
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
         admin.v1.Menu:
             type: object
             properties:
@@ -911,6 +1044,41 @@ components:
                 updatedAt:
                     type: string
             description: 菜单基础信息
+        admin.v1.SimpleUser:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                avatar:
+                    type: string
+                fullname:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                timezone:
+                    type: string
+                language:
+                    type: string
+                createdBy:
+                    type: string
+                updatedBy:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                deleted:
+                    type: boolean
         admin.v1.UpdateMenuRequest:
             type: object
             properties:
@@ -948,6 +1116,123 @@ components:
                 success:
                     type: boolean
             description: 更新菜单响应
+        admin.v1.UpdateUserAccountsRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                userAccounts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.UserAccount'
+        admin.v1.UpdateUserAccountsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+        admin.v1.UpdateUserRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                nickname:
+                    type: string
+                fullname:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                post:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                timezone:
+                    type: string
+                language:
+                    type: string
+                lastLoginIp:
+                    type: string
+                lastLoginAt:
+                    type: string
+        admin.v1.UpdateUserResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                user:
+                    $ref: '#/components/schemas/admin.v1.SimpleUser'
+                msg:
+                    type: string
+        admin.v1.User:
+            type: object
+            properties:
+                id:
+                    type: string
+                username:
+                    type: string
+                email:
+                    type: string
+                phone:
+                    type: string
+                avatar:
+                    type: string
+                fullname:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                gender:
+                    type: integer
+                    format: enum
+                timezone:
+                    type: string
+                language:
+                    type: string
+                createdBy:
+                    type: string
+                updatedBy:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                deleted:
+                    type: boolean
+                userAccounts:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.UserAccount'
+            description: 全部用户信息
+        admin.v1.UserAccount:
+            type: object
+            properties:
+                userId:
+                    type: string
+                platform:
+                    type: string
+                identifier:
+                    type: string
+                name:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
         login.v1.GetCaptchaResponse:
             type: object
             properties:
@@ -1754,5 +2039,7 @@ tags:
     - name: PositionService
     - name: SysMenuService
       description: 系统菜单服务
+    - name: UserService
+      description: 定义服务
     - name: UserService
       description: 定义服务

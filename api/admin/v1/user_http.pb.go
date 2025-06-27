@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-http v2.8.4
 // - protoc             v5.29.0--rc1
-// source: user_management/v1/user.proto
+// source: admin/v1/user.proto
 
 package v1
 
@@ -19,14 +19,14 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
-const OperationUserServiceChangePassword = "/user_management.v1.UserService/ChangePassword"
-const OperationUserServiceCheckPassword = "/user_management.v1.UserService/CheckPassword"
-const OperationUserServiceCreateUser = "/user_management.v1.UserService/CreateUser"
-const OperationUserServiceDeleteUser = "/user_management.v1.UserService/DeleteUser"
-const OperationUserServiceGetUserInfo = "/user_management.v1.UserService/GetUserInfo"
-const OperationUserServiceListUsers = "/user_management.v1.UserService/ListUsers"
-const OperationUserServiceUpdateUser = "/user_management.v1.UserService/UpdateUser"
-const OperationUserServiceUpdateUserAccounts = "/user_management.v1.UserService/UpdateUserAccounts"
+const OperationUserServiceChangePassword = "/admin.v1.UserService/ChangePassword"
+const OperationUserServiceCheckPassword = "/admin.v1.UserService/CheckPassword"
+const OperationUserServiceCreateUser = "/admin.v1.UserService/CreateUser"
+const OperationUserServiceDeleteUser = "/admin.v1.UserService/DeleteUser"
+const OperationUserServiceGetUserInfo = "/admin.v1.UserService/GetUserInfo"
+const OperationUserServiceListUsers = "/admin.v1.UserService/ListUsers"
+const OperationUserServiceUpdateUser = "/admin.v1.UserService/UpdateUser"
+const OperationUserServiceUpdateUserAccounts = "/admin.v1.UserService/UpdateUserAccounts"
 
 type UserServiceHTTPServer interface {
 	// ChangePassword 修改用户密码
@@ -49,17 +49,17 @@ type UserServiceHTTPServer interface {
 
 func RegisterUserServiceHTTPServer(s *http.Server, srv UserServiceHTTPServer) {
 	r := s.Route("/")
-	r.POST("/v1/users", _UserService_CreateUser1_HTTP_Handler(srv))
-	r.DELETE("/v1/users/{id}", _UserService_DeleteUser1_HTTP_Handler(srv))
-	r.PUT("/v1/users/{id}", _UserService_UpdateUser1_HTTP_Handler(srv))
-	r.PUT("/v1/users/{id}/accounts", _UserService_UpdateUserAccounts1_HTTP_Handler(srv))
-	r.PUT("/v1/users/{id}/password", _UserService_ChangePassword1_HTTP_Handler(srv))
-	r.GET("/v1/users", _UserService_ListUsers1_HTTP_Handler(srv))
-	r.GET("/v1/userInfo", _UserService_GetUserInfo1_HTTP_Handler(srv))
-	r.POST("/v1/users/{id}/password/check", _UserService_CheckPassword1_HTTP_Handler(srv))
+	r.POST("/v1/users", _UserService_CreateUser0_HTTP_Handler(srv))
+	r.DELETE("/v1/users/{id}", _UserService_DeleteUser0_HTTP_Handler(srv))
+	r.PUT("/v1/users/{id}", _UserService_UpdateUser0_HTTP_Handler(srv))
+	r.PUT("/v1/users/{id}/accounts", _UserService_UpdateUserAccounts0_HTTP_Handler(srv))
+	r.PUT("/v1/users/{id}/password", _UserService_ChangePassword0_HTTP_Handler(srv))
+	r.GET("/v1/users", _UserService_ListUsers0_HTTP_Handler(srv))
+	r.GET("/v1/userInfo", _UserService_GetUserInfo0_HTTP_Handler(srv))
+	r.POST("/v1/users/{id}/password/check", _UserService_CheckPassword0_HTTP_Handler(srv))
 }
 
-func _UserService_CreateUser1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_CreateUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CreateUserRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -81,7 +81,7 @@ func _UserService_CreateUser1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx h
 	}
 }
 
-func _UserService_DeleteUser1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_DeleteUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in DeleteUserRequest
 		if err := ctx.BindQuery(&in); err != nil {
@@ -103,7 +103,7 @@ func _UserService_DeleteUser1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx h
 	}
 }
 
-func _UserService_UpdateUser1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_UpdateUser0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UpdateUserRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -128,7 +128,7 @@ func _UserService_UpdateUser1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx h
 	}
 }
 
-func _UserService_UpdateUserAccounts1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_UpdateUserAccounts0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in UpdateUserAccountsRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -153,7 +153,7 @@ func _UserService_UpdateUserAccounts1_HTTP_Handler(srv UserServiceHTTPServer) fu
 	}
 }
 
-func _UserService_ChangePassword1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_ChangePassword0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ChangePasswordRequest
 		if err := ctx.Bind(&in); err != nil {
@@ -178,7 +178,7 @@ func _UserService_ChangePassword1_HTTP_Handler(srv UserServiceHTTPServer) func(c
 	}
 }
 
-func _UserService_ListUsers1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_ListUsers0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in ListUsersRequest
 		if err := ctx.BindQuery(&in); err != nil {
@@ -197,7 +197,7 @@ func _UserService_ListUsers1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx ht
 	}
 }
 
-func _UserService_GetUserInfo1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_GetUserInfo0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in GetUserInfoRequest
 		if err := ctx.BindQuery(&in); err != nil {
@@ -216,7 +216,7 @@ func _UserService_GetUserInfo1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx 
 	}
 }
 
-func _UserService_CheckPassword1_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
+func _UserService_CheckPassword0_HTTP_Handler(srv UserServiceHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
 		var in CheckPasswordRequest
 		if err := ctx.Bind(&in); err != nil {
