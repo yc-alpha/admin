@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	admin "github.com/yc-alpha/admin/app/admin"
 	"github.com/yc-alpha/admin/app/admin/internal/server"
+	"github.com/yc-alpha/admin/common/log_adapter"
 	"github.com/yc-alpha/admin/common/snowflake"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/logger"
@@ -69,9 +70,9 @@ func main() {
 		kratos.Version(Version),
 		kratos.Metadata(map[string]string{}),
 		kratos.Server(httpServer, grpcServer),
+		kratos.Logger(log_adapter.NewAdapter()), // 使用自定义日志适配器
 		// kratos.Registrar(data.NewRegistrar()),
 	)
-
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
