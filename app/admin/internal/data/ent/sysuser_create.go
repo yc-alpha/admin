@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
 // SysUserCreate is the builder for creating a SysUser entity.
@@ -228,6 +230,36 @@ func (suc *SysUserCreate) AddAccounts(s ...*SysUserAccount) *SysUserCreate {
 		ids[i] = s[i].ID
 	}
 	return suc.AddAccountIDs(ids...)
+}
+
+// AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
+func (suc *SysUserCreate) AddUserTenantIDs(ids ...int64) *SysUserCreate {
+	suc.mutation.AddUserTenantIDs(ids...)
+	return suc
+}
+
+// AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
+func (suc *SysUserCreate) AddUserTenants(u ...*UserTenant) *SysUserCreate {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suc.AddUserTenantIDs(ids...)
+}
+
+// AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by IDs.
+func (suc *SysUserCreate) AddUserDepartmentIDs(ids ...int64) *SysUserCreate {
+	suc.mutation.AddUserDepartmentIDs(ids...)
+	return suc
+}
+
+// AddUserDepartments adds the "user_departments" edges to the UserDepartment entity.
+func (suc *SysUserCreate) AddUserDepartments(u ...*UserDepartment) *SysUserCreate {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suc.AddUserDepartmentIDs(ids...)
 }
 
 // Mutation returns the SysUserMutation object of the builder.
@@ -481,6 +513,38 @@ func (suc *SysUserCreate) createSpec() (*SysUser, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := suc.mutation.UserTenantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := suc.mutation.UserDepartmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

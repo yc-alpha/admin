@@ -48,6 +48,10 @@ const (
 	FieldDeletedAt = "deleted_at"
 	// EdgeAccounts holds the string denoting the accounts edge name in mutations.
 	EdgeAccounts = "accounts"
+	// EdgeUserTenants holds the string denoting the user_tenants edge name in mutations.
+	EdgeUserTenants = "user_tenants"
+	// EdgeUserDepartments holds the string denoting the user_departments edge name in mutations.
+	EdgeUserDepartments = "user_departments"
 	// Table holds the table name of the sysuser in the database.
 	Table = "sys_users"
 	// AccountsTable is the table that holds the accounts relation/edge.
@@ -57,6 +61,20 @@ const (
 	AccountsInverseTable = "sys_user_accounts"
 	// AccountsColumn is the table column denoting the accounts relation/edge.
 	AccountsColumn = "user_id"
+	// UserTenantsTable is the table that holds the user_tenants relation/edge.
+	UserTenantsTable = "user_tenants"
+	// UserTenantsInverseTable is the table name for the UserTenant entity.
+	// It exists in this package in order to avoid circular dependency with the "usertenant" package.
+	UserTenantsInverseTable = "user_tenants"
+	// UserTenantsColumn is the table column denoting the user_tenants relation/edge.
+	UserTenantsColumn = "user_id"
+	// UserDepartmentsTable is the table that holds the user_departments relation/edge.
+	UserDepartmentsTable = "user_departments"
+	// UserDepartmentsInverseTable is the table name for the UserDepartment entity.
+	// It exists in this package in order to avoid circular dependency with the "userdepartment" package.
+	UserDepartmentsInverseTable = "user_departments"
+	// UserDepartmentsColumn is the table column denoting the user_departments relation/edge.
+	UserDepartmentsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for sysuser fields.
@@ -272,10 +290,52 @@ func ByAccounts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAccountsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByUserTenantsCount orders the results by user_tenants count.
+func ByUserTenantsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserTenantsStep(), opts...)
+	}
+}
+
+// ByUserTenants orders the results by user_tenants terms.
+func ByUserTenants(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserTenantsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserDepartmentsCount orders the results by user_departments count.
+func ByUserDepartmentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserDepartmentsStep(), opts...)
+	}
+}
+
+// ByUserDepartments orders the results by user_departments terms.
+func ByUserDepartments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserDepartmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAccountsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AccountsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, AccountsTable, AccountsColumn),
+	)
+}
+func newUserTenantsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserTenantsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserTenantsTable, UserTenantsColumn),
+	)
+}
+func newUserDepartmentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserDepartmentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserDepartmentsTable, UserDepartmentsColumn),
 	)
 }

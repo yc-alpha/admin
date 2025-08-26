@@ -9,6 +9,18 @@ import (
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
 )
 
+// The DepartmentFunc type is an adapter to allow the use of ordinary
+// function as Department mutator.
+type DepartmentFunc func(context.Context, *ent.DepartmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DepartmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DepartmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DepartmentMutation", m)
+}
+
 // The SysUserFunc type is an adapter to allow the use of ordinary
 // function as SysUser mutator.
 type SysUserFunc func(context.Context, *ent.SysUserMutation) (ent.Value, error)
@@ -31,6 +43,42 @@ func (f SysUserAccountFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SysUserAccountMutation", m)
+}
+
+// The TenantFunc type is an adapter to allow the use of ordinary
+// function as Tenant mutator.
+type TenantFunc func(context.Context, *ent.TenantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TenantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TenantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TenantMutation", m)
+}
+
+// The UserDepartmentFunc type is an adapter to allow the use of ordinary
+// function as UserDepartment mutator.
+type UserDepartmentFunc func(context.Context, *ent.UserDepartmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserDepartmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserDepartmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserDepartmentMutation", m)
+}
+
+// The UserTenantFunc type is an adapter to allow the use of ordinary
+// function as UserTenant mutator.
+type UserTenantFunc func(context.Context, *ent.UserTenantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserTenantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserTenantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserTenantMutation", m)
 }
 
 // Condition is a hook condition function.

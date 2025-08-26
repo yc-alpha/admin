@@ -12,10 +12,18 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Department is the client for interacting with the Department builders.
+	Department *DepartmentClient
 	// SysUser is the client for interacting with the SysUser builders.
 	SysUser *SysUserClient
 	// SysUserAccount is the client for interacting with the SysUserAccount builders.
 	SysUserAccount *SysUserAccountClient
+	// Tenant is the client for interacting with the Tenant builders.
+	Tenant *TenantClient
+	// UserDepartment is the client for interacting with the UserDepartment builders.
+	UserDepartment *UserDepartmentClient
+	// UserTenant is the client for interacting with the UserTenant builders.
+	UserTenant *UserTenantClient
 
 	// lazily loaded.
 	client     *Client
@@ -147,8 +155,12 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Department = NewDepartmentClient(tx.config)
 	tx.SysUser = NewSysUserClient(tx.config)
 	tx.SysUserAccount = NewSysUserAccountClient(tx.config)
+	tx.Tenant = NewTenantClient(tx.config)
+	tx.UserDepartment = NewUserDepartmentClient(tx.config)
+	tx.UserTenant = NewUserTenantClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -158,7 +170,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: SysUser.QueryXXX(), the query will be executed
+// applies a query, for example: Department.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

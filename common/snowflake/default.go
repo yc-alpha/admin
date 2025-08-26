@@ -13,3 +13,7 @@ func SetNode(nodeId int64) {
 func Generate() ID {
 	return node.Generate()
 }
+
+func GenId() int64 {
+	return node.Generate().Int64()
+}

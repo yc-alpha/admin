@@ -14,6 +14,8 @@ import (
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/predicate"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
 // SysUserUpdate is the builder for updating SysUser entities.
@@ -276,6 +278,36 @@ func (suu *SysUserUpdate) AddAccounts(s ...*SysUserAccount) *SysUserUpdate {
 	return suu.AddAccountIDs(ids...)
 }
 
+// AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
+func (suu *SysUserUpdate) AddUserTenantIDs(ids ...int64) *SysUserUpdate {
+	suu.mutation.AddUserTenantIDs(ids...)
+	return suu
+}
+
+// AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
+func (suu *SysUserUpdate) AddUserTenants(u ...*UserTenant) *SysUserUpdate {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suu.AddUserTenantIDs(ids...)
+}
+
+// AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by IDs.
+func (suu *SysUserUpdate) AddUserDepartmentIDs(ids ...int64) *SysUserUpdate {
+	suu.mutation.AddUserDepartmentIDs(ids...)
+	return suu
+}
+
+// AddUserDepartments adds the "user_departments" edges to the UserDepartment entity.
+func (suu *SysUserUpdate) AddUserDepartments(u ...*UserDepartment) *SysUserUpdate {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suu.AddUserDepartmentIDs(ids...)
+}
+
 // Mutation returns the SysUserMutation object of the builder.
 func (suu *SysUserUpdate) Mutation() *SysUserMutation {
 	return suu.mutation
@@ -300,6 +332,48 @@ func (suu *SysUserUpdate) RemoveAccounts(s ...*SysUserAccount) *SysUserUpdate {
 		ids[i] = s[i].ID
 	}
 	return suu.RemoveAccountIDs(ids...)
+}
+
+// ClearUserTenants clears all "user_tenants" edges to the UserTenant entity.
+func (suu *SysUserUpdate) ClearUserTenants() *SysUserUpdate {
+	suu.mutation.ClearUserTenants()
+	return suu
+}
+
+// RemoveUserTenantIDs removes the "user_tenants" edge to UserTenant entities by IDs.
+func (suu *SysUserUpdate) RemoveUserTenantIDs(ids ...int64) *SysUserUpdate {
+	suu.mutation.RemoveUserTenantIDs(ids...)
+	return suu
+}
+
+// RemoveUserTenants removes "user_tenants" edges to UserTenant entities.
+func (suu *SysUserUpdate) RemoveUserTenants(u ...*UserTenant) *SysUserUpdate {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suu.RemoveUserTenantIDs(ids...)
+}
+
+// ClearUserDepartments clears all "user_departments" edges to the UserDepartment entity.
+func (suu *SysUserUpdate) ClearUserDepartments() *SysUserUpdate {
+	suu.mutation.ClearUserDepartments()
+	return suu
+}
+
+// RemoveUserDepartmentIDs removes the "user_departments" edge to UserDepartment entities by IDs.
+func (suu *SysUserUpdate) RemoveUserDepartmentIDs(ids ...int64) *SysUserUpdate {
+	suu.mutation.RemoveUserDepartmentIDs(ids...)
+	return suu
+}
+
+// RemoveUserDepartments removes "user_departments" edges to UserDepartment entities.
+func (suu *SysUserUpdate) RemoveUserDepartments(u ...*UserDepartment) *SysUserUpdate {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suu.RemoveUserDepartmentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -502,6 +576,96 @@ func (suu *SysUserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suu.mutation.UserTenantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suu.mutation.RemovedUserTenantsIDs(); len(nodes) > 0 && !suu.mutation.UserTenantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suu.mutation.UserTenantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suu.mutation.UserDepartmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suu.mutation.RemovedUserDepartmentsIDs(); len(nodes) > 0 && !suu.mutation.UserDepartmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suu.mutation.UserDepartmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -776,6 +940,36 @@ func (suuo *SysUserUpdateOne) AddAccounts(s ...*SysUserAccount) *SysUserUpdateOn
 	return suuo.AddAccountIDs(ids...)
 }
 
+// AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
+func (suuo *SysUserUpdateOne) AddUserTenantIDs(ids ...int64) *SysUserUpdateOne {
+	suuo.mutation.AddUserTenantIDs(ids...)
+	return suuo
+}
+
+// AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
+func (suuo *SysUserUpdateOne) AddUserTenants(u ...*UserTenant) *SysUserUpdateOne {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suuo.AddUserTenantIDs(ids...)
+}
+
+// AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by IDs.
+func (suuo *SysUserUpdateOne) AddUserDepartmentIDs(ids ...int64) *SysUserUpdateOne {
+	suuo.mutation.AddUserDepartmentIDs(ids...)
+	return suuo
+}
+
+// AddUserDepartments adds the "user_departments" edges to the UserDepartment entity.
+func (suuo *SysUserUpdateOne) AddUserDepartments(u ...*UserDepartment) *SysUserUpdateOne {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suuo.AddUserDepartmentIDs(ids...)
+}
+
 // Mutation returns the SysUserMutation object of the builder.
 func (suuo *SysUserUpdateOne) Mutation() *SysUserMutation {
 	return suuo.mutation
@@ -800,6 +994,48 @@ func (suuo *SysUserUpdateOne) RemoveAccounts(s ...*SysUserAccount) *SysUserUpdat
 		ids[i] = s[i].ID
 	}
 	return suuo.RemoveAccountIDs(ids...)
+}
+
+// ClearUserTenants clears all "user_tenants" edges to the UserTenant entity.
+func (suuo *SysUserUpdateOne) ClearUserTenants() *SysUserUpdateOne {
+	suuo.mutation.ClearUserTenants()
+	return suuo
+}
+
+// RemoveUserTenantIDs removes the "user_tenants" edge to UserTenant entities by IDs.
+func (suuo *SysUserUpdateOne) RemoveUserTenantIDs(ids ...int64) *SysUserUpdateOne {
+	suuo.mutation.RemoveUserTenantIDs(ids...)
+	return suuo
+}
+
+// RemoveUserTenants removes "user_tenants" edges to UserTenant entities.
+func (suuo *SysUserUpdateOne) RemoveUserTenants(u ...*UserTenant) *SysUserUpdateOne {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suuo.RemoveUserTenantIDs(ids...)
+}
+
+// ClearUserDepartments clears all "user_departments" edges to the UserDepartment entity.
+func (suuo *SysUserUpdateOne) ClearUserDepartments() *SysUserUpdateOne {
+	suuo.mutation.ClearUserDepartments()
+	return suuo
+}
+
+// RemoveUserDepartmentIDs removes the "user_departments" edge to UserDepartment entities by IDs.
+func (suuo *SysUserUpdateOne) RemoveUserDepartmentIDs(ids ...int64) *SysUserUpdateOne {
+	suuo.mutation.RemoveUserDepartmentIDs(ids...)
+	return suuo
+}
+
+// RemoveUserDepartments removes "user_departments" edges to UserDepartment entities.
+func (suuo *SysUserUpdateOne) RemoveUserDepartments(u ...*UserDepartment) *SysUserUpdateOne {
+	ids := make([]int64, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return suuo.RemoveUserDepartmentIDs(ids...)
 }
 
 // Where appends a list predicates to the SysUserUpdate builder.
@@ -1032,6 +1268,96 @@ func (suuo *SysUserUpdateOne) sqlSave(ctx context.Context) (_node *SysUser, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(sysuseraccount.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suuo.mutation.UserTenantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suuo.mutation.RemovedUserTenantsIDs(); len(nodes) > 0 && !suuo.mutation.UserTenantsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suuo.mutation.UserTenantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserTenantsTable,
+			Columns: []string{sysuser.UserTenantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if suuo.mutation.UserDepartmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suuo.mutation.RemovedUserDepartmentsIDs(); len(nodes) > 0 && !suuo.mutation.UserDepartmentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := suuo.mutation.UserDepartmentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   sysuser.UserDepartmentsTable,
+			Columns: []string{sysuser.UserDepartmentsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

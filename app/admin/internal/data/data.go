@@ -45,7 +45,6 @@ func (d *Data) Migrate() {
 	if err := d.Client.Schema.Create(context.Background()); err != nil {
 		logger.Fatalf("failed creating schema resources: %v", err)
 	}
-	return
 }
 
 func NewRegistrar() registry.Registrar {

@@ -12,8 +12,12 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -74,8 +78,12 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			department.Table:     department.ValidColumn,
 			sysuser.Table:        sysuser.ValidColumn,
 			sysuseraccount.Table: sysuseraccount.ValidColumn,
+			tenant.Table:         tenant.ValidColumn,
+			userdepartment.Table: userdepartment.ValidColumn,
+			usertenant.Table:     usertenant.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

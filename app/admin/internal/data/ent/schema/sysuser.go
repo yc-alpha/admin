@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/hook"
@@ -20,6 +21,20 @@ const (
 	DefaultTimezone = "Asia/Shanghai"
 )
 
+var (
+	EmailRegex    = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`) // 基本 email 格式校验
+	PhoneRegex    = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)          // E.164 国际手机号格式，例如 +8613812345678
+	LanguageRegex = regexp.MustCompile(`^(en|zh|fr|es|de|ja|ko)$`)
+)
+
+func IsValidTimeZone(timezone string) error {
+	// Validate that the timezone is a valid IANA timezone
+	if _, err := time.LoadLocation(timezone); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SysUser holds the schema definition for the SysUser entity.
 type SysUser struct {
 	ent.Schema
@@ -28,97 +43,39 @@ type SysUser struct {
 // Fields of the SysUser.
 func (SysUser) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int64("id").
-			Immutable().
-			Unique().
-			DefaultFunc(func() int64 {
-				return snowflake.Generate().Int64()
-			}).
-			Comment("Primary Key ID"),
-		field.String("username").
-			MaxLen(64).
-			NotEmpty().
-			Unique().
-			Comment("Username of the user"),
-		field.String("email").
-			Match(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)). // 基本 email 格式校验
-			NotEmpty().
-			Nillable().
-			Unique().
-			Comment("Email address of the user"),
-		// E.164 国际手机号格式，例如 +8613812345678
-		field.String("phone").
-			Match(regexp.MustCompile(`^\+[1-9]\d{1,14}$`)).
-			MaxLen(16).
-			NotEmpty().
-			Nillable().
-			Unique().
-			Comment("Phone number of the user"),
-		field.String("password").
-			NotEmpty().
-			Nillable().
-			Sensitive().
-			Comment("Password of the user"),
-		field.Enum("status").
-			Values("ACTIVE", "DISABLED", "PENDING").
-			Default("PENDING").
-			Comment("Status of the user"),
-		field.String("full_name").
-			Optional().
-			Nillable().
-			Comment("Full name of the user"),
-		field.Enum("gender").
-			Values("MALE", "FEMALE", "UNKNOWN").
-			Default("UNKNOWN").
-			Comment("User gender"),
-		field.String("avatar").
-			Optional().
-			Nillable().
-			Comment("Avatar URL of the user"),
-		field.String("language").
-			Default(DefaultLanguage).
-			Match(regexp.MustCompile(`^(en|zh|fr|es|de|ja|ko)$`)).
-			Comment("Preferred language of the user"),
-		field.String("timezone").
-			Default(DefaultTimezone).
-			Validate(func(timezone string) error {
-				// Validate that the timezone is a valid IANA timezone
-				if _, err := time.LoadLocation(timezone); err != nil {
-					return err
-				}
-				return nil
-			}).
-			Comment("Preferred timezone of the user"),
-		field.Int64("created_by").
-			Optional().
-			Nillable().
-			Comment("User who created this record"),
-		field.Int64("updated_by").
-			Optional().
-			Nillable().
-			Comment("User who last updated this record"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable().
-			Comment("Creation timestamp of the user record"),
-		field.Time("updated_at").
-			Default(time.Now).
-			UpdateDefault(time.Now).
-			Comment("Last update timestamp of the user record"),
-		field.Time("deleted_at").
-			Optional().
-			Nillable().
-			Comment("Timestamp when the user was deleted, if applicable"),
+		field.Int64("id").Unique().Immutable().DefaultFunc(snowflake.GenId).Comment("Primary Key ID"),
+		field.String("username").MaxLen(64).NotEmpty().Unique().Comment("Username of the user"),
+		field.String("email").Match(EmailRegex).NotEmpty().Nillable().Unique().Comment("Email address of the user"),
+		field.String("phone").Match(PhoneRegex).MaxLen(16).NotEmpty().Nillable().Unique().Comment("Phone number of the user"),
+		field.String("password").NotEmpty().Nillable().Sensitive().Comment("Password of the user"),
+		field.Enum("status").Values("ACTIVE", "DISABLED", "PENDING").Default("PENDING").Comment("Status of the user"),
+		field.String("full_name").Optional().Nillable().Comment("Full name of the user"),
+		field.Enum("gender").Values("MALE", "FEMALE", "UNKNOWN").Default("UNKNOWN").Comment("User gender"),
+		field.String("avatar").Optional().Nillable().Comment("Avatar URL of the user"),
+		field.String("language").Default(DefaultLanguage).Match(LanguageRegex).Comment("Preferred language of the user"),
+		field.String("timezone").Default(DefaultTimezone).Validate(IsValidTimeZone).Comment("Preferred timezone of the user"),
+		field.Int64("created_by").Optional().Nillable().Comment("User who created this record"),
+		field.Int64("updated_by").Optional().Nillable().Comment("User who last updated this record"),
+		field.Time("created_at").Default(time.Now).Immutable().Comment("Creation timestamp of this record"),
+		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now).Comment("Last update timestamp of this record"),
+		field.Time("deleted_at").Optional().Nillable().Comment("Timestamp when the record was deleted, if applicable"),
 	}
 }
 
 // Edges of the SysUser.
 func (SysUser) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("accounts", SysUserAccount.Type).Annotations(
-			entsql.WithComments(true),
-			entsql.OnDelete(entsql.Cascade),
-		),
+		edge.To("accounts", SysUserAccount.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("user_tenants", UserTenant.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("user_departments", UserDepartment.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+	}
+}
+
+func (SysUser) Annotations() []schema.Annotation {
+	// 把 WithComments 放这里，ent 在迁移时会把 field.Comment 写入 DB
+	return []schema.Annotation{
+		entsql.WithComments(true),
+		// 你也可以在这里设置表名、表注释等 entsql.Table / entsql.View 等
 	}
 }
 

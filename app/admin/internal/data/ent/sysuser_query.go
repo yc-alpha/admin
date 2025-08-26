@@ -16,17 +16,21 @@ import (
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/predicate"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
 // SysUserQuery is the builder for querying SysUser entities.
 type SysUserQuery struct {
 	config
-	ctx          *QueryContext
-	order        []sysuser.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.SysUser
-	withAccounts *SysUserAccountQuery
-	modifiers    []func(*sql.Selector)
+	ctx                 *QueryContext
+	order               []sysuser.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.SysUser
+	withAccounts        *SysUserAccountQuery
+	withUserTenants     *UserTenantQuery
+	withUserDepartments *UserDepartmentQuery
+	modifiers           []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -78,6 +82,50 @@ func (suq *SysUserQuery) QueryAccounts() *SysUserAccountQuery {
 			sqlgraph.From(sysuser.Table, sysuser.FieldID, selector),
 			sqlgraph.To(sysuseraccount.Table, sysuseraccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.AccountsTable, sysuser.AccountsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(suq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserTenants chains the current query on the "user_tenants" edge.
+func (suq *SysUserQuery) QueryUserTenants() *UserTenantQuery {
+	query := (&UserTenantClient{config: suq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := suq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := suq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sysuser.Table, sysuser.FieldID, selector),
+			sqlgraph.To(usertenant.Table, usertenant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.UserTenantsTable, sysuser.UserTenantsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(suq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserDepartments chains the current query on the "user_departments" edge.
+func (suq *SysUserQuery) QueryUserDepartments() *UserDepartmentQuery {
+	query := (&UserDepartmentClient{config: suq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := suq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := suq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sysuser.Table, sysuser.FieldID, selector),
+			sqlgraph.To(userdepartment.Table, userdepartment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.UserDepartmentsTable, sysuser.UserDepartmentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(suq.driver.Dialect(), step)
 		return fromU, nil
@@ -272,12 +320,14 @@ func (suq *SysUserQuery) Clone() *SysUserQuery {
 		return nil
 	}
 	return &SysUserQuery{
-		config:       suq.config,
-		ctx:          suq.ctx.Clone(),
-		order:        append([]sysuser.OrderOption{}, suq.order...),
-		inters:       append([]Interceptor{}, suq.inters...),
-		predicates:   append([]predicate.SysUser{}, suq.predicates...),
-		withAccounts: suq.withAccounts.Clone(),
+		config:              suq.config,
+		ctx:                 suq.ctx.Clone(),
+		order:               append([]sysuser.OrderOption{}, suq.order...),
+		inters:              append([]Interceptor{}, suq.inters...),
+		predicates:          append([]predicate.SysUser{}, suq.predicates...),
+		withAccounts:        suq.withAccounts.Clone(),
+		withUserTenants:     suq.withUserTenants.Clone(),
+		withUserDepartments: suq.withUserDepartments.Clone(),
 		// clone intermediate query.
 		sql:  suq.sql.Clone(),
 		path: suq.path,
@@ -292,6 +342,28 @@ func (suq *SysUserQuery) WithAccounts(opts ...func(*SysUserAccountQuery)) *SysUs
 		opt(query)
 	}
 	suq.withAccounts = query
+	return suq
+}
+
+// WithUserTenants tells the query-builder to eager-load the nodes that are connected to
+// the "user_tenants" edge. The optional arguments are used to configure the query builder of the edge.
+func (suq *SysUserQuery) WithUserTenants(opts ...func(*UserTenantQuery)) *SysUserQuery {
+	query := (&UserTenantClient{config: suq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	suq.withUserTenants = query
+	return suq
+}
+
+// WithUserDepartments tells the query-builder to eager-load the nodes that are connected to
+// the "user_departments" edge. The optional arguments are used to configure the query builder of the edge.
+func (suq *SysUserQuery) WithUserDepartments(opts ...func(*UserDepartmentQuery)) *SysUserQuery {
+	query := (&UserDepartmentClient{config: suq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	suq.withUserDepartments = query
 	return suq
 }
 
@@ -373,8 +445,10 @@ func (suq *SysUserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sys
 	var (
 		nodes       = []*SysUser{}
 		_spec       = suq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			suq.withAccounts != nil,
+			suq.withUserTenants != nil,
+			suq.withUserDepartments != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -405,6 +479,20 @@ func (suq *SysUserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Sys
 			return nil, err
 		}
 	}
+	if query := suq.withUserTenants; query != nil {
+		if err := suq.loadUserTenants(ctx, query, nodes,
+			func(n *SysUser) { n.Edges.UserTenants = []*UserTenant{} },
+			func(n *SysUser, e *UserTenant) { n.Edges.UserTenants = append(n.Edges.UserTenants, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := suq.withUserDepartments; query != nil {
+		if err := suq.loadUserDepartments(ctx, query, nodes,
+			func(n *SysUser) { n.Edges.UserDepartments = []*UserDepartment{} },
+			func(n *SysUser, e *UserDepartment) { n.Edges.UserDepartments = append(n.Edges.UserDepartments, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -423,6 +511,66 @@ func (suq *SysUserQuery) loadAccounts(ctx context.Context, query *SysUserAccount
 	}
 	query.Where(predicate.SysUserAccount(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(sysuser.AccountsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (suq *SysUserQuery) loadUserTenants(ctx context.Context, query *UserTenantQuery, nodes []*SysUser, init func(*SysUser), assign func(*SysUser, *UserTenant)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*SysUser)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usertenant.FieldUserID)
+	}
+	query.Where(predicate.UserTenant(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sysuser.UserTenantsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (suq *SysUserQuery) loadUserDepartments(ctx context.Context, query *UserDepartmentQuery, nodes []*SysUser, init func(*SysUser), assign func(*SysUser, *UserDepartment)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*SysUser)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userdepartment.FieldUserID)
+	}
+	query.Where(predicate.UserDepartment(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(sysuser.UserDepartmentsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

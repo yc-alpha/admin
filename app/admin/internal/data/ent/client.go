@@ -15,8 +15,12 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
 // Client is the client that holds all ent builders.
@@ -24,10 +28,18 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Department is the client for interacting with the Department builders.
+	Department *DepartmentClient
 	// SysUser is the client for interacting with the SysUser builders.
 	SysUser *SysUserClient
 	// SysUserAccount is the client for interacting with the SysUserAccount builders.
 	SysUserAccount *SysUserAccountClient
+	// Tenant is the client for interacting with the Tenant builders.
+	Tenant *TenantClient
+	// UserDepartment is the client for interacting with the UserDepartment builders.
+	UserDepartment *UserDepartmentClient
+	// UserTenant is the client for interacting with the UserTenant builders.
+	UserTenant *UserTenantClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -39,8 +51,12 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Department = NewDepartmentClient(c.config)
 	c.SysUser = NewSysUserClient(c.config)
 	c.SysUserAccount = NewSysUserAccountClient(c.config)
+	c.Tenant = NewTenantClient(c.config)
+	c.UserDepartment = NewUserDepartmentClient(c.config)
+	c.UserTenant = NewUserTenantClient(c.config)
 }
 
 type (
@@ -133,8 +149,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
+		Department:     NewDepartmentClient(cfg),
 		SysUser:        NewSysUserClient(cfg),
 		SysUserAccount: NewSysUserAccountClient(cfg),
+		Tenant:         NewTenantClient(cfg),
+		UserDepartment: NewUserDepartmentClient(cfg),
+		UserTenant:     NewUserTenantClient(cfg),
 	}, nil
 }
 
@@ -154,15 +174,19 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:            ctx,
 		config:         cfg,
+		Department:     NewDepartmentClient(cfg),
 		SysUser:        NewSysUserClient(cfg),
 		SysUserAccount: NewSysUserAccountClient(cfg),
+		Tenant:         NewTenantClient(cfg),
+		UserDepartment: NewUserDepartmentClient(cfg),
+		UserTenant:     NewUserTenantClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		SysUser.
+//		Department.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -184,26 +208,207 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.SysUser.Use(hooks...)
-	c.SysUserAccount.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Department, c.SysUser, c.SysUserAccount, c.Tenant, c.UserDepartment,
+		c.UserTenant,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.SysUser.Intercept(interceptors...)
-	c.SysUserAccount.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Department, c.SysUser, c.SysUserAccount, c.Tenant, c.UserDepartment,
+		c.UserTenant,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *DepartmentMutation:
+		return c.Department.mutate(ctx, m)
 	case *SysUserMutation:
 		return c.SysUser.mutate(ctx, m)
 	case *SysUserAccountMutation:
 		return c.SysUserAccount.mutate(ctx, m)
+	case *TenantMutation:
+		return c.Tenant.mutate(ctx, m)
+	case *UserDepartmentMutation:
+		return c.UserDepartment.mutate(ctx, m)
+	case *UserTenantMutation:
+		return c.UserTenant.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// DepartmentClient is a client for the Department schema.
+type DepartmentClient struct {
+	config
+}
+
+// NewDepartmentClient returns a client for the Department from the given config.
+func NewDepartmentClient(c config) *DepartmentClient {
+	return &DepartmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `department.Hooks(f(g(h())))`.
+func (c *DepartmentClient) Use(hooks ...Hook) {
+	c.hooks.Department = append(c.hooks.Department, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `department.Intercept(f(g(h())))`.
+func (c *DepartmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Department = append(c.inters.Department, interceptors...)
+}
+
+// Create returns a builder for creating a Department entity.
+func (c *DepartmentClient) Create() *DepartmentCreate {
+	mutation := newDepartmentMutation(c.config, OpCreate)
+	return &DepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Department entities.
+func (c *DepartmentClient) CreateBulk(builders ...*DepartmentCreate) *DepartmentCreateBulk {
+	return &DepartmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *DepartmentClient) MapCreateBulk(slice any, setFunc func(*DepartmentCreate, int)) *DepartmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &DepartmentCreateBulk{err: fmt.Errorf("calling to DepartmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*DepartmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &DepartmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Department.
+func (c *DepartmentClient) Update() *DepartmentUpdate {
+	mutation := newDepartmentMutation(c.config, OpUpdate)
+	return &DepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DepartmentClient) UpdateOne(d *Department) *DepartmentUpdateOne {
+	mutation := newDepartmentMutation(c.config, OpUpdateOne, withDepartment(d))
+	return &DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DepartmentClient) UpdateOneID(id int64) *DepartmentUpdateOne {
+	mutation := newDepartmentMutation(c.config, OpUpdateOne, withDepartmentID(id))
+	return &DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Department.
+func (c *DepartmentClient) Delete() *DepartmentDelete {
+	mutation := newDepartmentMutation(c.config, OpDelete)
+	return &DepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DepartmentClient) DeleteOne(d *Department) *DepartmentDeleteOne {
+	return c.DeleteOneID(d.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DepartmentClient) DeleteOneID(id int64) *DepartmentDeleteOne {
+	builder := c.Delete().Where(department.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DepartmentDeleteOne{builder}
+}
+
+// Query returns a query builder for Department.
+func (c *DepartmentClient) Query() *DepartmentQuery {
+	return &DepartmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDepartment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Department entity by its id.
+func (c *DepartmentClient) Get(ctx context.Context, id int64) (*Department, error) {
+	return c.Query().Where(department.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DepartmentClient) GetX(ctx context.Context, id int64) *Department {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTenant queries the tenant edge of a Department.
+func (c *DepartmentClient) QueryTenant(d *Department) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(department.Table, department.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, department.TenantTable, department.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserDepartments queries the user_departments edge of a Department.
+func (c *DepartmentClient) QueryUserDepartments(d *Department) *UserDepartmentQuery {
+	query := (&UserDepartmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(department.Table, department.FieldID, id),
+			sqlgraph.To(userdepartment.Table, userdepartment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, department.UserDepartmentsTable, department.UserDepartmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DepartmentClient) Hooks() []Hook {
+	return c.hooks.Department
+}
+
+// Interceptors returns the client interceptors.
+func (c *DepartmentClient) Interceptors() []Interceptor {
+	return c.inters.Department
+}
+
+func (c *DepartmentClient) mutate(ctx context.Context, m *DepartmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Department mutation op: %q", m.Op())
 	}
 }
 
@@ -324,6 +529,38 @@ func (c *SysUserClient) QueryAccounts(su *SysUser) *SysUserAccountQuery {
 			sqlgraph.From(sysuser.Table, sysuser.FieldID, id),
 			sqlgraph.To(sysuseraccount.Table, sysuseraccount.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.AccountsTable, sysuser.AccountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(su.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserTenants queries the user_tenants edge of a SysUser.
+func (c *SysUserClient) QueryUserTenants(su *SysUser) *UserTenantQuery {
+	query := (&UserTenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := su.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sysuser.Table, sysuser.FieldID, id),
+			sqlgraph.To(usertenant.Table, usertenant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.UserTenantsTable, sysuser.UserTenantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(su.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserDepartments queries the user_departments edge of a SysUser.
+func (c *SysUserClient) QueryUserDepartments(su *SysUser) *UserDepartmentQuery {
+	query := (&UserDepartmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := su.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(sysuser.Table, sysuser.FieldID, id),
+			sqlgraph.To(userdepartment.Table, userdepartment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.UserDepartmentsTable, sysuser.UserDepartmentsColumn),
 		)
 		fromV = sqlgraph.Neighbors(su.driver.Dialect(), step)
 		return fromV, nil
@@ -506,12 +743,509 @@ func (c *SysUserAccountClient) mutate(ctx context.Context, m *SysUserAccountMuta
 	}
 }
 
+// TenantClient is a client for the Tenant schema.
+type TenantClient struct {
+	config
+}
+
+// NewTenantClient returns a client for the Tenant from the given config.
+func NewTenantClient(c config) *TenantClient {
+	return &TenantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tenant.Hooks(f(g(h())))`.
+func (c *TenantClient) Use(hooks ...Hook) {
+	c.hooks.Tenant = append(c.hooks.Tenant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `tenant.Intercept(f(g(h())))`.
+func (c *TenantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Tenant = append(c.inters.Tenant, interceptors...)
+}
+
+// Create returns a builder for creating a Tenant entity.
+func (c *TenantClient) Create() *TenantCreate {
+	mutation := newTenantMutation(c.config, OpCreate)
+	return &TenantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Tenant entities.
+func (c *TenantClient) CreateBulk(builders ...*TenantCreate) *TenantCreateBulk {
+	return &TenantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *TenantClient) MapCreateBulk(slice any, setFunc func(*TenantCreate, int)) *TenantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &TenantCreateBulk{err: fmt.Errorf("calling to TenantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*TenantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &TenantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Tenant.
+func (c *TenantClient) Update() *TenantUpdate {
+	mutation := newTenantMutation(c.config, OpUpdate)
+	return &TenantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TenantClient) UpdateOne(t *Tenant) *TenantUpdateOne {
+	mutation := newTenantMutation(c.config, OpUpdateOne, withTenant(t))
+	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TenantClient) UpdateOneID(id int64) *TenantUpdateOne {
+	mutation := newTenantMutation(c.config, OpUpdateOne, withTenantID(id))
+	return &TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Tenant.
+func (c *TenantClient) Delete() *TenantDelete {
+	mutation := newTenantMutation(c.config, OpDelete)
+	return &TenantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TenantClient) DeleteOne(t *Tenant) *TenantDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TenantClient) DeleteOneID(id int64) *TenantDeleteOne {
+	builder := c.Delete().Where(tenant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TenantDeleteOne{builder}
+}
+
+// Query returns a query builder for Tenant.
+func (c *TenantClient) Query() *TenantQuery {
+	return &TenantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTenant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Tenant entity by its id.
+func (c *TenantClient) Get(ctx context.Context, id int64) (*Tenant, error) {
+	return c.Query().Where(tenant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TenantClient) GetX(ctx context.Context, id int64) *Tenant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUserTenants queries the user_tenants edge of a Tenant.
+func (c *TenantClient) QueryUserTenants(t *Tenant) *UserTenantQuery {
+	query := (&UserTenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(usertenant.Table, usertenant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.UserTenantsTable, tenant.UserTenantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDepartments queries the departments edge of a Tenant.
+func (c *TenantClient) QueryDepartments(t *Tenant) *DepartmentQuery {
+	query := (&DepartmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, id),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.DepartmentsTable, tenant.DepartmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TenantClient) Hooks() []Hook {
+	return c.hooks.Tenant
+}
+
+// Interceptors returns the client interceptors.
+func (c *TenantClient) Interceptors() []Interceptor {
+	return c.inters.Tenant
+}
+
+func (c *TenantClient) mutate(ctx context.Context, m *TenantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TenantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TenantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TenantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Tenant mutation op: %q", m.Op())
+	}
+}
+
+// UserDepartmentClient is a client for the UserDepartment schema.
+type UserDepartmentClient struct {
+	config
+}
+
+// NewUserDepartmentClient returns a client for the UserDepartment from the given config.
+func NewUserDepartmentClient(c config) *UserDepartmentClient {
+	return &UserDepartmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userdepartment.Hooks(f(g(h())))`.
+func (c *UserDepartmentClient) Use(hooks ...Hook) {
+	c.hooks.UserDepartment = append(c.hooks.UserDepartment, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userdepartment.Intercept(f(g(h())))`.
+func (c *UserDepartmentClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserDepartment = append(c.inters.UserDepartment, interceptors...)
+}
+
+// Create returns a builder for creating a UserDepartment entity.
+func (c *UserDepartmentClient) Create() *UserDepartmentCreate {
+	mutation := newUserDepartmentMutation(c.config, OpCreate)
+	return &UserDepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserDepartment entities.
+func (c *UserDepartmentClient) CreateBulk(builders ...*UserDepartmentCreate) *UserDepartmentCreateBulk {
+	return &UserDepartmentCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserDepartmentClient) MapCreateBulk(slice any, setFunc func(*UserDepartmentCreate, int)) *UserDepartmentCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserDepartmentCreateBulk{err: fmt.Errorf("calling to UserDepartmentClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserDepartmentCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserDepartmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserDepartment.
+func (c *UserDepartmentClient) Update() *UserDepartmentUpdate {
+	mutation := newUserDepartmentMutation(c.config, OpUpdate)
+	return &UserDepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserDepartmentClient) UpdateOne(ud *UserDepartment) *UserDepartmentUpdateOne {
+	mutation := newUserDepartmentMutation(c.config, OpUpdateOne, withUserDepartment(ud))
+	return &UserDepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserDepartmentClient) UpdateOneID(id int64) *UserDepartmentUpdateOne {
+	mutation := newUserDepartmentMutation(c.config, OpUpdateOne, withUserDepartmentID(id))
+	return &UserDepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserDepartment.
+func (c *UserDepartmentClient) Delete() *UserDepartmentDelete {
+	mutation := newUserDepartmentMutation(c.config, OpDelete)
+	return &UserDepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserDepartmentClient) DeleteOne(ud *UserDepartment) *UserDepartmentDeleteOne {
+	return c.DeleteOneID(ud.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserDepartmentClient) DeleteOneID(id int64) *UserDepartmentDeleteOne {
+	builder := c.Delete().Where(userdepartment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserDepartmentDeleteOne{builder}
+}
+
+// Query returns a query builder for UserDepartment.
+func (c *UserDepartmentClient) Query() *UserDepartmentQuery {
+	return &UserDepartmentQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserDepartment},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserDepartment entity by its id.
+func (c *UserDepartmentClient) Get(ctx context.Context, id int64) (*UserDepartment, error) {
+	return c.Query().Where(userdepartment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserDepartmentClient) GetX(ctx context.Context, id int64) *UserDepartment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserDepartment.
+func (c *UserDepartmentClient) QueryUser(ud *UserDepartment) *SysUserQuery {
+	query := (&SysUserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ud.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userdepartment.Table, userdepartment.FieldID, id),
+			sqlgraph.To(sysuser.Table, sysuser.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userdepartment.UserTable, userdepartment.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ud.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDepartment queries the department edge of a UserDepartment.
+func (c *UserDepartmentClient) QueryDepartment(ud *UserDepartment) *DepartmentQuery {
+	query := (&DepartmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ud.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userdepartment.Table, userdepartment.FieldID, id),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userdepartment.DepartmentTable, userdepartment.DepartmentColumn),
+		)
+		fromV = sqlgraph.Neighbors(ud.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserDepartmentClient) Hooks() []Hook {
+	return c.hooks.UserDepartment
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserDepartmentClient) Interceptors() []Interceptor {
+	return c.inters.UserDepartment
+}
+
+func (c *UserDepartmentClient) mutate(ctx context.Context, m *UserDepartmentMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserDepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserDepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserDepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserDepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserDepartment mutation op: %q", m.Op())
+	}
+}
+
+// UserTenantClient is a client for the UserTenant schema.
+type UserTenantClient struct {
+	config
+}
+
+// NewUserTenantClient returns a client for the UserTenant from the given config.
+func NewUserTenantClient(c config) *UserTenantClient {
+	return &UserTenantClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usertenant.Hooks(f(g(h())))`.
+func (c *UserTenantClient) Use(hooks ...Hook) {
+	c.hooks.UserTenant = append(c.hooks.UserTenant, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usertenant.Intercept(f(g(h())))`.
+func (c *UserTenantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserTenant = append(c.inters.UserTenant, interceptors...)
+}
+
+// Create returns a builder for creating a UserTenant entity.
+func (c *UserTenantClient) Create() *UserTenantCreate {
+	mutation := newUserTenantMutation(c.config, OpCreate)
+	return &UserTenantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserTenant entities.
+func (c *UserTenantClient) CreateBulk(builders ...*UserTenantCreate) *UserTenantCreateBulk {
+	return &UserTenantCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserTenantClient) MapCreateBulk(slice any, setFunc func(*UserTenantCreate, int)) *UserTenantCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserTenantCreateBulk{err: fmt.Errorf("calling to UserTenantClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserTenantCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserTenantCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserTenant.
+func (c *UserTenantClient) Update() *UserTenantUpdate {
+	mutation := newUserTenantMutation(c.config, OpUpdate)
+	return &UserTenantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserTenantClient) UpdateOne(ut *UserTenant) *UserTenantUpdateOne {
+	mutation := newUserTenantMutation(c.config, OpUpdateOne, withUserTenant(ut))
+	return &UserTenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserTenantClient) UpdateOneID(id int64) *UserTenantUpdateOne {
+	mutation := newUserTenantMutation(c.config, OpUpdateOne, withUserTenantID(id))
+	return &UserTenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserTenant.
+func (c *UserTenantClient) Delete() *UserTenantDelete {
+	mutation := newUserTenantMutation(c.config, OpDelete)
+	return &UserTenantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserTenantClient) DeleteOne(ut *UserTenant) *UserTenantDeleteOne {
+	return c.DeleteOneID(ut.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserTenantClient) DeleteOneID(id int64) *UserTenantDeleteOne {
+	builder := c.Delete().Where(usertenant.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserTenantDeleteOne{builder}
+}
+
+// Query returns a query builder for UserTenant.
+func (c *UserTenantClient) Query() *UserTenantQuery {
+	return &UserTenantQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserTenant},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserTenant entity by its id.
+func (c *UserTenantClient) Get(ctx context.Context, id int64) (*UserTenant, error) {
+	return c.Query().Where(usertenant.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserTenantClient) GetX(ctx context.Context, id int64) *UserTenant {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserTenant.
+func (c *UserTenantClient) QueryUser(ut *UserTenant) *SysUserQuery {
+	query := (&SysUserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ut.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usertenant.Table, usertenant.FieldID, id),
+			sqlgraph.To(sysuser.Table, sysuser.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usertenant.UserTable, usertenant.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ut.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTenant queries the tenant edge of a UserTenant.
+func (c *UserTenantClient) QueryTenant(ut *UserTenant) *TenantQuery {
+	query := (&TenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ut.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usertenant.Table, usertenant.FieldID, id),
+			sqlgraph.To(tenant.Table, tenant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, usertenant.TenantTable, usertenant.TenantColumn),
+		)
+		fromV = sqlgraph.Neighbors(ut.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserTenantClient) Hooks() []Hook {
+	return c.hooks.UserTenant
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserTenantClient) Interceptors() []Interceptor {
+	return c.inters.UserTenant
+}
+
+func (c *UserTenantClient) mutate(ctx context.Context, m *UserTenantMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserTenantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserTenantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserTenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserTenantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserTenant mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		SysUser, SysUserAccount []ent.Hook
+		Department, SysUser, SysUserAccount, Tenant, UserDepartment,
+		UserTenant []ent.Hook
 	}
 	inters struct {
-		SysUser, SysUserAccount []ent.Interceptor
+		Department, SysUser, SysUserAccount, Tenant, UserDepartment,
+		UserTenant []ent.Interceptor
 	}
 )

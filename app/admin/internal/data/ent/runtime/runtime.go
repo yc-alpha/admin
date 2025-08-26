@@ -5,15 +5,34 @@ package runtime
 import (
 	"time"
 
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/schema"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	departmentFields := schema.Department{}.Fields()
+	_ = departmentFields
+	// departmentDescAttributes is the schema descriptor for attributes field.
+	departmentDescAttributes := departmentFields[5].Descriptor()
+	// department.DefaultAttributes holds the default value on creation for the attributes field.
+	department.DefaultAttributes = departmentDescAttributes.Default.(map[string]interface{})
+	// departmentDescCreatedAt is the schema descriptor for created_at field.
+	departmentDescCreatedAt := departmentFields[8].Descriptor()
+	// department.DefaultCreatedAt holds the default value on creation for the created_at field.
+	department.DefaultCreatedAt = departmentDescCreatedAt.Default.(func() time.Time)
+	// departmentDescUpdatedAt is the schema descriptor for updated_at field.
+	departmentDescUpdatedAt := departmentFields[9].Descriptor()
+	// department.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	department.DefaultUpdatedAt = departmentDescUpdatedAt.Default.(func() time.Time)
+	// department.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	department.UpdateDefaultUpdatedAt = departmentDescUpdatedAt.UpdateDefault.(func() time.Time)
 	sysuserHooks := schema.SysUser{}.Hooks()
 	sysuser.Hooks[0] = sysuserHooks[0]
 	sysuserFields := schema.SysUser{}.Fields()
@@ -119,6 +138,50 @@ func init() {
 	sysuseraccount.DefaultUpdatedAt = sysuseraccountDescUpdatedAt.Default.(func() time.Time)
 	// sysuseraccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	sysuseraccount.UpdateDefaultUpdatedAt = sysuseraccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	tenantFields := schema.Tenant{}.Fields()
+	_ = tenantFields
+	// tenantDescName is the schema descriptor for name field.
+	tenantDescName := tenantFields[1].Descriptor()
+	// tenant.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	tenant.NameValidator = func() func(string) error {
+		validators := tenantDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// tenantDescAttributes is the schema descriptor for attributes field.
+	tenantDescAttributes := tenantFields[5].Descriptor()
+	// tenant.DefaultAttributes holds the default value on creation for the attributes field.
+	tenant.DefaultAttributes = tenantDescAttributes.Default.(map[string]interface{})
+	// tenantDescCreatedAt is the schema descriptor for created_at field.
+	tenantDescCreatedAt := tenantFields[8].Descriptor()
+	// tenant.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tenant.DefaultCreatedAt = tenantDescCreatedAt.Default.(func() time.Time)
+	// tenantDescUpdatedAt is the schema descriptor for updated_at field.
+	tenantDescUpdatedAt := tenantFields[9].Descriptor()
+	// tenant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tenant.DefaultUpdatedAt = tenantDescUpdatedAt.Default.(func() time.Time)
+	// tenant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	tenant.UpdateDefaultUpdatedAt = tenantDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// tenantDescID is the schema descriptor for id field.
+	tenantDescID := tenantFields[0].Descriptor()
+	// tenant.DefaultID holds the default value on creation for the id field.
+	tenant.DefaultID = tenantDescID.Default.(func() int64)
+	userdepartmentFields := schema.UserDepartment{}.Fields()
+	_ = userdepartmentFields
+	// userdepartmentDescAttributes is the schema descriptor for attributes field.
+	userdepartmentDescAttributes := userdepartmentFields[4].Descriptor()
+	// userdepartment.DefaultAttributes holds the default value on creation for the attributes field.
+	userdepartment.DefaultAttributes = userdepartmentDescAttributes.Default.(map[string]interface{})
 }
 
 const (

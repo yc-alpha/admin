@@ -953,6 +953,52 @@ func HasAccountsWith(preds ...predicate.SysUserAccount) predicate.SysUser {
 	})
 }
 
+// HasUserTenants applies the HasEdge predicate on the "user_tenants" edge.
+func HasUserTenants() predicate.SysUser {
+	return predicate.SysUser(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UserTenantsTable, UserTenantsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserTenantsWith applies the HasEdge predicate on the "user_tenants" edge with a given conditions (other predicates).
+func HasUserTenantsWith(preds ...predicate.UserTenant) predicate.SysUser {
+	return predicate.SysUser(func(s *sql.Selector) {
+		step := newUserTenantsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUserDepartments applies the HasEdge predicate on the "user_departments" edge.
+func HasUserDepartments() predicate.SysUser {
+	return predicate.SysUser(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UserDepartmentsTable, UserDepartmentsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserDepartmentsWith applies the HasEdge predicate on the "user_departments" edge with a given conditions (other predicates).
+func HasUserDepartmentsWith(preds ...predicate.UserDepartment) predicate.SysUser {
+	return predicate.SysUser(func(s *sql.Selector) {
+		step := newUserDepartmentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.SysUser) predicate.SysUser {
 	return predicate.SysUser(sql.AndPredicates(predicates...))

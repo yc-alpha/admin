@@ -42,11 +42,11 @@ type SysUser struct {
 	CreatedBy *int64 `json:"created_by,omitempty"`
 	// User who last updated this record
 	UpdatedBy *int64 `json:"updated_by,omitempty"`
-	// Creation timestamp of the user record
+	// Creation timestamp of this record
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// Last update timestamp of the user record
+	// Last update timestamp of this record
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
-	// Timestamp when the user was deleted, if applicable
+	// Timestamp when the record was deleted, if applicable
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SysUserQuery when eager-loading is set.
@@ -58,9 +58,13 @@ type SysUser struct {
 type SysUserEdges struct {
 	// Accounts holds the value of the accounts edge.
 	Accounts []*SysUserAccount `json:"accounts,omitempty"`
+	// UserTenants holds the value of the user_tenants edge.
+	UserTenants []*UserTenant `json:"user_tenants,omitempty"`
+	// UserDepartments holds the value of the user_departments edge.
+	UserDepartments []*UserDepartment `json:"user_departments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // AccountsOrErr returns the Accounts value or an error if the edge
@@ -70,6 +74,24 @@ func (e SysUserEdges) AccountsOrErr() ([]*SysUserAccount, error) {
 		return e.Accounts, nil
 	}
 	return nil, &NotLoadedError{edge: "accounts"}
+}
+
+// UserTenantsOrErr returns the UserTenants value or an error if the edge
+// was not loaded in eager-loading.
+func (e SysUserEdges) UserTenantsOrErr() ([]*UserTenant, error) {
+	if e.loadedTypes[1] {
+		return e.UserTenants, nil
+	}
+	return nil, &NotLoadedError{edge: "user_tenants"}
+}
+
+// UserDepartmentsOrErr returns the UserDepartments value or an error if the edge
+// was not loaded in eager-loading.
+func (e SysUserEdges) UserDepartmentsOrErr() ([]*UserDepartment, error) {
+	if e.loadedTypes[2] {
+		return e.UserDepartments, nil
+	}
+	return nil, &NotLoadedError{edge: "user_departments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -218,6 +240,16 @@ func (su *SysUser) Value(name string) (ent.Value, error) {
 // QueryAccounts queries the "accounts" edge of the SysUser entity.
 func (su *SysUser) QueryAccounts() *SysUserAccountQuery {
 	return NewSysUserClient(su.config).QueryAccounts(su)
+}
+
+// QueryUserTenants queries the "user_tenants" edge of the SysUser entity.
+func (su *SysUser) QueryUserTenants() *UserTenantQuery {
+	return NewSysUserClient(su.config).QueryUserTenants(su)
+}
+
+// QueryUserDepartments queries the "user_departments" edge of the SysUser entity.
+func (su *SysUser) QueryUserDepartments() *UserDepartmentQuery {
+	return NewSysUserClient(su.config).QueryUserDepartments(su)
 }
 
 // Update returns a builder for updating this SysUser.

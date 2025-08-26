@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -31,14 +32,13 @@ func (SysUserAccount) Fields() []ent.Field {
 // Edges of the SysUserAccounts.
 func (SysUserAccount) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", SysUser.Type).
-			Ref("accounts").
-			Required().
-			Unique().
-			Field("user_id").
-			Annotations(
-				entsql.WithComments(true),
-			),
+		edge.From("user", SysUser.Type).Ref("accounts").Required().Unique().Field("user_id"),
+	}
+}
+
+func (SysUserAccount) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entsql.WithComments(true),
 	}
 }
 
