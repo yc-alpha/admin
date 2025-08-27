@@ -21,7 +21,7 @@ func (UserTenant) Fields() []ent.Field {
 
 func (UserTenant) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", SysUser.Type).Ref("user_tenants").Required().Unique().Field("user_id"),
+		edge.From("user", User.Type).Ref("user_tenants").Required().Unique().Field("user_id"),
 		edge.From("tenant", Tenant.Type).Ref("user_tenants").Required().Unique().Field("tenant_id"),
 	}
 }

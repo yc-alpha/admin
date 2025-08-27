@@ -9,11 +9,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 )
 
-// SysUser is the model entity for the SysUser schema.
-type SysUser struct {
+// User is the model entity for the User schema.
+type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	// Primary Key ID
@@ -27,11 +27,11 @@ type SysUser struct {
 	// Password of the user
 	Password *string `json:"-"`
 	// Status of the user
-	Status sysuser.Status `json:"status,omitempty"`
+	Status user.Status `json:"status,omitempty"`
 	// Full name of the user
 	FullName *string `json:"full_name,omitempty"`
 	// User gender
-	Gender sysuser.Gender `json:"gender,omitempty"`
+	Gender user.Gender `json:"gender,omitempty"`
 	// Avatar URL of the user
 	Avatar *string `json:"avatar,omitempty"`
 	// Preferred language of the user
@@ -49,15 +49,15 @@ type SysUser struct {
 	// Timestamp when the record was deleted, if applicable
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the SysUserQuery when eager-loading is set.
-	Edges        SysUserEdges `json:"edges"`
+	// The values are being populated by the UserQuery when eager-loading is set.
+	Edges        UserEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// SysUserEdges holds the relations/edges for other nodes in the graph.
-type SysUserEdges struct {
+// UserEdges holds the relations/edges for other nodes in the graph.
+type UserEdges struct {
 	// Accounts holds the value of the accounts edge.
-	Accounts []*SysUserAccount `json:"accounts,omitempty"`
+	Accounts []*UserAccount `json:"accounts,omitempty"`
 	// UserTenants holds the value of the user_tenants edge.
 	UserTenants []*UserTenant `json:"user_tenants,omitempty"`
 	// UserDepartments holds the value of the user_departments edge.
@@ -69,7 +69,7 @@ type SysUserEdges struct {
 
 // AccountsOrErr returns the Accounts value or an error if the edge
 // was not loaded in eager-loading.
-func (e SysUserEdges) AccountsOrErr() ([]*SysUserAccount, error) {
+func (e UserEdges) AccountsOrErr() ([]*UserAccount, error) {
 	if e.loadedTypes[0] {
 		return e.Accounts, nil
 	}
@@ -78,7 +78,7 @@ func (e SysUserEdges) AccountsOrErr() ([]*SysUserAccount, error) {
 
 // UserTenantsOrErr returns the UserTenants value or an error if the edge
 // was not loaded in eager-loading.
-func (e SysUserEdges) UserTenantsOrErr() ([]*UserTenant, error) {
+func (e UserEdges) UserTenantsOrErr() ([]*UserTenant, error) {
 	if e.loadedTypes[1] {
 		return e.UserTenants, nil
 	}
@@ -87,7 +87,7 @@ func (e SysUserEdges) UserTenantsOrErr() ([]*UserTenant, error) {
 
 // UserDepartmentsOrErr returns the UserDepartments value or an error if the edge
 // was not loaded in eager-loading.
-func (e SysUserEdges) UserDepartmentsOrErr() ([]*UserDepartment, error) {
+func (e UserEdges) UserDepartmentsOrErr() ([]*UserDepartment, error) {
 	if e.loadedTypes[2] {
 		return e.UserDepartments, nil
 	}
@@ -95,15 +95,15 @@ func (e SysUserEdges) UserDepartmentsOrErr() ([]*UserDepartment, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*SysUser) scanValues(columns []string) ([]any, error) {
+func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sysuser.FieldID, sysuser.FieldCreatedBy, sysuser.FieldUpdatedBy:
+		case user.FieldID, user.FieldCreatedBy, user.FieldUpdatedBy:
 			values[i] = new(sql.NullInt64)
-		case sysuser.FieldUsername, sysuser.FieldEmail, sysuser.FieldPhone, sysuser.FieldPassword, sysuser.FieldStatus, sysuser.FieldFullName, sysuser.FieldGender, sysuser.FieldAvatar, sysuser.FieldLanguage, sysuser.FieldTimezone:
+		case user.FieldUsername, user.FieldEmail, user.FieldPhone, user.FieldPassword, user.FieldStatus, user.FieldFullName, user.FieldGender, user.FieldAvatar, user.FieldLanguage, user.FieldTimezone:
 			values[i] = new(sql.NullString)
-		case sysuser.FieldCreatedAt, sysuser.FieldUpdatedAt, sysuser.FieldDeletedAt:
+		case user.FieldCreatedAt, user.FieldUpdatedAt, user.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -113,177 +113,177 @@ func (*SysUser) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the SysUser fields.
-func (su *SysUser) assignValues(columns []string, values []any) error {
+// to the User fields.
+func (u *User) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case sysuser.FieldID:
+		case user.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			su.ID = int64(value.Int64)
-		case sysuser.FieldUsername:
+			u.ID = int64(value.Int64)
+		case user.FieldUsername:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field username", values[i])
 			} else if value.Valid {
-				su.Username = value.String
+				u.Username = value.String
 			}
-		case sysuser.FieldEmail:
+		case user.FieldEmail:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field email", values[i])
 			} else if value.Valid {
-				su.Email = new(string)
-				*su.Email = value.String
+				u.Email = new(string)
+				*u.Email = value.String
 			}
-		case sysuser.FieldPhone:
+		case user.FieldPhone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field phone", values[i])
 			} else if value.Valid {
-				su.Phone = new(string)
-				*su.Phone = value.String
+				u.Phone = new(string)
+				*u.Phone = value.String
 			}
-		case sysuser.FieldPassword:
+		case user.FieldPassword:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field password", values[i])
 			} else if value.Valid {
-				su.Password = new(string)
-				*su.Password = value.String
+				u.Password = new(string)
+				*u.Password = value.String
 			}
-		case sysuser.FieldStatus:
+		case user.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				su.Status = sysuser.Status(value.String)
+				u.Status = user.Status(value.String)
 			}
-		case sysuser.FieldFullName:
+		case user.FieldFullName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field full_name", values[i])
 			} else if value.Valid {
-				su.FullName = new(string)
-				*su.FullName = value.String
+				u.FullName = new(string)
+				*u.FullName = value.String
 			}
-		case sysuser.FieldGender:
+		case user.FieldGender:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field gender", values[i])
 			} else if value.Valid {
-				su.Gender = sysuser.Gender(value.String)
+				u.Gender = user.Gender(value.String)
 			}
-		case sysuser.FieldAvatar:
+		case user.FieldAvatar:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field avatar", values[i])
 			} else if value.Valid {
-				su.Avatar = new(string)
-				*su.Avatar = value.String
+				u.Avatar = new(string)
+				*u.Avatar = value.String
 			}
-		case sysuser.FieldLanguage:
+		case user.FieldLanguage:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field language", values[i])
 			} else if value.Valid {
-				su.Language = value.String
+				u.Language = value.String
 			}
-		case sysuser.FieldTimezone:
+		case user.FieldTimezone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field timezone", values[i])
 			} else if value.Valid {
-				su.Timezone = value.String
+				u.Timezone = value.String
 			}
-		case sysuser.FieldCreatedBy:
+		case user.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				su.CreatedBy = new(int64)
-				*su.CreatedBy = value.Int64
+				u.CreatedBy = new(int64)
+				*u.CreatedBy = value.Int64
 			}
-		case sysuser.FieldUpdatedBy:
+		case user.FieldUpdatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_by", values[i])
 			} else if value.Valid {
-				su.UpdatedBy = new(int64)
-				*su.UpdatedBy = value.Int64
+				u.UpdatedBy = new(int64)
+				*u.UpdatedBy = value.Int64
 			}
-		case sysuser.FieldCreatedAt:
+		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				su.CreatedAt = value.Time
+				u.CreatedAt = value.Time
 			}
-		case sysuser.FieldUpdatedAt:
+		case user.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				su.UpdatedAt = value.Time
+				u.UpdatedAt = value.Time
 			}
-		case sysuser.FieldDeletedAt:
+		case user.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
-				su.DeletedAt = new(time.Time)
-				*su.DeletedAt = value.Time
+				u.DeletedAt = new(time.Time)
+				*u.DeletedAt = value.Time
 			}
 		default:
-			su.selectValues.Set(columns[i], values[i])
+			u.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the SysUser.
+// Value returns the ent.Value that was dynamically selected and assigned to the User.
 // This includes values selected through modifiers, order, etc.
-func (su *SysUser) Value(name string) (ent.Value, error) {
-	return su.selectValues.Get(name)
+func (u *User) Value(name string) (ent.Value, error) {
+	return u.selectValues.Get(name)
 }
 
-// QueryAccounts queries the "accounts" edge of the SysUser entity.
-func (su *SysUser) QueryAccounts() *SysUserAccountQuery {
-	return NewSysUserClient(su.config).QueryAccounts(su)
+// QueryAccounts queries the "accounts" edge of the User entity.
+func (u *User) QueryAccounts() *UserAccountQuery {
+	return NewUserClient(u.config).QueryAccounts(u)
 }
 
-// QueryUserTenants queries the "user_tenants" edge of the SysUser entity.
-func (su *SysUser) QueryUserTenants() *UserTenantQuery {
-	return NewSysUserClient(su.config).QueryUserTenants(su)
+// QueryUserTenants queries the "user_tenants" edge of the User entity.
+func (u *User) QueryUserTenants() *UserTenantQuery {
+	return NewUserClient(u.config).QueryUserTenants(u)
 }
 
-// QueryUserDepartments queries the "user_departments" edge of the SysUser entity.
-func (su *SysUser) QueryUserDepartments() *UserDepartmentQuery {
-	return NewSysUserClient(su.config).QueryUserDepartments(su)
+// QueryUserDepartments queries the "user_departments" edge of the User entity.
+func (u *User) QueryUserDepartments() *UserDepartmentQuery {
+	return NewUserClient(u.config).QueryUserDepartments(u)
 }
 
-// Update returns a builder for updating this SysUser.
-// Note that you need to call SysUser.Unwrap() before calling this method if this SysUser
+// Update returns a builder for updating this User.
+// Note that you need to call User.Unwrap() before calling this method if this User
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (su *SysUser) Update() *SysUserUpdateOne {
-	return NewSysUserClient(su.config).UpdateOne(su)
+func (u *User) Update() *UserUpdateOne {
+	return NewUserClient(u.config).UpdateOne(u)
 }
 
-// Unwrap unwraps the SysUser entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the User entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (su *SysUser) Unwrap() *SysUser {
-	_tx, ok := su.config.driver.(*txDriver)
+func (u *User) Unwrap() *User {
+	_tx, ok := u.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: SysUser is not a transactional entity")
+		panic("ent: User is not a transactional entity")
 	}
-	su.config.driver = _tx.drv
-	return su
+	u.config.driver = _tx.drv
+	return u
 }
 
 // String implements the fmt.Stringer.
-func (su *SysUser) String() string {
+func (u *User) String() string {
 	var builder strings.Builder
-	builder.WriteString("SysUser(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", su.ID))
+	builder.WriteString("User(")
+	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
 	builder.WriteString("username=")
-	builder.WriteString(su.Username)
+	builder.WriteString(u.Username)
 	builder.WriteString(", ")
-	if v := su.Email; v != nil {
+	if v := u.Email; v != nil {
 		builder.WriteString("email=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
-	if v := su.Phone; v != nil {
+	if v := u.Phone; v != nil {
 		builder.WriteString("phone=")
 		builder.WriteString(*v)
 	}
@@ -291,44 +291,44 @@ func (su *SysUser) String() string {
 	builder.WriteString("password=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(fmt.Sprintf("%v", su.Status))
+	builder.WriteString(fmt.Sprintf("%v", u.Status))
 	builder.WriteString(", ")
-	if v := su.FullName; v != nil {
+	if v := u.FullName; v != nil {
 		builder.WriteString("full_name=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
 	builder.WriteString("gender=")
-	builder.WriteString(fmt.Sprintf("%v", su.Gender))
+	builder.WriteString(fmt.Sprintf("%v", u.Gender))
 	builder.WriteString(", ")
-	if v := su.Avatar; v != nil {
+	if v := u.Avatar; v != nil {
 		builder.WriteString("avatar=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
 	builder.WriteString("language=")
-	builder.WriteString(su.Language)
+	builder.WriteString(u.Language)
 	builder.WriteString(", ")
 	builder.WriteString("timezone=")
-	builder.WriteString(su.Timezone)
+	builder.WriteString(u.Timezone)
 	builder.WriteString(", ")
-	if v := su.CreatedBy; v != nil {
+	if v := u.CreatedBy; v != nil {
 		builder.WriteString("created_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
-	if v := su.UpdatedBy; v != nil {
+	if v := u.UpdatedBy; v != nil {
 		builder.WriteString("updated_by=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(su.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(u.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(su.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(u.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	if v := su.DeletedAt; v != nil {
+	if v := u.DeletedAt; v != nil {
 		builder.WriteString("deleted_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
@@ -336,5 +336,5 @@ func (su *SysUser) String() string {
 	return builder.String()
 }
 
-// SysUsers is a parsable slice of SysUser.
-type SysUsers []*SysUser
+// Users is a parsable slice of User.
+type Users []*User

@@ -11,13 +11,13 @@ import (
 	"entgo.io/ent/schema/index"
 )
 
-// SysUserAccounts holds the schema definition for the SysUserAccounts entity.
-type SysUserAccount struct {
+// UserAccounts holds the schema definition for the UserAccounts entity.
+type UserAccount struct {
 	ent.Schema
 }
 
-// Fields of the SysUserAccount.
-func (SysUserAccount) Fields() []ent.Field {
+// Fields of the UserAccount.
+func (UserAccount) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("user_id").Positive().Comment("Reference to SysUser ID"),
 		field.String("platform").Comment("Social media platform (e.g., Twitter, Facebook)"),
@@ -29,20 +29,20 @@ func (SysUserAccount) Fields() []ent.Field {
 	}
 }
 
-// Edges of the SysUserAccounts.
-func (SysUserAccount) Edges() []ent.Edge {
+// Edges of the UserAccounts.
+func (UserAccount) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", SysUser.Type).Ref("accounts").Required().Unique().Field("user_id"),
+		edge.From("user", User.Type).Ref("accounts").Required().Unique().Field("user_id"),
 	}
 }
 
-func (SysUserAccount) Annotations() []schema.Annotation {
+func (UserAccount) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entsql.WithComments(true),
 	}
 }
 
-func (SysUserAccount) Indexes() []ent.Index {
+func (UserAccount) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("user_id"),                         // 单字段索引
 		index.Fields("platform", "identifier").Unique(), // 若希望平台+账号唯一，可添加 Unique

@@ -125,7 +125,7 @@ func HasUser() predicate.UserTenant {
 }
 
 // HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
-func HasUserWith(preds ...predicate.SysUser) predicate.UserTenant {
+func HasUserWith(preds ...predicate.User) predicate.UserTenant {
 	return predicate.UserTenant(func(s *sql.Selector) {
 		step := newUserStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {

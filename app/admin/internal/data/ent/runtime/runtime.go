@@ -7,9 +7,9 @@ import (
 
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/schema"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 )
 
@@ -33,111 +33,6 @@ func init() {
 	department.DefaultUpdatedAt = departmentDescUpdatedAt.Default.(func() time.Time)
 	// department.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	department.UpdateDefaultUpdatedAt = departmentDescUpdatedAt.UpdateDefault.(func() time.Time)
-	sysuserHooks := schema.SysUser{}.Hooks()
-	sysuser.Hooks[0] = sysuserHooks[0]
-	sysuserFields := schema.SysUser{}.Fields()
-	_ = sysuserFields
-	// sysuserDescUsername is the schema descriptor for username field.
-	sysuserDescUsername := sysuserFields[1].Descriptor()
-	// sysuser.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
-	sysuser.UsernameValidator = func() func(string) error {
-		validators := sysuserDescUsername.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(username string) error {
-			for _, fn := range fns {
-				if err := fn(username); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
-	// sysuserDescEmail is the schema descriptor for email field.
-	sysuserDescEmail := sysuserFields[2].Descriptor()
-	// sysuser.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	sysuser.EmailValidator = func() func(string) error {
-		validators := sysuserDescEmail.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(email string) error {
-			for _, fn := range fns {
-				if err := fn(email); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
-	// sysuserDescPhone is the schema descriptor for phone field.
-	sysuserDescPhone := sysuserFields[3].Descriptor()
-	// sysuser.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
-	sysuser.PhoneValidator = func() func(string) error {
-		validators := sysuserDescPhone.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-			validators[2].(func(string) error),
-		}
-		return func(phone string) error {
-			for _, fn := range fns {
-				if err := fn(phone); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
-	// sysuserDescPassword is the schema descriptor for password field.
-	sysuserDescPassword := sysuserFields[4].Descriptor()
-	// sysuser.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	sysuser.PasswordValidator = sysuserDescPassword.Validators[0].(func(string) error)
-	// sysuserDescLanguage is the schema descriptor for language field.
-	sysuserDescLanguage := sysuserFields[9].Descriptor()
-	// sysuser.DefaultLanguage holds the default value on creation for the language field.
-	sysuser.DefaultLanguage = sysuserDescLanguage.Default.(string)
-	// sysuser.LanguageValidator is a validator for the "language" field. It is called by the builders before save.
-	sysuser.LanguageValidator = sysuserDescLanguage.Validators[0].(func(string) error)
-	// sysuserDescTimezone is the schema descriptor for timezone field.
-	sysuserDescTimezone := sysuserFields[10].Descriptor()
-	// sysuser.DefaultTimezone holds the default value on creation for the timezone field.
-	sysuser.DefaultTimezone = sysuserDescTimezone.Default.(string)
-	// sysuser.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
-	sysuser.TimezoneValidator = sysuserDescTimezone.Validators[0].(func(string) error)
-	// sysuserDescCreatedAt is the schema descriptor for created_at field.
-	sysuserDescCreatedAt := sysuserFields[13].Descriptor()
-	// sysuser.DefaultCreatedAt holds the default value on creation for the created_at field.
-	sysuser.DefaultCreatedAt = sysuserDescCreatedAt.Default.(func() time.Time)
-	// sysuserDescUpdatedAt is the schema descriptor for updated_at field.
-	sysuserDescUpdatedAt := sysuserFields[14].Descriptor()
-	// sysuser.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	sysuser.DefaultUpdatedAt = sysuserDescUpdatedAt.Default.(func() time.Time)
-	// sysuser.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	sysuser.UpdateDefaultUpdatedAt = sysuserDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// sysuserDescID is the schema descriptor for id field.
-	sysuserDescID := sysuserFields[0].Descriptor()
-	// sysuser.DefaultID holds the default value on creation for the id field.
-	sysuser.DefaultID = sysuserDescID.Default.(func() int64)
-	sysuseraccountFields := schema.SysUserAccount{}.Fields()
-	_ = sysuseraccountFields
-	// sysuseraccountDescUserID is the schema descriptor for user_id field.
-	sysuseraccountDescUserID := sysuseraccountFields[0].Descriptor()
-	// sysuseraccount.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
-	sysuseraccount.UserIDValidator = sysuseraccountDescUserID.Validators[0].(func(int64) error)
-	// sysuseraccountDescCreatedAt is the schema descriptor for created_at field.
-	sysuseraccountDescCreatedAt := sysuseraccountFields[4].Descriptor()
-	// sysuseraccount.DefaultCreatedAt holds the default value on creation for the created_at field.
-	sysuseraccount.DefaultCreatedAt = sysuseraccountDescCreatedAt.Default.(func() time.Time)
-	// sysuseraccountDescUpdatedAt is the schema descriptor for updated_at field.
-	sysuseraccountDescUpdatedAt := sysuseraccountFields[5].Descriptor()
-	// sysuseraccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	sysuseraccount.DefaultUpdatedAt = sysuseraccountDescUpdatedAt.Default.(func() time.Time)
-	// sysuseraccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	sysuseraccount.UpdateDefaultUpdatedAt = sysuseraccountDescUpdatedAt.UpdateDefault.(func() time.Time)
 	tenantFields := schema.Tenant{}.Fields()
 	_ = tenantFields
 	// tenantDescName is the schema descriptor for name field.
@@ -176,6 +71,111 @@ func init() {
 	tenantDescID := tenantFields[0].Descriptor()
 	// tenant.DefaultID holds the default value on creation for the id field.
 	tenant.DefaultID = tenantDescID.Default.(func() int64)
+	userHooks := schema.User{}.Hooks()
+	user.Hooks[0] = userHooks[0]
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescUsername is the schema descriptor for username field.
+	userDescUsername := userFields[1].Descriptor()
+	// user.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
+	user.UsernameValidator = func() func(string) error {
+		validators := userDescUsername.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(username string) error {
+			for _, fn := range fns {
+				if err := fn(username); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[2].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = func() func(string) error {
+		validators := userDescEmail.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(email string) error {
+			for _, fn := range fns {
+				if err := fn(email); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescPhone is the schema descriptor for phone field.
+	userDescPhone := userFields[3].Descriptor()
+	// user.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
+	user.PhoneValidator = func() func(string) error {
+		validators := userDescPhone.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(phone string) error {
+			for _, fn := range fns {
+				if err := fn(phone); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescPassword is the schema descriptor for password field.
+	userDescPassword := userFields[4].Descriptor()
+	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
+	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
+	// userDescLanguage is the schema descriptor for language field.
+	userDescLanguage := userFields[9].Descriptor()
+	// user.DefaultLanguage holds the default value on creation for the language field.
+	user.DefaultLanguage = userDescLanguage.Default.(string)
+	// user.LanguageValidator is a validator for the "language" field. It is called by the builders before save.
+	user.LanguageValidator = userDescLanguage.Validators[0].(func(string) error)
+	// userDescTimezone is the schema descriptor for timezone field.
+	userDescTimezone := userFields[10].Descriptor()
+	// user.DefaultTimezone holds the default value on creation for the timezone field.
+	user.DefaultTimezone = userDescTimezone.Default.(string)
+	// user.TimezoneValidator is a validator for the "timezone" field. It is called by the builders before save.
+	user.TimezoneValidator = userDescTimezone.Validators[0].(func(string) error)
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[13].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[14].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userFields[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() int64)
+	useraccountFields := schema.UserAccount{}.Fields()
+	_ = useraccountFields
+	// useraccountDescUserID is the schema descriptor for user_id field.
+	useraccountDescUserID := useraccountFields[0].Descriptor()
+	// useraccount.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
+	useraccount.UserIDValidator = useraccountDescUserID.Validators[0].(func(int64) error)
+	// useraccountDescCreatedAt is the schema descriptor for created_at field.
+	useraccountDescCreatedAt := useraccountFields[4].Descriptor()
+	// useraccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	useraccount.DefaultCreatedAt = useraccountDescCreatedAt.Default.(func() time.Time)
+	// useraccountDescUpdatedAt is the schema descriptor for updated_at field.
+	useraccountDescUpdatedAt := useraccountFields[5].Descriptor()
+	// useraccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	useraccount.DefaultUpdatedAt = useraccountDescUpdatedAt.Default.(func() time.Time)
+	// useraccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	useraccount.UpdateDefaultUpdatedAt = useraccountDescUpdatedAt.UpdateDefault.(func() time.Time)
 	userdepartmentFields := schema.UserDepartment{}.Fields()
 	_ = userdepartmentFields
 	// userdepartmentDescAttributes is the schema descriptor for attributes field.

@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/predicate"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
@@ -76,9 +76,9 @@ func (utu *UserTenantUpdate) ClearRoleLabels() *UserTenantUpdate {
 	return utu
 }
 
-// SetUser sets the "user" edge to the SysUser entity.
-func (utu *UserTenantUpdate) SetUser(s *SysUser) *UserTenantUpdate {
-	return utu.SetUserID(s.ID)
+// SetUser sets the "user" edge to the User entity.
+func (utu *UserTenantUpdate) SetUser(u *User) *UserTenantUpdate {
+	return utu.SetUserID(u.ID)
 }
 
 // SetTenant sets the "tenant" edge to the Tenant entity.
@@ -91,7 +91,7 @@ func (utu *UserTenantUpdate) Mutation() *UserTenantMutation {
 	return utu.mutation
 }
 
-// ClearUser clears the "user" edge to the SysUser entity.
+// ClearUser clears the "user" edge to the User entity.
 func (utu *UserTenantUpdate) ClearUser() *UserTenantUpdate {
 	utu.mutation.ClearUser()
 	return utu
@@ -172,7 +172,7 @@ func (utu *UserTenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{usertenant.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -185,7 +185,7 @@ func (utu *UserTenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{usertenant.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -288,9 +288,9 @@ func (utuo *UserTenantUpdateOne) ClearRoleLabels() *UserTenantUpdateOne {
 	return utuo
 }
 
-// SetUser sets the "user" edge to the SysUser entity.
-func (utuo *UserTenantUpdateOne) SetUser(s *SysUser) *UserTenantUpdateOne {
-	return utuo.SetUserID(s.ID)
+// SetUser sets the "user" edge to the User entity.
+func (utuo *UserTenantUpdateOne) SetUser(u *User) *UserTenantUpdateOne {
+	return utuo.SetUserID(u.ID)
 }
 
 // SetTenant sets the "tenant" edge to the Tenant entity.
@@ -303,7 +303,7 @@ func (utuo *UserTenantUpdateOne) Mutation() *UserTenantMutation {
 	return utuo.mutation
 }
 
-// ClearUser clears the "user" edge to the SysUser entity.
+// ClearUser clears the "user" edge to the User entity.
 func (utuo *UserTenantUpdateOne) ClearUser() *UserTenantUpdateOne {
 	utuo.mutation.ClearUser()
 	return utuo
@@ -414,7 +414,7 @@ func (utuo *UserTenantUpdateOne) sqlSave(ctx context.Context) (_node *UserTenant
 			Columns: []string{usertenant.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -427,7 +427,7 @@ func (utuo *UserTenantUpdateOne) sqlSave(ctx context.Context) (_node *UserTenant
 			Columns: []string{usertenant.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

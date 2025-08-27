@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 )
 
@@ -53,9 +53,9 @@ func (udc *UserDepartmentCreate) SetID(i int64) *UserDepartmentCreate {
 	return udc
 }
 
-// SetUser sets the "user" edge to the SysUser entity.
-func (udc *UserDepartmentCreate) SetUser(s *SysUser) *UserDepartmentCreate {
-	return udc.SetUserID(s.ID)
+// SetUser sets the "user" edge to the User entity.
+func (udc *UserDepartmentCreate) SetUser(u *User) *UserDepartmentCreate {
+	return udc.SetUserID(u.ID)
 }
 
 // SetDepartmentID sets the "department" edge to the Department entity by ID.
@@ -179,7 +179,7 @@ func (udc *UserDepartmentCreate) createSpec() (*UserDepartment, *sqlgraph.Create
 			Columns: []string{userdepartment.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/predicate"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 )
 
@@ -84,9 +84,9 @@ func (udu *UserDepartmentUpdate) SetAttributes(m map[string]interface{}) *UserDe
 	return udu
 }
 
-// SetUser sets the "user" edge to the SysUser entity.
-func (udu *UserDepartmentUpdate) SetUser(s *SysUser) *UserDepartmentUpdate {
-	return udu.SetUserID(s.ID)
+// SetUser sets the "user" edge to the User entity.
+func (udu *UserDepartmentUpdate) SetUser(u *User) *UserDepartmentUpdate {
+	return udu.SetUserID(u.ID)
 }
 
 // SetDepartmentID sets the "department" edge to the Department entity by ID.
@@ -105,7 +105,7 @@ func (udu *UserDepartmentUpdate) Mutation() *UserDepartmentMutation {
 	return udu.mutation
 }
 
-// ClearUser clears the "user" edge to the SysUser entity.
+// ClearUser clears the "user" edge to the User entity.
 func (udu *UserDepartmentUpdate) ClearUser() *UserDepartmentUpdate {
 	udu.mutation.ClearUser()
 	return udu
@@ -184,7 +184,7 @@ func (udu *UserDepartmentUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Columns: []string{userdepartment.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -197,7 +197,7 @@ func (udu *UserDepartmentUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Columns: []string{userdepartment.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -309,9 +309,9 @@ func (uduo *UserDepartmentUpdateOne) SetAttributes(m map[string]interface{}) *Us
 	return uduo
 }
 
-// SetUser sets the "user" edge to the SysUser entity.
-func (uduo *UserDepartmentUpdateOne) SetUser(s *SysUser) *UserDepartmentUpdateOne {
-	return uduo.SetUserID(s.ID)
+// SetUser sets the "user" edge to the User entity.
+func (uduo *UserDepartmentUpdateOne) SetUser(u *User) *UserDepartmentUpdateOne {
+	return uduo.SetUserID(u.ID)
 }
 
 // SetDepartmentID sets the "department" edge to the Department entity by ID.
@@ -330,7 +330,7 @@ func (uduo *UserDepartmentUpdateOne) Mutation() *UserDepartmentMutation {
 	return uduo.mutation
 }
 
-// ClearUser clears the "user" edge to the SysUser entity.
+// ClearUser clears the "user" edge to the User entity.
 func (uduo *UserDepartmentUpdateOne) ClearUser() *UserDepartmentUpdateOne {
 	uduo.mutation.ClearUser()
 	return uduo
@@ -439,7 +439,7 @@ func (uduo *UserDepartmentUpdateOne) sqlSave(ctx context.Context) (_node *UserDe
 			Columns: []string{userdepartment.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -452,7 +452,7 @@ func (uduo *UserDepartmentUpdateOne) sqlSave(ctx context.Context) (_node *UserDe
 			Columns: []string{userdepartment.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

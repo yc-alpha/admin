@@ -6,19 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"reflect"
-
 	"slices"
 	"strconv"
 	"time"
 
-	"net/http"
-
 	"entgo.io/ent/dialect/sql"
 	v1 "github.com/yc-alpha/admin/api/admin/v1"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/common/excel"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/variant"
@@ -46,7 +44,7 @@ type filterBo struct {
 	Status   []v1.UserStatus `json:"status"`
 }
 
-func convertUserAccountToProto(account *ent.SysUserAccount) *v1.UserAccount {
+func convertUserAccountToProto(account *ent.UserAccount) *v1.UserAccount {
 	target := &v1.UserAccount{
 		UserId:     strconv.FormatInt(account.UserID, 10),
 		Platform:   account.Platform,
@@ -58,7 +56,7 @@ func convertUserAccountToProto(account *ent.SysUserAccount) *v1.UserAccount {
 	return target
 }
 
-func convertSimpleUserToProto(user *ent.SysUser) *v1.SimpleUser {
+func convertSimpleUserToProto(user *ent.User) *v1.SimpleUser {
 	return &v1.SimpleUser{
 		Id:        strconv.FormatInt(user.ID, 10),
 		Username:  user.Username,
@@ -77,7 +75,7 @@ func convertSimpleUserToProto(user *ent.SysUser) *v1.SimpleUser {
 	}
 }
 
-func convertUserToProto(user *ent.SysUser, accounts ...*ent.SysUserAccount) *v1.User {
+func convertUserToProto(user *ent.User, accounts ...*ent.UserAccount) *v1.User {
 	target := &v1.User{
 		Id:        strconv.FormatInt(user.ID, 10),
 		Username:  user.Username,
@@ -117,28 +115,28 @@ func (s *UserService) CreateUser(ctx context.Context, req *v1.CreateUserRequest)
 	}
 	defer tx.Rollback()
 
-	creator := tx.SysUser.Create().
+	creator := tx.User.Create().
 		SetUsername(req.Username).
 		SetPassword(req.Password).
 		SetEmail(req.Email).
 		SetPhone(req.Phone).
 		SetFullName(req.Fullname).
-		SetStatus(sysuser.Status(req.Status.String())).
-		SetGender(sysuser.Gender(req.Gender.String())).
+		SetStatus(user.Status(req.Status.String())).
+		SetGender(user.Gender(req.Gender.String())).
 		SetLanguage(req.Language).
 		SetTimezone(req.Timezone)
 	if config.GetBool("system.skip_activate", false) {
-		creator.SetStatus(sysuser.StatusACTIVE)
+		creator.SetStatus(user.StatusACTIVE)
 	}
 	user, err := creator.Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var userAccounts []*ent.SysUserAccount
+	var userAccounts []*ent.UserAccount
 	if len(req.UserAccounts) > 0 {
 		for _, account := range req.UserAccounts {
-			accBuilder := tx.SysUserAccount.Create().
+			accBuilder := tx.UserAccount.Create().
 				SetUserID(user.ID).
 				SetPlatform(account.Platform).
 				SetIdentifier(account.Identifier)
@@ -169,7 +167,7 @@ func (s *UserService) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest)
 	if err != nil {
 		return &v1.DeleteUserResponse{Result: false, Code: 500, Msg: "invalid user ID"}, nil
 	}
-	if err := s.client.SysUser.DeleteOneID(userID).Exec(ctx); err != nil {
+	if err := s.client.User.DeleteOneID(userID).Exec(ctx); err != nil {
 		return &v1.DeleteUserResponse{Result: false, Code: 500, Msg: "failed to delete user: " + err.Error()}, nil
 	}
 	return &v1.DeleteUserResponse{Result: true, Code: 200, Msg: "user deleted successfully"}, nil
@@ -181,12 +179,12 @@ func (s *UserService) UpdateUser(ctx context.Context, req *v1.UpdateUserRequest)
 	if err != nil {
 		return &v1.UpdateUserResponse{Result: false, Code: 500, Msg: "invalid user ID"}, nil
 	}
-	updater := s.client.SysUser.UpdateOneID(userID).
+	updater := s.client.User.UpdateOneID(userID).
 		SetUsername(req.Username).
 		SetEmail(req.Email).
 		SetPhone(req.Phone).
-		SetStatus(sysuser.Status(req.Status.String())).
-		SetGender(sysuser.Gender(req.Gender.String())).
+		SetStatus(user.Status(req.Status.String())).
+		SetGender(user.Gender(req.Gender.String())).
 		SetLanguage(req.Language).
 		SetTimezone(req.Timezone)
 
@@ -216,23 +214,23 @@ func (s *UserService) UpdateUserAccounts(ctx context.Context, req *v1.UpdateUser
 	defer tx.Rollback()
 
 	// lock users
-	user, err := tx.SysUser.Query().Where(sysuser.ID(userID)).WithAccounts().ForUpdate().Only(ctx)
+	user, err := tx.User.Query().Where(user.ID(userID)).WithAccounts().ForUpdate().Only(ctx)
 	if err != nil {
 		return &v1.UpdateUserAccountsResponse{Result: false, Code: 500, Msg: "user not found"}, nil
 	}
 
 	// Create old account mapping (using Platform+Account as a unique identifier)
-	oldAccountMap := make(map[string]*ent.SysUserAccount)
+	oldAccountMap := make(map[string]*ent.UserAccount)
 	for _, acc := range user.Edges.Accounts {
 		key := acc.Platform + "|" + acc.Identifier
 		oldAccountMap[key] = acc
 	}
 
 	// Create a new account mapping
-	newAccountMap := make(map[string]*ent.SysUserAccount)
+	newAccountMap := make(map[string]*ent.UserAccount)
 	for _, acc := range req.UserAccounts {
 		key := acc.Platform + "|" + acc.Identifier
-		account := &ent.SysUserAccount{
+		account := &ent.UserAccount{
 			UserID:     userID,
 			Platform:   acc.Platform,
 			Identifier: acc.Identifier,
@@ -244,7 +242,7 @@ func (s *UserService) UpdateUserAccounts(ctx context.Context, req *v1.UpdateUser
 	// Find the account that needs to be deleted
 	for key := range oldAccountMap {
 		if _, exists := newAccountMap[key]; !exists {
-			if err := tx.SysUserAccount.DeleteOneID(oldAccountMap[key].ID).Exec(ctx); err != nil {
+			if err := tx.UserAccount.DeleteOneID(oldAccountMap[key].ID).Exec(ctx); err != nil {
 				return &v1.UpdateUserAccountsResponse{Result: false, Code: 500, Msg: "failed to delete user account: " + err.Error()}, nil
 			}
 		}
@@ -252,7 +250,7 @@ func (s *UserService) UpdateUserAccounts(ctx context.Context, req *v1.UpdateUser
 
 	// Update or create user accounts
 	for _, newAcc := range newAccountMap {
-		if err := tx.SysUserAccount.
+		if err := tx.UserAccount.
 			Create().
 			SetPlatform(newAcc.Platform).
 			SetIdentifier(newAcc.Identifier).
@@ -278,12 +276,12 @@ func (s *UserService) GetUserInfo(ctx context.Context, req *v1.GetUserInfoReques
 	if req.Id == "" && req.Username == "" && req.Email == "" && req.Phone == "" {
 		return &v1.GetUserInfoResponse{Result: false, Code: 500, Msg: "user ID, username, email, or phone is required"}, nil
 	}
-	user, err := s.client.SysUser.Query().
-		Where(sysuser.Or(
-			sysuser.ID(variant.New(req.GetId()).ToInt64()),
-			sysuser.Username(req.GetUsername()),
-			sysuser.Email(req.GetEmail()),
-			sysuser.Phone(req.GetPhone()),
+	user, err := s.client.User.Query().
+		Where(user.Or(
+			user.ID(variant.New(req.GetId()).ToInt64()),
+			user.Username(req.GetUsername()),
+			user.Email(req.GetEmail()),
+			user.Phone(req.GetPhone()),
 		)).
 		WithAccounts().
 		Only(ctx)
@@ -299,35 +297,35 @@ func (s *UserService) GetUserInfo(ctx context.Context, req *v1.GetUserInfoReques
 	}, nil
 }
 
-func filterFunc(bo *filterBo, query *ent.SysUserQuery) {
+func filterFunc(bo *filterBo, query *ent.UserQuery) {
 	if bo.Username != "" {
-		query.Where(sysuser.UsernameContains(bo.Username))
+		query.Where(user.UsernameContains(bo.Username))
 	}
 	if bo.Email != "" {
-		query.Where(sysuser.EmailContains(bo.Email))
+		query.Where(user.EmailContains(bo.Email))
 	}
 	if bo.Phone != "" {
-		query.Where(sysuser.PhoneContains(bo.Phone))
+		query.Where(user.PhoneContains(bo.Phone))
 	}
 	if bo.Filter != "" {
-		query.Where(sysuser.Or(
-			sysuser.UsernameContains(bo.Username),
-			sysuser.EmailContains(bo.Email),
-			sysuser.PhoneContains(bo.Phone),
+		query.Where(user.Or(
+			user.UsernameContains(bo.Username),
+			user.EmailContains(bo.Email),
+			user.PhoneContains(bo.Phone),
 		))
 	}
 	if len(bo.Status) > 0 && len(bo.Status) < 3 {
-		s := []sysuser.Status{}
+		s := []user.Status{}
 		for _, status := range bo.Status {
-			s = append(s, sysuser.Status(status.String()))
+			s = append(s, user.Status(status.String()))
 		}
-		query.Where(sysuser.StatusIn(s...))
+		query.Where(user.StatusIn(s...))
 	}
 }
 
 // ListUsers retrieves a list of users based on the provided filters and pagination.
 func (s *UserService) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
-	q := s.client.SysUser.Query()
+	q := s.client.User.Query()
 
 	filterFunc(&filterBo{
 		Username: req.GetUsername(),
@@ -338,8 +336,8 @@ func (s *UserService) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (
 	}, q)
 	// 排序参数
 	allowedOrderFields := []string{
-		sysuser.FieldUsername,
-		sysuser.FieldCreatedAt,
+		user.FieldUsername,
+		user.FieldCreatedAt,
 	}
 	if slices.Contains(allowedOrderFields, req.GetOrder()) {
 		if req.GetIsDesc() {
@@ -389,7 +387,7 @@ func (s *UserService) ChangePassword(ctx context.Context, req *v1.ChangePassword
 	oldPwd := req.GetOldPassword()
 	newPwd := req.GetNewPassword()
 	userId := variant.New(req.GetId()).ToInt64()
-	updateOne := s.client.SysUser.UpdateOneID(userId)
+	updateOne := s.client.User.UpdateOneID(userId)
 
 	ok, err := s.checkPassword(ctx, userId, oldPwd)
 	if err != nil {
@@ -408,7 +406,7 @@ func (s *UserService) ChangePassword(ctx context.Context, req *v1.ChangePassword
 
 func (s *UserService) checkPassword(ctx context.Context, userID int64, password string) (bool, error) {
 
-	user, err := s.client.SysUser.Get(ctx, userID)
+	user, err := s.client.User.Get(ctx, userID)
 	if err != nil {
 		return false, fmt.Errorf("failed to fetch user password: %w", err)
 	}
@@ -464,13 +462,13 @@ func (s *UserService) ExportUser(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	query := s.client.SysUser.Query()
+	query := s.client.User.Query()
 	if len(body.Ids) > 0 {
 		var ids []int64
 		for _, id := range body.Ids {
 			ids = append(ids, variant.New(id).ToInt64())
 		}
-		query.Where(sysuser.IDIn(ids...))
+		query.Where(user.IDIn(ids...))
 	} else {
 		filterFunc(body.Params, query)
 	}

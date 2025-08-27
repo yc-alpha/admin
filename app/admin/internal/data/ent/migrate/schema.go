@@ -11,16 +11,16 @@ var (
 	// DepartmentsColumns holds the columns for the "departments" table.
 	DepartmentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "parent_id", Type: field.TypeInt64},
-		{Name: "name", Type: field.TypeString},
+		{Name: "parent_id", Type: field.TypeInt64, Comment: "Parent Department ID"},
+		{Name: "name", Type: field.TypeString, Comment: "Name of the department"},
 		{Name: "path", Type: field.TypeString},
 		{Name: "attributes", Type: field.TypeJSON},
-		{Name: "created_by", Type: field.TypeInt64, Nullable: true},
-		{Name: "updated_by", Type: field.TypeInt64, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "tenant_id", Type: field.TypeInt64},
+		{Name: "created_by", Type: field.TypeInt64, Nullable: true, Comment: "User who created this record"},
+		{Name: "updated_by", Type: field.TypeInt64, Nullable: true, Comment: "User who last updated this record"},
+		{Name: "created_at", Type: field.TypeTime, Comment: "Creation timestamp of this record"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "Last update timestamp of this record"},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true, Comment: "Timestamp when the record was deleted, if applicable"},
+		{Name: "tenant_id", Type: field.TypeInt64, Comment: "Tenant ID"},
 	}
 	// DepartmentsTable holds the schema information for the "departments" table.
 	DepartmentsTable = &schema.Table{
@@ -36,8 +36,28 @@ var (
 			},
 		},
 	}
-	// SysUsersColumns holds the columns for the "sys_users" table.
-	SysUsersColumns = []*schema.Column{
+	// TenantsColumns holds the columns for the "tenants" table.
+	TenantsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Primary Key ID"},
+		{Name: "name", Type: field.TypeString, Size: 128, Comment: "Name of the tenant"},
+		{Name: "owner_id", Type: field.TypeInt64, Comment: "Owner user ID of the tenant"},
+		{Name: "status", Type: field.TypeEnum, Comment: "Status of the tenant", Enums: []string{"ACTIVE", "DISABLED", "EXPIRED", "PENDING"}, Default: "PENDING"},
+		{Name: "expired_at", Type: field.TypeTime, Nullable: true, Comment: "Expiration time of the tenant"},
+		{Name: "attributes", Type: field.TypeJSON},
+		{Name: "created_by", Type: field.TypeInt64, Nullable: true, Comment: "User who created this record"},
+		{Name: "updated_by", Type: field.TypeInt64, Nullable: true, Comment: "User who last updated this record"},
+		{Name: "created_at", Type: field.TypeTime, Comment: "Creation timestamp of this record"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "Last update timestamp of this record"},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true, Comment: "Timestamp when the record was deleted, if applicable"},
+	}
+	// TenantsTable holds the schema information for the "tenants" table.
+	TenantsTable = &schema.Table{
+		Name:       "tenants",
+		Columns:    TenantsColumns,
+		PrimaryKey: []*schema.Column{TenantsColumns[0]},
+	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Primary Key ID"},
 		{Name: "username", Type: field.TypeString, Unique: true, Size: 64, Comment: "Username of the user"},
 		{Name: "email", Type: field.TypeString, Unique: true, Comment: "Email address of the user"},
@@ -55,76 +75,56 @@ var (
 		{Name: "updated_at", Type: field.TypeTime, Comment: "Last update timestamp of this record"},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true, Comment: "Timestamp when the record was deleted, if applicable"},
 	}
-	// SysUsersTable holds the schema information for the "sys_users" table.
-	SysUsersTable = &schema.Table{
-		Name:       "sys_users",
-		Columns:    SysUsersColumns,
-		PrimaryKey: []*schema.Column{SysUsersColumns[0]},
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
-	// SysUserAccountsColumns holds the columns for the "sys_user_accounts" table.
-	SysUserAccountsColumns = []*schema.Column{
+	// UserAccountsColumns holds the columns for the "user_accounts" table.
+	UserAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "platform", Type: field.TypeString},
-		{Name: "identifier", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "platform", Type: field.TypeString, Comment: "Social media platform (e.g., Twitter, Facebook)"},
+		{Name: "identifier", Type: field.TypeString, Comment: "User's account identifier on the platform"},
+		{Name: "name", Type: field.TypeString, Comment: "User's name on the platform"},
+		{Name: "created_at", Type: field.TypeTime, Comment: "Record creation timestamp"},
+		{Name: "updated_at", Type: field.TypeTime, Comment: "Record last update timestamp"},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true, Comment: "Soft delete flag, null if not deleted"},
+		{Name: "user_id", Type: field.TypeInt64, Comment: "Reference to SysUser ID"},
 	}
-	// SysUserAccountsTable holds the schema information for the "sys_user_accounts" table.
-	SysUserAccountsTable = &schema.Table{
-		Name:       "sys_user_accounts",
-		Columns:    SysUserAccountsColumns,
-		PrimaryKey: []*schema.Column{SysUserAccountsColumns[0]},
+	// UserAccountsTable holds the schema information for the "user_accounts" table.
+	UserAccountsTable = &schema.Table{
+		Name:       "user_accounts",
+		Columns:    UserAccountsColumns,
+		PrimaryKey: []*schema.Column{UserAccountsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "sys_user_accounts_sys_users_accounts",
-				Columns:    []*schema.Column{SysUserAccountsColumns[7]},
-				RefColumns: []*schema.Column{SysUsersColumns[0]},
+				Symbol:     "user_accounts_users_accounts",
+				Columns:    []*schema.Column{UserAccountsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "sysuseraccount_user_id",
+				Name:    "useraccount_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{SysUserAccountsColumns[7]},
+				Columns: []*schema.Column{UserAccountsColumns[7]},
 			},
 			{
-				Name:    "sysuseraccount_platform_identifier",
+				Name:    "useraccount_platform_identifier",
 				Unique:  true,
-				Columns: []*schema.Column{SysUserAccountsColumns[1], SysUserAccountsColumns[2]},
+				Columns: []*schema.Column{UserAccountsColumns[1], UserAccountsColumns[2]},
 			},
 		},
-	}
-	// TenantsColumns holds the columns for the "tenants" table.
-	TenantsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "name", Type: field.TypeString, Size: 128},
-		{Name: "owner_id", Type: field.TypeInt64},
-		{Name: "status", Type: field.TypeEnum, Enums: []string{"ACTIVE", "DISABLED", "EXPIRED", "PENDING"}, Default: "PENDING"},
-		{Name: "expired_at", Type: field.TypeTime, Nullable: true},
-		{Name: "attributes", Type: field.TypeJSON},
-		{Name: "created_by", Type: field.TypeInt64, Nullable: true},
-		{Name: "updated_by", Type: field.TypeInt64, Nullable: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
-	}
-	// TenantsTable holds the schema information for the "tenants" table.
-	TenantsTable = &schema.Table{
-		Name:       "tenants",
-		Columns:    TenantsColumns,
-		PrimaryKey: []*schema.Column{TenantsColumns[0]},
 	}
 	// UserDepartmentsColumns holds the columns for the "user_departments" table.
 	UserDepartmentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
-		{Name: "tenant_id", Type: field.TypeInt64},
+		{Name: "tenant_id", Type: field.TypeInt64, Comment: "Tenant ID"},
 		{Name: "attributes", Type: field.TypeJSON},
-		{Name: "dept_id", Type: field.TypeInt64},
-		{Name: "user_id", Type: field.TypeInt64},
+		{Name: "dept_id", Type: field.TypeInt64, Comment: "Department ID"},
+		{Name: "user_id", Type: field.TypeInt64, Comment: "SysUser ID"},
 	}
 	// UserDepartmentsTable holds the schema information for the "user_departments" table.
 	UserDepartmentsTable = &schema.Table{
@@ -139,9 +139,9 @@ var (
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "user_departments_sys_users_user_departments",
+				Symbol:     "user_departments_users_user_departments",
 				Columns:    []*schema.Column{UserDepartmentsColumns[4]},
-				RefColumns: []*schema.Column{SysUsersColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -150,8 +150,8 @@ var (
 	UserTenantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "role_labels", Type: field.TypeJSON, Nullable: true},
-		{Name: "user_id", Type: field.TypeInt64},
-		{Name: "tenant_id", Type: field.TypeInt64},
+		{Name: "tenant_id", Type: field.TypeInt64, Comment: "Tenant ID"},
+		{Name: "user_id", Type: field.TypeInt64, Comment: "SysUser ID"},
 	}
 	// UserTenantsTable holds the schema information for the "user_tenants" table.
 	UserTenantsTable = &schema.Table{
@@ -160,15 +160,15 @@ var (
 		PrimaryKey: []*schema.Column{UserTenantsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "user_tenants_sys_users_user_tenants",
+				Symbol:     "user_tenants_tenants_user_tenants",
 				Columns:    []*schema.Column{UserTenantsColumns[2]},
-				RefColumns: []*schema.Column{SysUsersColumns[0]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
-				Symbol:     "user_tenants_tenants_user_tenants",
+				Symbol:     "user_tenants_users_user_tenants",
 				Columns:    []*schema.Column{UserTenantsColumns[3]},
-				RefColumns: []*schema.Column{TenantsColumns[0]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
@@ -176,9 +176,9 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		DepartmentsTable,
-		SysUsersTable,
-		SysUserAccountsTable,
 		TenantsTable,
+		UsersTable,
+		UserAccountsTable,
 		UserDepartmentsTable,
 		UserTenantsTable,
 	}
@@ -186,9 +186,9 @@ var (
 
 func init() {
 	DepartmentsTable.ForeignKeys[0].RefTable = TenantsTable
-	SysUserAccountsTable.ForeignKeys[0].RefTable = SysUsersTable
+	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
 	UserDepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
-	UserDepartmentsTable.ForeignKeys[1].RefTable = SysUsersTable
-	UserTenantsTable.ForeignKeys[0].RefTable = SysUsersTable
-	UserTenantsTable.ForeignKeys[1].RefTable = TenantsTable
+	UserDepartmentsTable.ForeignKeys[1].RefTable = UsersTable
+	UserTenantsTable.ForeignKeys[0].RefTable = TenantsTable
+	UserTenantsTable.ForeignKeys[1].RefTable = UsersTable
 }

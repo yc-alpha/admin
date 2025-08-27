@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 )
 
@@ -36,7 +36,7 @@ type UserDepartment struct {
 // UserDepartmentEdges holds the relations/edges for other nodes in the graph.
 type UserDepartmentEdges struct {
 	// User holds the value of the user edge.
-	User *SysUser `json:"user,omitempty"`
+	User *User `json:"user,omitempty"`
 	// Department holds the value of the department edge.
 	Department *Department `json:"department,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -46,11 +46,11 @@ type UserDepartmentEdges struct {
 
 // UserOrErr returns the User value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UserDepartmentEdges) UserOrErr() (*SysUser, error) {
+func (e UserDepartmentEdges) UserOrErr() (*User, error) {
 	if e.User != nil {
 		return e.User, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: sysuser.Label}
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
 }
@@ -136,7 +136,7 @@ func (ud *UserDepartment) Value(name string) (ent.Value, error) {
 }
 
 // QueryUser queries the "user" edge of the UserDepartment entity.
-func (ud *UserDepartment) QueryUser() *SysUserQuery {
+func (ud *UserDepartment) QueryUser() *UserQuery {
 	return NewUserDepartmentClient(ud.config).QueryUser(ud)
 }
 

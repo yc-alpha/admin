@@ -26,9 +26,9 @@ const (
 	Table = "user_tenants"
 	// UserTable is the table that holds the user relation/edge.
 	UserTable = "user_tenants"
-	// UserInverseTable is the table name for the SysUser entity.
-	// It exists in this package in order to avoid circular dependency with the "sysuser" package.
-	UserInverseTable = "sys_users"
+	// UserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_id"
 	// TenantTable is the table that holds the tenant relation/edge.

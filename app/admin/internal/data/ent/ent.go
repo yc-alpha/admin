@@ -13,9 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
@@ -79,9 +79,9 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			department.Table:     department.ValidColumn,
-			sysuser.Table:        sysuser.ValidColumn,
-			sysuseraccount.Table: sysuseraccount.ValidColumn,
 			tenant.Table:         tenant.ValidColumn,
+			user.Table:           user.ValidColumn,
+			useraccount.Table:    useraccount.ValidColumn,
 			userdepartment.Table: userdepartment.ValidColumn,
 			usertenant.Table:     usertenant.ValidColumn,
 		})

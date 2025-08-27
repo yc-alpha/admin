@@ -14,7 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/predicate"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 )
 
@@ -25,7 +25,7 @@ type UserDepartmentQuery struct {
 	order          []userdepartment.OrderOption
 	inters         []Interceptor
 	predicates     []predicate.UserDepartment
-	withUser       *SysUserQuery
+	withUser       *UserQuery
 	withDepartment *DepartmentQuery
 	modifiers      []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -65,8 +65,8 @@ func (udq *UserDepartmentQuery) Order(o ...userdepartment.OrderOption) *UserDepa
 }
 
 // QueryUser chains the current query on the "user" edge.
-func (udq *UserDepartmentQuery) QueryUser() *SysUserQuery {
-	query := (&SysUserClient{config: udq.config}).Query()
+func (udq *UserDepartmentQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: udq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := udq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -77,7 +77,7 @@ func (udq *UserDepartmentQuery) QueryUser() *SysUserQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(userdepartment.Table, userdepartment.FieldID, selector),
-			sqlgraph.To(sysuser.Table, sysuser.FieldID),
+			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, userdepartment.UserTable, userdepartment.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(udq.driver.Dialect(), step)
@@ -310,8 +310,8 @@ func (udq *UserDepartmentQuery) Clone() *UserDepartmentQuery {
 
 // WithUser tells the query-builder to eager-load the nodes that are connected to
 // the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (udq *UserDepartmentQuery) WithUser(opts ...func(*SysUserQuery)) *UserDepartmentQuery {
-	query := (&SysUserClient{config: udq.config}).Query()
+func (udq *UserDepartmentQuery) WithUser(opts ...func(*UserQuery)) *UserDepartmentQuery {
+	query := (&UserClient{config: udq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -436,7 +436,7 @@ func (udq *UserDepartmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	}
 	if query := udq.withUser; query != nil {
 		if err := udq.loadUser(ctx, query, nodes, nil,
-			func(n *UserDepartment, e *SysUser) { n.Edges.User = e }); err != nil {
+			func(n *UserDepartment, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -449,7 +449,7 @@ func (udq *UserDepartmentQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (udq *UserDepartmentQuery) loadUser(ctx context.Context, query *SysUserQuery, nodes []*UserDepartment, init func(*UserDepartment), assign func(*UserDepartment, *SysUser)) error {
+func (udq *UserDepartmentQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*UserDepartment, init func(*UserDepartment), assign func(*UserDepartment, *User)) error {
 	ids := make([]int64, 0, len(nodes))
 	nodeids := make(map[int64][]*UserDepartment)
 	for i := range nodes {
@@ -462,7 +462,7 @@ func (udq *UserDepartmentQuery) loadUser(ctx context.Context, query *SysUserQuer
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(sysuser.IDIn(ids...))
+	query.Where(user.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

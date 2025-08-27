@@ -9,14 +9,14 @@ import (
 // Department is the predicate function for department builders.
 type Department func(*sql.Selector)
 
-// SysUser is the predicate function for sysuser builders.
-type SysUser func(*sql.Selector)
-
-// SysUserAccount is the predicate function for sysuseraccount builders.
-type SysUserAccount func(*sql.Selector)
-
 // Tenant is the predicate function for tenant builders.
 type Tenant func(*sql.Selector)
+
+// User is the predicate function for user builders.
+type User func(*sql.Selector)
+
+// UserAccount is the predicate function for useraccount builders.
+type UserAccount func(*sql.Selector)
 
 // UserDepartment is the predicate function for userdepartment builders.
 type UserDepartment func(*sql.Selector)

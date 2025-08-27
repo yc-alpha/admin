@@ -14,12 +14,12 @@ type Tx struct {
 	config
 	// Department is the client for interacting with the Department builders.
 	Department *DepartmentClient
-	// SysUser is the client for interacting with the SysUser builders.
-	SysUser *SysUserClient
-	// SysUserAccount is the client for interacting with the SysUserAccount builders.
-	SysUserAccount *SysUserAccountClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
+	// UserAccount is the client for interacting with the UserAccount builders.
+	UserAccount *UserAccountClient
 	// UserDepartment is the client for interacting with the UserDepartment builders.
 	UserDepartment *UserDepartmentClient
 	// UserTenant is the client for interacting with the UserTenant builders.
@@ -156,9 +156,9 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Department = NewDepartmentClient(tx.config)
-	tx.SysUser = NewSysUserClient(tx.config)
-	tx.SysUserAccount = NewSysUserAccountClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
+	tx.User = NewUserClient(tx.config)
+	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserDepartment = NewUserDepartmentClient(tx.config)
 	tx.UserTenant = NewUserTenantClient(tx.config)
 }

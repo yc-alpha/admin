@@ -22,7 +22,7 @@ func (UserDepartment) Fields() []ent.Field {
 
 func (UserDepartment) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", SysUser.Type).Ref("user_departments").Required().Unique().Field("user_id"),
+		edge.From("user", User.Type).Ref("user_departments").Required().Unique().Field("user_id"),
 		edge.From("department", Department.Type).Ref("user_departments").Required().Unique().Field("dept_id"),
 	}
 }

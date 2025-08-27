@@ -13,8 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/predicate"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
@@ -25,7 +25,7 @@ type UserTenantQuery struct {
 	order      []usertenant.OrderOption
 	inters     []Interceptor
 	predicates []predicate.UserTenant
-	withUser   *SysUserQuery
+	withUser   *UserQuery
 	withTenant *TenantQuery
 	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
@@ -65,8 +65,8 @@ func (utq *UserTenantQuery) Order(o ...usertenant.OrderOption) *UserTenantQuery 
 }
 
 // QueryUser chains the current query on the "user" edge.
-func (utq *UserTenantQuery) QueryUser() *SysUserQuery {
-	query := (&SysUserClient{config: utq.config}).Query()
+func (utq *UserTenantQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: utq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := utq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -77,7 +77,7 @@ func (utq *UserTenantQuery) QueryUser() *SysUserQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(usertenant.Table, usertenant.FieldID, selector),
-			sqlgraph.To(sysuser.Table, sysuser.FieldID),
+			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usertenant.UserTable, usertenant.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(utq.driver.Dialect(), step)
@@ -310,8 +310,8 @@ func (utq *UserTenantQuery) Clone() *UserTenantQuery {
 
 // WithUser tells the query-builder to eager-load the nodes that are connected to
 // the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (utq *UserTenantQuery) WithUser(opts ...func(*SysUserQuery)) *UserTenantQuery {
-	query := (&SysUserClient{config: utq.config}).Query()
+func (utq *UserTenantQuery) WithUser(opts ...func(*UserQuery)) *UserTenantQuery {
+	query := (&UserClient{config: utq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
@@ -436,7 +436,7 @@ func (utq *UserTenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	}
 	if query := utq.withUser; query != nil {
 		if err := utq.loadUser(ctx, query, nodes, nil,
-			func(n *UserTenant, e *SysUser) { n.Edges.User = e }); err != nil {
+			func(n *UserTenant, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -449,7 +449,7 @@ func (utq *UserTenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	return nodes, nil
 }
 
-func (utq *UserTenantQuery) loadUser(ctx context.Context, query *SysUserQuery, nodes []*UserTenant, init func(*UserTenant), assign func(*UserTenant, *SysUser)) error {
+func (utq *UserTenantQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*UserTenant, init func(*UserTenant), assign func(*UserTenant, *User)) error {
 	ids := make([]int64, 0, len(nodes))
 	nodeids := make(map[int64][]*UserTenant)
 	for i := range nodes {
@@ -462,7 +462,7 @@ func (utq *UserTenantQuery) loadUser(ctx context.Context, query *SysUserQuery, n
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(sysuser.IDIn(ids...))
+	query.Where(user.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

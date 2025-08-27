@@ -9,12 +9,12 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 )
 
-// SysUserAccount is the model entity for the SysUserAccount schema.
-type SysUserAccount struct {
+// UserAccount is the model entity for the UserAccount schema.
+type UserAccount struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -33,15 +33,15 @@ type SysUserAccount struct {
 	// Soft delete flag, null if not deleted
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the SysUserAccountQuery when eager-loading is set.
-	Edges        SysUserAccountEdges `json:"edges"`
+	// The values are being populated by the UserAccountQuery when eager-loading is set.
+	Edges        UserAccountEdges `json:"edges"`
 	selectValues sql.SelectValues
 }
 
-// SysUserAccountEdges holds the relations/edges for other nodes in the graph.
-type SysUserAccountEdges struct {
+// UserAccountEdges holds the relations/edges for other nodes in the graph.
+type UserAccountEdges struct {
 	// User holds the value of the user edge.
-	User *SysUser `json:"user,omitempty"`
+	User *User `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
@@ -49,25 +49,25 @@ type SysUserAccountEdges struct {
 
 // UserOrErr returns the User value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e SysUserAccountEdges) UserOrErr() (*SysUser, error) {
+func (e UserAccountEdges) UserOrErr() (*User, error) {
 	if e.User != nil {
 		return e.User, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: sysuser.Label}
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*SysUserAccount) scanValues(columns []string) ([]any, error) {
+func (*UserAccount) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case sysuseraccount.FieldID, sysuseraccount.FieldUserID:
+		case useraccount.FieldID, useraccount.FieldUserID:
 			values[i] = new(sql.NullInt64)
-		case sysuseraccount.FieldPlatform, sysuseraccount.FieldIdentifier, sysuseraccount.FieldName:
+		case useraccount.FieldPlatform, useraccount.FieldIdentifier, useraccount.FieldName:
 			values[i] = new(sql.NullString)
-		case sysuseraccount.FieldCreatedAt, sysuseraccount.FieldUpdatedAt, sysuseraccount.FieldDeletedAt:
+		case useraccount.FieldCreatedAt, useraccount.FieldUpdatedAt, useraccount.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -77,125 +77,125 @@ func (*SysUserAccount) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the SysUserAccount fields.
-func (sua *SysUserAccount) assignValues(columns []string, values []any) error {
+// to the UserAccount fields.
+func (ua *UserAccount) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case sysuseraccount.FieldID:
+		case useraccount.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sua.ID = int(value.Int64)
-		case sysuseraccount.FieldUserID:
+			ua.ID = int(value.Int64)
+		case useraccount.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				sua.UserID = value.Int64
+				ua.UserID = value.Int64
 			}
-		case sysuseraccount.FieldPlatform:
+		case useraccount.FieldPlatform:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field platform", values[i])
 			} else if value.Valid {
-				sua.Platform = value.String
+				ua.Platform = value.String
 			}
-		case sysuseraccount.FieldIdentifier:
+		case useraccount.FieldIdentifier:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field identifier", values[i])
 			} else if value.Valid {
-				sua.Identifier = value.String
+				ua.Identifier = value.String
 			}
-		case sysuseraccount.FieldName:
+		case useraccount.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				sua.Name = new(string)
-				*sua.Name = value.String
+				ua.Name = new(string)
+				*ua.Name = value.String
 			}
-		case sysuseraccount.FieldCreatedAt:
+		case useraccount.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sua.CreatedAt = value.Time
+				ua.CreatedAt = value.Time
 			}
-		case sysuseraccount.FieldUpdatedAt:
+		case useraccount.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sua.UpdatedAt = value.Time
+				ua.UpdatedAt = value.Time
 			}
-		case sysuseraccount.FieldDeletedAt:
+		case useraccount.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
-				sua.DeletedAt = new(time.Time)
-				*sua.DeletedAt = value.Time
+				ua.DeletedAt = new(time.Time)
+				*ua.DeletedAt = value.Time
 			}
 		default:
-			sua.selectValues.Set(columns[i], values[i])
+			ua.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the SysUserAccount.
+// Value returns the ent.Value that was dynamically selected and assigned to the UserAccount.
 // This includes values selected through modifiers, order, etc.
-func (sua *SysUserAccount) Value(name string) (ent.Value, error) {
-	return sua.selectValues.Get(name)
+func (ua *UserAccount) Value(name string) (ent.Value, error) {
+	return ua.selectValues.Get(name)
 }
 
-// QueryUser queries the "user" edge of the SysUserAccount entity.
-func (sua *SysUserAccount) QueryUser() *SysUserQuery {
-	return NewSysUserAccountClient(sua.config).QueryUser(sua)
+// QueryUser queries the "user" edge of the UserAccount entity.
+func (ua *UserAccount) QueryUser() *UserQuery {
+	return NewUserAccountClient(ua.config).QueryUser(ua)
 }
 
-// Update returns a builder for updating this SysUserAccount.
-// Note that you need to call SysUserAccount.Unwrap() before calling this method if this SysUserAccount
+// Update returns a builder for updating this UserAccount.
+// Note that you need to call UserAccount.Unwrap() before calling this method if this UserAccount
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sua *SysUserAccount) Update() *SysUserAccountUpdateOne {
-	return NewSysUserAccountClient(sua.config).UpdateOne(sua)
+func (ua *UserAccount) Update() *UserAccountUpdateOne {
+	return NewUserAccountClient(ua.config).UpdateOne(ua)
 }
 
-// Unwrap unwraps the SysUserAccount entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the UserAccount entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sua *SysUserAccount) Unwrap() *SysUserAccount {
-	_tx, ok := sua.config.driver.(*txDriver)
+func (ua *UserAccount) Unwrap() *UserAccount {
+	_tx, ok := ua.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: SysUserAccount is not a transactional entity")
+		panic("ent: UserAccount is not a transactional entity")
 	}
-	sua.config.driver = _tx.drv
-	return sua
+	ua.config.driver = _tx.drv
+	return ua
 }
 
 // String implements the fmt.Stringer.
-func (sua *SysUserAccount) String() string {
+func (ua *UserAccount) String() string {
 	var builder strings.Builder
-	builder.WriteString("SysUserAccount(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sua.ID))
+	builder.WriteString("UserAccount(")
+	builder.WriteString(fmt.Sprintf("id=%v, ", ua.ID))
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", sua.UserID))
+	builder.WriteString(fmt.Sprintf("%v", ua.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("platform=")
-	builder.WriteString(sua.Platform)
+	builder.WriteString(ua.Platform)
 	builder.WriteString(", ")
 	builder.WriteString("identifier=")
-	builder.WriteString(sua.Identifier)
+	builder.WriteString(ua.Identifier)
 	builder.WriteString(", ")
-	if v := sua.Name; v != nil {
+	if v := ua.Name; v != nil {
 		builder.WriteString("name=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sua.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(ua.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sua.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(ua.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	if v := sua.DeletedAt; v != nil {
+	if v := ua.DeletedAt; v != nil {
 		builder.WriteString("deleted_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
@@ -203,5 +203,5 @@ func (sua *SysUserAccount) String() string {
 	return builder.String()
 }
 
-// SysUserAccounts is a parsable slice of SysUserAccount.
-type SysUserAccounts []*SysUserAccount
+// UserAccounts is a parsable slice of UserAccount.
+type UserAccounts []*UserAccount

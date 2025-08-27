@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
@@ -34,7 +34,7 @@ type UserTenant struct {
 // UserTenantEdges holds the relations/edges for other nodes in the graph.
 type UserTenantEdges struct {
 	// User holds the value of the user edge.
-	User *SysUser `json:"user,omitempty"`
+	User *User `json:"user,omitempty"`
 	// Tenant holds the value of the tenant edge.
 	Tenant *Tenant `json:"tenant,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -44,11 +44,11 @@ type UserTenantEdges struct {
 
 // UserOrErr returns the User value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UserTenantEdges) UserOrErr() (*SysUser, error) {
+func (e UserTenantEdges) UserOrErr() (*User, error) {
 	if e.User != nil {
 		return e.User, nil
 	} else if e.loadedTypes[0] {
-		return nil, &NotFoundError{label: sysuser.Label}
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
 }
@@ -128,7 +128,7 @@ func (ut *UserTenant) Value(name string) (ent.Value, error) {
 }
 
 // QueryUser queries the "user" edge of the UserTenant entity.
-func (ut *UserTenant) QueryUser() *SysUserQuery {
+func (ut *UserTenant) QueryUser() *UserQuery {
 	return NewUserTenantClient(ut.config).QueryUser(ut)
 }
 

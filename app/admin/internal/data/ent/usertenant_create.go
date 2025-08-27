@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
@@ -47,9 +47,9 @@ func (utc *UserTenantCreate) SetID(i int64) *UserTenantCreate {
 	return utc
 }
 
-// SetUser sets the "user" edge to the SysUser entity.
-func (utc *UserTenantCreate) SetUser(s *SysUser) *UserTenantCreate {
-	return utc.SetUserID(s.ID)
+// SetUser sets the "user" edge to the User entity.
+func (utc *UserTenantCreate) SetUser(u *User) *UserTenantCreate {
+	return utc.SetUserID(u.ID)
 }
 
 // SetTenant sets the "tenant" edge to the Tenant entity.
@@ -148,7 +148,7 @@ func (utc *UserTenantCreate) createSpec() (*UserTenant, *sqlgraph.CreateSpec) {
 			Columns: []string{usertenant.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(sysuser.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

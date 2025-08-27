@@ -16,9 +16,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuser"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/sysuseraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
@@ -30,12 +30,12 @@ type Client struct {
 	Schema *migrate.Schema
 	// Department is the client for interacting with the Department builders.
 	Department *DepartmentClient
-	// SysUser is the client for interacting with the SysUser builders.
-	SysUser *SysUserClient
-	// SysUserAccount is the client for interacting with the SysUserAccount builders.
-	SysUserAccount *SysUserAccountClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
+	// UserAccount is the client for interacting with the UserAccount builders.
+	UserAccount *UserAccountClient
 	// UserDepartment is the client for interacting with the UserDepartment builders.
 	UserDepartment *UserDepartmentClient
 	// UserTenant is the client for interacting with the UserTenant builders.
@@ -52,9 +52,9 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Department = NewDepartmentClient(c.config)
-	c.SysUser = NewSysUserClient(c.config)
-	c.SysUserAccount = NewSysUserAccountClient(c.config)
 	c.Tenant = NewTenantClient(c.config)
+	c.User = NewUserClient(c.config)
+	c.UserAccount = NewUserAccountClient(c.config)
 	c.UserDepartment = NewUserDepartmentClient(c.config)
 	c.UserTenant = NewUserTenantClient(c.config)
 }
@@ -150,9 +150,9 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:            ctx,
 		config:         cfg,
 		Department:     NewDepartmentClient(cfg),
-		SysUser:        NewSysUserClient(cfg),
-		SysUserAccount: NewSysUserAccountClient(cfg),
 		Tenant:         NewTenantClient(cfg),
+		User:           NewUserClient(cfg),
+		UserAccount:    NewUserAccountClient(cfg),
 		UserDepartment: NewUserDepartmentClient(cfg),
 		UserTenant:     NewUserTenantClient(cfg),
 	}, nil
@@ -175,9 +175,9 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:            ctx,
 		config:         cfg,
 		Department:     NewDepartmentClient(cfg),
-		SysUser:        NewSysUserClient(cfg),
-		SysUserAccount: NewSysUserAccountClient(cfg),
 		Tenant:         NewTenantClient(cfg),
+		User:           NewUserClient(cfg),
+		UserAccount:    NewUserAccountClient(cfg),
 		UserDepartment: NewUserDepartmentClient(cfg),
 		UserTenant:     NewUserTenantClient(cfg),
 	}, nil
@@ -209,8 +209,7 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Department, c.SysUser, c.SysUserAccount, c.Tenant, c.UserDepartment,
-		c.UserTenant,
+		c.Department, c.Tenant, c.User, c.UserAccount, c.UserDepartment, c.UserTenant,
 	} {
 		n.Use(hooks...)
 	}
@@ -220,8 +219,7 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Department, c.SysUser, c.SysUserAccount, c.Tenant, c.UserDepartment,
-		c.UserTenant,
+		c.Department, c.Tenant, c.User, c.UserAccount, c.UserDepartment, c.UserTenant,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -232,12 +230,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *DepartmentMutation:
 		return c.Department.mutate(ctx, m)
-	case *SysUserMutation:
-		return c.SysUser.mutate(ctx, m)
-	case *SysUserAccountMutation:
-		return c.SysUserAccount.mutate(ctx, m)
 	case *TenantMutation:
 		return c.Tenant.mutate(ctx, m)
+	case *UserMutation:
+		return c.User.mutate(ctx, m)
+	case *UserAccountMutation:
+		return c.UserAccount.mutate(ctx, m)
 	case *UserDepartmentMutation:
 		return c.UserDepartment.mutate(ctx, m)
 	case *UserTenantMutation:
@@ -412,337 +410,6 @@ func (c *DepartmentClient) mutate(ctx context.Context, m *DepartmentMutation) (V
 	}
 }
 
-// SysUserClient is a client for the SysUser schema.
-type SysUserClient struct {
-	config
-}
-
-// NewSysUserClient returns a client for the SysUser from the given config.
-func NewSysUserClient(c config) *SysUserClient {
-	return &SysUserClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `sysuser.Hooks(f(g(h())))`.
-func (c *SysUserClient) Use(hooks ...Hook) {
-	c.hooks.SysUser = append(c.hooks.SysUser, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `sysuser.Intercept(f(g(h())))`.
-func (c *SysUserClient) Intercept(interceptors ...Interceptor) {
-	c.inters.SysUser = append(c.inters.SysUser, interceptors...)
-}
-
-// Create returns a builder for creating a SysUser entity.
-func (c *SysUserClient) Create() *SysUserCreate {
-	mutation := newSysUserMutation(c.config, OpCreate)
-	return &SysUserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of SysUser entities.
-func (c *SysUserClient) CreateBulk(builders ...*SysUserCreate) *SysUserCreateBulk {
-	return &SysUserCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *SysUserClient) MapCreateBulk(slice any, setFunc func(*SysUserCreate, int)) *SysUserCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &SysUserCreateBulk{err: fmt.Errorf("calling to SysUserClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*SysUserCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &SysUserCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for SysUser.
-func (c *SysUserClient) Update() *SysUserUpdate {
-	mutation := newSysUserMutation(c.config, OpUpdate)
-	return &SysUserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SysUserClient) UpdateOne(su *SysUser) *SysUserUpdateOne {
-	mutation := newSysUserMutation(c.config, OpUpdateOne, withSysUser(su))
-	return &SysUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SysUserClient) UpdateOneID(id int64) *SysUserUpdateOne {
-	mutation := newSysUserMutation(c.config, OpUpdateOne, withSysUserID(id))
-	return &SysUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for SysUser.
-func (c *SysUserClient) Delete() *SysUserDelete {
-	mutation := newSysUserMutation(c.config, OpDelete)
-	return &SysUserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SysUserClient) DeleteOne(su *SysUser) *SysUserDeleteOne {
-	return c.DeleteOneID(su.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SysUserClient) DeleteOneID(id int64) *SysUserDeleteOne {
-	builder := c.Delete().Where(sysuser.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SysUserDeleteOne{builder}
-}
-
-// Query returns a query builder for SysUser.
-func (c *SysUserClient) Query() *SysUserQuery {
-	return &SysUserQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeSysUser},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a SysUser entity by its id.
-func (c *SysUserClient) Get(ctx context.Context, id int64) (*SysUser, error) {
-	return c.Query().Where(sysuser.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SysUserClient) GetX(ctx context.Context, id int64) *SysUser {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryAccounts queries the accounts edge of a SysUser.
-func (c *SysUserClient) QueryAccounts(su *SysUser) *SysUserAccountQuery {
-	query := (&SysUserAccountClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := su.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(sysuser.Table, sysuser.FieldID, id),
-			sqlgraph.To(sysuseraccount.Table, sysuseraccount.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.AccountsTable, sysuser.AccountsColumn),
-		)
-		fromV = sqlgraph.Neighbors(su.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryUserTenants queries the user_tenants edge of a SysUser.
-func (c *SysUserClient) QueryUserTenants(su *SysUser) *UserTenantQuery {
-	query := (&UserTenantClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := su.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(sysuser.Table, sysuser.FieldID, id),
-			sqlgraph.To(usertenant.Table, usertenant.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.UserTenantsTable, sysuser.UserTenantsColumn),
-		)
-		fromV = sqlgraph.Neighbors(su.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryUserDepartments queries the user_departments edge of a SysUser.
-func (c *SysUserClient) QueryUserDepartments(su *SysUser) *UserDepartmentQuery {
-	query := (&UserDepartmentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := su.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(sysuser.Table, sysuser.FieldID, id),
-			sqlgraph.To(userdepartment.Table, userdepartment.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, sysuser.UserDepartmentsTable, sysuser.UserDepartmentsColumn),
-		)
-		fromV = sqlgraph.Neighbors(su.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *SysUserClient) Hooks() []Hook {
-	hooks := c.hooks.SysUser
-	return append(hooks[:len(hooks):len(hooks)], sysuser.Hooks[:]...)
-}
-
-// Interceptors returns the client interceptors.
-func (c *SysUserClient) Interceptors() []Interceptor {
-	return c.inters.SysUser
-}
-
-func (c *SysUserClient) mutate(ctx context.Context, m *SysUserMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&SysUserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&SysUserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&SysUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&SysUserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown SysUser mutation op: %q", m.Op())
-	}
-}
-
-// SysUserAccountClient is a client for the SysUserAccount schema.
-type SysUserAccountClient struct {
-	config
-}
-
-// NewSysUserAccountClient returns a client for the SysUserAccount from the given config.
-func NewSysUserAccountClient(c config) *SysUserAccountClient {
-	return &SysUserAccountClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `sysuseraccount.Hooks(f(g(h())))`.
-func (c *SysUserAccountClient) Use(hooks ...Hook) {
-	c.hooks.SysUserAccount = append(c.hooks.SysUserAccount, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `sysuseraccount.Intercept(f(g(h())))`.
-func (c *SysUserAccountClient) Intercept(interceptors ...Interceptor) {
-	c.inters.SysUserAccount = append(c.inters.SysUserAccount, interceptors...)
-}
-
-// Create returns a builder for creating a SysUserAccount entity.
-func (c *SysUserAccountClient) Create() *SysUserAccountCreate {
-	mutation := newSysUserAccountMutation(c.config, OpCreate)
-	return &SysUserAccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of SysUserAccount entities.
-func (c *SysUserAccountClient) CreateBulk(builders ...*SysUserAccountCreate) *SysUserAccountCreateBulk {
-	return &SysUserAccountCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *SysUserAccountClient) MapCreateBulk(slice any, setFunc func(*SysUserAccountCreate, int)) *SysUserAccountCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &SysUserAccountCreateBulk{err: fmt.Errorf("calling to SysUserAccountClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*SysUserAccountCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &SysUserAccountCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for SysUserAccount.
-func (c *SysUserAccountClient) Update() *SysUserAccountUpdate {
-	mutation := newSysUserAccountMutation(c.config, OpUpdate)
-	return &SysUserAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *SysUserAccountClient) UpdateOne(sua *SysUserAccount) *SysUserAccountUpdateOne {
-	mutation := newSysUserAccountMutation(c.config, OpUpdateOne, withSysUserAccount(sua))
-	return &SysUserAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *SysUserAccountClient) UpdateOneID(id int) *SysUserAccountUpdateOne {
-	mutation := newSysUserAccountMutation(c.config, OpUpdateOne, withSysUserAccountID(id))
-	return &SysUserAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for SysUserAccount.
-func (c *SysUserAccountClient) Delete() *SysUserAccountDelete {
-	mutation := newSysUserAccountMutation(c.config, OpDelete)
-	return &SysUserAccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *SysUserAccountClient) DeleteOne(sua *SysUserAccount) *SysUserAccountDeleteOne {
-	return c.DeleteOneID(sua.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *SysUserAccountClient) DeleteOneID(id int) *SysUserAccountDeleteOne {
-	builder := c.Delete().Where(sysuseraccount.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &SysUserAccountDeleteOne{builder}
-}
-
-// Query returns a query builder for SysUserAccount.
-func (c *SysUserAccountClient) Query() *SysUserAccountQuery {
-	return &SysUserAccountQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeSysUserAccount},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a SysUserAccount entity by its id.
-func (c *SysUserAccountClient) Get(ctx context.Context, id int) (*SysUserAccount, error) {
-	return c.Query().Where(sysuseraccount.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *SysUserAccountClient) GetX(ctx context.Context, id int) *SysUserAccount {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryUser queries the user edge of a SysUserAccount.
-func (c *SysUserAccountClient) QueryUser(sua *SysUserAccount) *SysUserQuery {
-	query := (&SysUserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := sua.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(sysuseraccount.Table, sysuseraccount.FieldID, id),
-			sqlgraph.To(sysuser.Table, sysuser.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, sysuseraccount.UserTable, sysuseraccount.UserColumn),
-		)
-		fromV = sqlgraph.Neighbors(sua.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *SysUserAccountClient) Hooks() []Hook {
-	return c.hooks.SysUserAccount
-}
-
-// Interceptors returns the client interceptors.
-func (c *SysUserAccountClient) Interceptors() []Interceptor {
-	return c.inters.SysUserAccount
-}
-
-func (c *SysUserAccountClient) mutate(ctx context.Context, m *SysUserAccountMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&SysUserAccountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&SysUserAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&SysUserAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&SysUserAccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown SysUserAccount mutation op: %q", m.Op())
-	}
-}
-
 // TenantClient is a client for the Tenant schema.
 type TenantClient struct {
 	config
@@ -908,6 +575,337 @@ func (c *TenantClient) mutate(ctx context.Context, m *TenantMutation) (Value, er
 	}
 }
 
+// UserClient is a client for the User schema.
+type UserClient struct {
+	config
+}
+
+// NewUserClient returns a client for the User from the given config.
+func NewUserClient(c config) *UserClient {
+	return &UserClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `user.Hooks(f(g(h())))`.
+func (c *UserClient) Use(hooks ...Hook) {
+	c.hooks.User = append(c.hooks.User, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `user.Intercept(f(g(h())))`.
+func (c *UserClient) Intercept(interceptors ...Interceptor) {
+	c.inters.User = append(c.inters.User, interceptors...)
+}
+
+// Create returns a builder for creating a User entity.
+func (c *UserClient) Create() *UserCreate {
+	mutation := newUserMutation(c.config, OpCreate)
+	return &UserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of User entities.
+func (c *UserClient) CreateBulk(builders ...*UserCreate) *UserCreateBulk {
+	return &UserCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserClient) MapCreateBulk(slice any, setFunc func(*UserCreate, int)) *UserCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserCreateBulk{err: fmt.Errorf("calling to UserClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for User.
+func (c *UserClient) Update() *UserUpdate {
+	mutation := newUserMutation(c.config, OpUpdate)
+	return &UserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserClient) UpdateOne(u *User) *UserUpdateOne {
+	mutation := newUserMutation(c.config, OpUpdateOne, withUser(u))
+	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserClient) UpdateOneID(id int64) *UserUpdateOne {
+	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
+	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for User.
+func (c *UserClient) Delete() *UserDelete {
+	mutation := newUserMutation(c.config, OpDelete)
+	return &UserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
+	return c.DeleteOneID(u.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserClient) DeleteOneID(id int64) *UserDeleteOne {
+	builder := c.Delete().Where(user.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserDeleteOne{builder}
+}
+
+// Query returns a query builder for User.
+func (c *UserClient) Query() *UserQuery {
+	return &UserQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUser},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a User entity by its id.
+func (c *UserClient) Get(ctx context.Context, id int64) (*User, error) {
+	return c.Query().Where(user.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserClient) GetX(ctx context.Context, id int64) *User {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAccounts queries the accounts edge of a User.
+func (c *UserClient) QueryAccounts(u *User) *UserAccountQuery {
+	query := (&UserAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(useraccount.Table, useraccount.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AccountsTable, user.AccountsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserTenants queries the user_tenants edge of a User.
+func (c *UserClient) QueryUserTenants(u *User) *UserTenantQuery {
+	query := (&UserTenantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usertenant.Table, usertenant.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserTenantsTable, user.UserTenantsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserDepartments queries the user_departments edge of a User.
+func (c *UserClient) QueryUserDepartments(u *User) *UserDepartmentQuery {
+	query := (&UserDepartmentClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userdepartment.Table, userdepartment.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserDepartmentsTable, user.UserDepartmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserClient) Hooks() []Hook {
+	hooks := c.hooks.User
+	return append(hooks[:len(hooks):len(hooks)], user.Hooks[:]...)
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserClient) Interceptors() []Interceptor {
+	return c.inters.User
+}
+
+func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown User mutation op: %q", m.Op())
+	}
+}
+
+// UserAccountClient is a client for the UserAccount schema.
+type UserAccountClient struct {
+	config
+}
+
+// NewUserAccountClient returns a client for the UserAccount from the given config.
+func NewUserAccountClient(c config) *UserAccountClient {
+	return &UserAccountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `useraccount.Hooks(f(g(h())))`.
+func (c *UserAccountClient) Use(hooks ...Hook) {
+	c.hooks.UserAccount = append(c.hooks.UserAccount, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `useraccount.Intercept(f(g(h())))`.
+func (c *UserAccountClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserAccount = append(c.inters.UserAccount, interceptors...)
+}
+
+// Create returns a builder for creating a UserAccount entity.
+func (c *UserAccountClient) Create() *UserAccountCreate {
+	mutation := newUserAccountMutation(c.config, OpCreate)
+	return &UserAccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserAccount entities.
+func (c *UserAccountClient) CreateBulk(builders ...*UserAccountCreate) *UserAccountCreateBulk {
+	return &UserAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserAccountClient) MapCreateBulk(slice any, setFunc func(*UserAccountCreate, int)) *UserAccountCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserAccountCreateBulk{err: fmt.Errorf("calling to UserAccountClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserAccountCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserAccountCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserAccount.
+func (c *UserAccountClient) Update() *UserAccountUpdate {
+	mutation := newUserAccountMutation(c.config, OpUpdate)
+	return &UserAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserAccountClient) UpdateOne(ua *UserAccount) *UserAccountUpdateOne {
+	mutation := newUserAccountMutation(c.config, OpUpdateOne, withUserAccount(ua))
+	return &UserAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserAccountClient) UpdateOneID(id int) *UserAccountUpdateOne {
+	mutation := newUserAccountMutation(c.config, OpUpdateOne, withUserAccountID(id))
+	return &UserAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserAccount.
+func (c *UserAccountClient) Delete() *UserAccountDelete {
+	mutation := newUserAccountMutation(c.config, OpDelete)
+	return &UserAccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserAccountClient) DeleteOne(ua *UserAccount) *UserAccountDeleteOne {
+	return c.DeleteOneID(ua.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserAccountClient) DeleteOneID(id int) *UserAccountDeleteOne {
+	builder := c.Delete().Where(useraccount.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserAccountDeleteOne{builder}
+}
+
+// Query returns a query builder for UserAccount.
+func (c *UserAccountClient) Query() *UserAccountQuery {
+	return &UserAccountQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserAccount},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserAccount entity by its id.
+func (c *UserAccountClient) Get(ctx context.Context, id int) (*UserAccount, error) {
+	return c.Query().Where(useraccount.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserAccountClient) GetX(ctx context.Context, id int) *UserAccount {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserAccount.
+func (c *UserAccountClient) QueryUser(ua *UserAccount) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ua.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(useraccount.Table, useraccount.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, useraccount.UserTable, useraccount.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ua.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserAccountClient) Hooks() []Hook {
+	return c.hooks.UserAccount
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserAccountClient) Interceptors() []Interceptor {
+	return c.inters.UserAccount
+}
+
+func (c *UserAccountClient) mutate(ctx context.Context, m *UserAccountMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserAccountCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserAccountUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserAccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserAccountDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserAccount mutation op: %q", m.Op())
+	}
+}
+
 // UserDepartmentClient is a client for the UserDepartment schema.
 type UserDepartmentClient struct {
 	config
@@ -1017,13 +1015,13 @@ func (c *UserDepartmentClient) GetX(ctx context.Context, id int64) *UserDepartme
 }
 
 // QueryUser queries the user edge of a UserDepartment.
-func (c *UserDepartmentClient) QueryUser(ud *UserDepartment) *SysUserQuery {
-	query := (&SysUserClient{config: c.config}).Query()
+func (c *UserDepartmentClient) QueryUser(ud *UserDepartment) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ud.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(userdepartment.Table, userdepartment.FieldID, id),
-			sqlgraph.To(sysuser.Table, sysuser.FieldID),
+			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, userdepartment.UserTable, userdepartment.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(ud.driver.Dialect(), step)
@@ -1182,13 +1180,13 @@ func (c *UserTenantClient) GetX(ctx context.Context, id int64) *UserTenant {
 }
 
 // QueryUser queries the user edge of a UserTenant.
-func (c *UserTenantClient) QueryUser(ut *UserTenant) *SysUserQuery {
-	query := (&SysUserClient{config: c.config}).Query()
+func (c *UserTenantClient) QueryUser(ut *UserTenant) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ut.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(usertenant.Table, usertenant.FieldID, id),
-			sqlgraph.To(sysuser.Table, sysuser.FieldID),
+			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, usertenant.UserTable, usertenant.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(ut.driver.Dialect(), step)
@@ -1241,11 +1239,10 @@ func (c *UserTenantClient) mutate(ctx context.Context, m *UserTenantMutation) (V
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Department, SysUser, SysUserAccount, Tenant, UserDepartment,
-		UserTenant []ent.Hook
+		Department, Tenant, User, UserAccount, UserDepartment, UserTenant []ent.Hook
 	}
 	inters struct {
-		Department, SysUser, SysUserAccount, Tenant, UserDepartment,
+		Department, Tenant, User, UserAccount, UserDepartment,
 		UserTenant []ent.Interceptor
 	}
 )

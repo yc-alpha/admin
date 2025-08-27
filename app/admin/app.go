@@ -1,6 +1,8 @@
 package usermanagement
 
 import (
+	"context"
+
 	"github.com/go-kratos/kratos/v2/transport/http"
 
 	"github.com/go-kratos/kratos/v2/transport/grpc"
@@ -11,7 +13,7 @@ import (
 
 func RegisteApplication(http *http.Server, grpc *grpc.Server) {
 	basicData := data.NewData()
-	basicData.Migrate()
+	basicData.Migrate(context.Background())
 
 	userService := service.NewUserService(basicData.Client)
 

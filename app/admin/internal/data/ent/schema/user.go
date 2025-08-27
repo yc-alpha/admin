@@ -35,13 +35,13 @@ func IsValidTimeZone(timezone string) error {
 	return nil
 }
 
-// SysUser holds the schema definition for the SysUser entity.
-type SysUser struct {
+// User holds the schema definition for the User entity.
+type User struct {
 	ent.Schema
 }
 
 // Fields of the SysUser.
-func (SysUser) Fields() []ent.Field {
+func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("id").Unique().Immutable().DefaultFunc(snowflake.GenId).Comment("Primary Key ID"),
 		field.String("username").MaxLen(64).NotEmpty().Unique().Comment("Username of the user"),
@@ -62,16 +62,16 @@ func (SysUser) Fields() []ent.Field {
 	}
 }
 
-// Edges of the SysUser.
-func (SysUser) Edges() []ent.Edge {
+// Edges of the User.
+func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("accounts", SysUserAccount.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("accounts", UserAccount.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("user_tenants", UserTenant.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("user_departments", UserDepartment.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }
 
-func (SysUser) Annotations() []schema.Annotation {
+func (User) Annotations() []schema.Annotation {
 	// 把 WithComments 放这里，ent 在迁移时会把 field.Comment 写入 DB
 	return []schema.Annotation{
 		entsql.WithComments(true),
@@ -79,8 +79,8 @@ func (SysUser) Annotations() []schema.Annotation {
 	}
 }
 
-// Hooks of the SysUser.
-func (SysUser) Hooks() []ent.Hook {
+// Hooks of the User.
+func (User) Hooks() []ent.Hook {
 	return []ent.Hook{
 		hook.On(func(next ent.Mutator) ent.Mutator {
 			return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
