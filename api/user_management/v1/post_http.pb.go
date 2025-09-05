@@ -129,9 +129,13 @@ func _PositionService_ListPositions0_HTTP_Handler(srv PositionServiceHTTPServer)
 }
 
 type PositionServiceHTTPClient interface {
+	// CreatePosition 新增岗位
 	CreatePosition(ctx context.Context, req *CreatePositionRequest, opts ...http.CallOption) (rsp *CreatePositionResponse, err error)
+	// DeletePosition 删除岗位
 	DeletePosition(ctx context.Context, req *DeletePositionRequest, opts ...http.CallOption) (rsp *DeletePositionResponse, err error)
+	// ListPositions 分页获取岗位列表
 	ListPositions(ctx context.Context, req *ListPositionsRequest, opts ...http.CallOption) (rsp *ListPositionsResponse, err error)
+	// UpdatePosition 更新岗位
 	UpdatePosition(ctx context.Context, req *UpdatePositionRequest, opts ...http.CallOption) (rsp *UpdatePositionResponse, err error)
 }
 
@@ -143,6 +147,7 @@ func NewPositionServiceHTTPClient(client *http.Client) PositionServiceHTTPClient
 	return &PositionServiceHTTPClientImpl{client}
 }
 
+// CreatePosition 新增岗位
 func (c *PositionServiceHTTPClientImpl) CreatePosition(ctx context.Context, in *CreatePositionRequest, opts ...http.CallOption) (*CreatePositionResponse, error) {
 	var out CreatePositionResponse
 	pattern := "/v1/posts"
@@ -156,6 +161,7 @@ func (c *PositionServiceHTTPClientImpl) CreatePosition(ctx context.Context, in *
 	return &out, nil
 }
 
+// DeletePosition 删除岗位
 func (c *PositionServiceHTTPClientImpl) DeletePosition(ctx context.Context, in *DeletePositionRequest, opts ...http.CallOption) (*DeletePositionResponse, error) {
 	var out DeletePositionResponse
 	pattern := "/v1/posts/{id}"
@@ -169,6 +175,7 @@ func (c *PositionServiceHTTPClientImpl) DeletePosition(ctx context.Context, in *
 	return &out, nil
 }
 
+// ListPositions 分页获取岗位列表
 func (c *PositionServiceHTTPClientImpl) ListPositions(ctx context.Context, in *ListPositionsRequest, opts ...http.CallOption) (*ListPositionsResponse, error) {
 	var out ListPositionsResponse
 	pattern := "/v1/posts"
@@ -182,6 +189,7 @@ func (c *PositionServiceHTTPClientImpl) ListPositions(ctx context.Context, in *L
 	return &out, nil
 }
 
+// UpdatePosition 更新岗位
 func (c *PositionServiceHTTPClientImpl) UpdatePosition(ctx context.Context, in *UpdatePositionRequest, opts ...http.CallOption) (*UpdatePositionResponse, error) {
 	var out UpdatePositionResponse
 	pattern := "/v1/posts"

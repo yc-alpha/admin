@@ -184,11 +184,17 @@ func _PermissionService_BatchCheckPermission0_HTTP_Handler(srv PermissionService
 }
 
 type PermissionServiceHTTPClient interface {
+	// BatchCheckPermission 批量检查权限
 	BatchCheckPermission(ctx context.Context, req *BatchCheckPermissionRequest, opts ...http.CallOption) (rsp *BatchCheckPermissionResponse, err error)
+	// CheckPermission 检查权限
 	CheckPermission(ctx context.Context, req *CheckPermissionRequest, opts ...http.CallOption) (rsp *CheckPermissionResponse, err error)
+	// CreatePolicy 创建策略
 	CreatePolicy(ctx context.Context, req *CreatePolicyRequest, opts ...http.CallOption) (rsp *CreatePolicyResponse, err error)
+	// DeletePolicy 删除策略
 	DeletePolicy(ctx context.Context, req *DeletePolicyRequest, opts ...http.CallOption) (rsp *DeletePolicyResponse, err error)
+	// ListPolicies 获取策略列表
 	ListPolicies(ctx context.Context, req *ListPoliciesRequest, opts ...http.CallOption) (rsp *ListPoliciesResponse, err error)
+	// UpdatePolicy 更新策略
 	UpdatePolicy(ctx context.Context, req *UpdatePolicyRequest, opts ...http.CallOption) (rsp *UpdatePolicyResponse, err error)
 }
 
@@ -200,6 +206,7 @@ func NewPermissionServiceHTTPClient(client *http.Client) PermissionServiceHTTPCl
 	return &PermissionServiceHTTPClientImpl{client}
 }
 
+// BatchCheckPermission 批量检查权限
 func (c *PermissionServiceHTTPClientImpl) BatchCheckPermission(ctx context.Context, in *BatchCheckPermissionRequest, opts ...http.CallOption) (*BatchCheckPermissionResponse, error) {
 	var out BatchCheckPermissionResponse
 	pattern := "/v1/permissions/batch-check"
@@ -213,6 +220,7 @@ func (c *PermissionServiceHTTPClientImpl) BatchCheckPermission(ctx context.Conte
 	return &out, nil
 }
 
+// CheckPermission 检查权限
 func (c *PermissionServiceHTTPClientImpl) CheckPermission(ctx context.Context, in *CheckPermissionRequest, opts ...http.CallOption) (*CheckPermissionResponse, error) {
 	var out CheckPermissionResponse
 	pattern := "/v1/permissions/check"
@@ -226,6 +234,7 @@ func (c *PermissionServiceHTTPClientImpl) CheckPermission(ctx context.Context, i
 	return &out, nil
 }
 
+// CreatePolicy 创建策略
 func (c *PermissionServiceHTTPClientImpl) CreatePolicy(ctx context.Context, in *CreatePolicyRequest, opts ...http.CallOption) (*CreatePolicyResponse, error) {
 	var out CreatePolicyResponse
 	pattern := "/v1/policies"
@@ -239,6 +248,7 @@ func (c *PermissionServiceHTTPClientImpl) CreatePolicy(ctx context.Context, in *
 	return &out, nil
 }
 
+// DeletePolicy 删除策略
 func (c *PermissionServiceHTTPClientImpl) DeletePolicy(ctx context.Context, in *DeletePolicyRequest, opts ...http.CallOption) (*DeletePolicyResponse, error) {
 	var out DeletePolicyResponse
 	pattern := "/v1/policies/{id}"
@@ -252,6 +262,7 @@ func (c *PermissionServiceHTTPClientImpl) DeletePolicy(ctx context.Context, in *
 	return &out, nil
 }
 
+// ListPolicies 获取策略列表
 func (c *PermissionServiceHTTPClientImpl) ListPolicies(ctx context.Context, in *ListPoliciesRequest, opts ...http.CallOption) (*ListPoliciesResponse, error) {
 	var out ListPoliciesResponse
 	pattern := "/v1/policies"
@@ -265,6 +276,7 @@ func (c *PermissionServiceHTTPClientImpl) ListPolicies(ctx context.Context, in *
 	return &out, nil
 }
 
+// UpdatePolicy 更新策略
 func (c *PermissionServiceHTTPClientImpl) UpdatePolicy(ctx context.Context, in *UpdatePolicyRequest, opts ...http.CallOption) (*UpdatePolicyResponse, error) {
 	var out UpdatePolicyResponse
 	pattern := "/v1/policies/{id}"

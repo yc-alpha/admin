@@ -132,9 +132,13 @@ func _DepartmentService_ListDepartments0_HTTP_Handler(srv DepartmentServiceHTTPS
 }
 
 type DepartmentServiceHTTPClient interface {
+	// CreateDepartment 创建部门
 	CreateDepartment(ctx context.Context, req *CreateDepartmentRequest, opts ...http.CallOption) (rsp *CreateDepartmentResponse, err error)
+	// DeleteDepartment 删除部门
 	DeleteDepartment(ctx context.Context, req *DeleteDepartmentRequest, opts ...http.CallOption) (rsp *DeleteDepartmentResponse, err error)
+	// ListDepartments 获取部门列表
 	ListDepartments(ctx context.Context, req *ListDepartmentsRequest, opts ...http.CallOption) (rsp *ListDepartmentsResponse, err error)
+	// UpdateDepartment 更新部门
 	UpdateDepartment(ctx context.Context, req *UpdateDepartmentRequest, opts ...http.CallOption) (rsp *UpdateDepartmentResponse, err error)
 }
 
@@ -146,6 +150,7 @@ func NewDepartmentServiceHTTPClient(client *http.Client) DepartmentServiceHTTPCl
 	return &DepartmentServiceHTTPClientImpl{client}
 }
 
+// CreateDepartment 创建部门
 func (c *DepartmentServiceHTTPClientImpl) CreateDepartment(ctx context.Context, in *CreateDepartmentRequest, opts ...http.CallOption) (*CreateDepartmentResponse, error) {
 	var out CreateDepartmentResponse
 	pattern := "/v1/departments"
@@ -159,6 +164,7 @@ func (c *DepartmentServiceHTTPClientImpl) CreateDepartment(ctx context.Context, 
 	return &out, nil
 }
 
+// DeleteDepartment 删除部门
 func (c *DepartmentServiceHTTPClientImpl) DeleteDepartment(ctx context.Context, in *DeleteDepartmentRequest, opts ...http.CallOption) (*DeleteDepartmentResponse, error) {
 	var out DeleteDepartmentResponse
 	pattern := "/v1/departments/{id}"
@@ -172,6 +178,7 @@ func (c *DepartmentServiceHTTPClientImpl) DeleteDepartment(ctx context.Context, 
 	return &out, nil
 }
 
+// ListDepartments 获取部门列表
 func (c *DepartmentServiceHTTPClientImpl) ListDepartments(ctx context.Context, in *ListDepartmentsRequest, opts ...http.CallOption) (*ListDepartmentsResponse, error) {
 	var out ListDepartmentsResponse
 	pattern := "/v1/departments"
@@ -185,6 +192,7 @@ func (c *DepartmentServiceHTTPClientImpl) ListDepartments(ctx context.Context, i
 	return &out, nil
 }
 
+// UpdateDepartment 更新部门
 func (c *DepartmentServiceHTTPClientImpl) UpdateDepartment(ctx context.Context, in *UpdateDepartmentRequest, opts ...http.CallOption) (*UpdateDepartmentResponse, error) {
 	var out UpdateDepartmentResponse
 	pattern := "/v1/departments/{id}"

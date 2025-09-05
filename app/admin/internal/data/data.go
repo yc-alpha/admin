@@ -11,6 +11,7 @@ import (
 	"github.com/go-kratos/kratos/v2/registry"
 	_ "github.com/lib/pq"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/migrate"
 	_ "github.com/yc-alpha/admin/app/admin/internal/data/ent/runtime"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/logger"
@@ -56,49 +57,12 @@ func NewDBClient() (*ent.Client, *sql.DB) {
 
 func (d *Data) Migrate(ctx context.Context) {
 	// Run the auto migration tool.
-	if err := d.Client.Schema.Create(ctx); err != nil {
+	if err := d.Client.Schema.Create(ctx,
+		migrate.WithDropIndex(false),
+		migrate.WithDropColumn(false),
+	); err != nil {
 		logger.Fatalf("failed creating schema resources: %v", err)
 	}
-	// 启用 RLS
-	err := d.InitRLS(ctx)
-	if err != nil {
-		logger.Fatalf("failed initializing RLS: %v", err)
-	}
-}
-
-// InitRLS initializes Row-Level Security for tenant-scoped tables.
-func (d *Data) InitRLS(ctx context.Context) error {
-	// createTenantFunc creates a helper function `app_current_tenant()` to fetch current tenant_id from session.
-	createFunc := `
-		CREATE OR REPLACE FUNCTION app_current_tenant() RETURNS BIGINT AS $$
-		BEGIN
-			RETURN current_setting('app.current_tenant')::BIGINT;
-		EXCEPTION WHEN others THEN
-			RETURN NULL;
-		END;
-		$$ LANGUAGE plpgsql STABLE;
-	`
-	if _, err := d.DB.ExecContext(ctx, createFunc); err != nil {
-		return fmt.Errorf("create app_current_tenant func: %v", err)
-	}
-	// list of tenant-scoped tables that must be protected by RLS
-	tables := []string{"user_tenants", "departments", "user_departments"}
-	for _, table := range tables {
-		// enable rls
-		if _, err := d.DB.Exec(fmt.Sprintf("ALTER TABLE %s ENABLE ROW LEVEL SECURITY;", table)); err != nil {
-			return fmt.Errorf("enable rls on %s: %w", table, err)
-		}
-		// create policy
-		// WITH CHECK ensures inserted/updated rows have tenant_id = current tenant
-		policyName := table + "_rls"
-		if _, err := d.DB.Exec(fmt.Sprintf(
-			"CREATE OR REPLACE POLICY %s ON %s USING (tenant_id = app_current_tenant()) WITH CHECK (tenant_id = app_current_tenant());",
-			policyName, table)); err != nil {
-			return fmt.Errorf("create policy on %s: %w", table, err)
-		}
-
-	}
-	return nil
 }
 
 func NewRegistrar() registry.Registrar {

@@ -242,13 +242,21 @@ func _UserService_CheckPassword1_HTTP_Handler(srv UserServiceHTTPServer) func(ct
 }
 
 type UserServiceHTTPClient interface {
+	// ChangePassword 修改用户密码
 	ChangePassword(ctx context.Context, req *ChangePasswordRequest, opts ...http.CallOption) (rsp *ChangePasswordResponse, err error)
+	// CheckPassword 验证用户密码
 	CheckPassword(ctx context.Context, req *CheckPasswordRequest, opts ...http.CallOption) (rsp *CheckPasswordResponse, err error)
+	// CreateUser 新增用户
 	CreateUser(ctx context.Context, req *CreateUserRequest, opts ...http.CallOption) (rsp *CreateUserResponse, err error)
+	// DeleteUser 删除用户
 	DeleteUser(ctx context.Context, req *DeleteUserRequest, opts ...http.CallOption) (rsp *DeleteUserResponse, err error)
+	// GetUserInfo 获取用户信息详情
 	GetUserInfo(ctx context.Context, req *GetUserInfoRequest, opts ...http.CallOption) (rsp *GetUserInfoResponse, err error)
+	// ListUsers 获取用户列表
 	ListUsers(ctx context.Context, req *ListUsersRequest, opts ...http.CallOption) (rsp *ListUsersResponse, err error)
+	// UpdateUser 更新用户
 	UpdateUser(ctx context.Context, req *UpdateUserRequest, opts ...http.CallOption) (rsp *UpdateUserResponse, err error)
+	// UpdateUserAccounts 更新用户关联账号
 	UpdateUserAccounts(ctx context.Context, req *UpdateUserAccountsRequest, opts ...http.CallOption) (rsp *UpdateUserAccountsResponse, err error)
 }
 
@@ -260,6 +268,7 @@ func NewUserServiceHTTPClient(client *http.Client) UserServiceHTTPClient {
 	return &UserServiceHTTPClientImpl{client}
 }
 
+// ChangePassword 修改用户密码
 func (c *UserServiceHTTPClientImpl) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...http.CallOption) (*ChangePasswordResponse, error) {
 	var out ChangePasswordResponse
 	pattern := "/v1/users/{id}/password"
@@ -273,6 +282,7 @@ func (c *UserServiceHTTPClientImpl) ChangePassword(ctx context.Context, in *Chan
 	return &out, nil
 }
 
+// CheckPassword 验证用户密码
 func (c *UserServiceHTTPClientImpl) CheckPassword(ctx context.Context, in *CheckPasswordRequest, opts ...http.CallOption) (*CheckPasswordResponse, error) {
 	var out CheckPasswordResponse
 	pattern := "/v1/users/{id}/password/check"
@@ -286,6 +296,7 @@ func (c *UserServiceHTTPClientImpl) CheckPassword(ctx context.Context, in *Check
 	return &out, nil
 }
 
+// CreateUser 新增用户
 func (c *UserServiceHTTPClientImpl) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...http.CallOption) (*CreateUserResponse, error) {
 	var out CreateUserResponse
 	pattern := "/v1/users"
@@ -299,6 +310,7 @@ func (c *UserServiceHTTPClientImpl) CreateUser(ctx context.Context, in *CreateUs
 	return &out, nil
 }
 
+// DeleteUser 删除用户
 func (c *UserServiceHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...http.CallOption) (*DeleteUserResponse, error) {
 	var out DeleteUserResponse
 	pattern := "/v1/users/{id}"
@@ -312,6 +324,7 @@ func (c *UserServiceHTTPClientImpl) DeleteUser(ctx context.Context, in *DeleteUs
 	return &out, nil
 }
 
+// GetUserInfo 获取用户信息详情
 func (c *UserServiceHTTPClientImpl) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...http.CallOption) (*GetUserInfoResponse, error) {
 	var out GetUserInfoResponse
 	pattern := "/v1/userInfo"
@@ -325,6 +338,7 @@ func (c *UserServiceHTTPClientImpl) GetUserInfo(ctx context.Context, in *GetUser
 	return &out, nil
 }
 
+// ListUsers 获取用户列表
 func (c *UserServiceHTTPClientImpl) ListUsers(ctx context.Context, in *ListUsersRequest, opts ...http.CallOption) (*ListUsersResponse, error) {
 	var out ListUsersResponse
 	pattern := "/v1/users"
@@ -338,6 +352,7 @@ func (c *UserServiceHTTPClientImpl) ListUsers(ctx context.Context, in *ListUsers
 	return &out, nil
 }
 
+// UpdateUser 更新用户
 func (c *UserServiceHTTPClientImpl) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...http.CallOption) (*UpdateUserResponse, error) {
 	var out UpdateUserResponse
 	pattern := "/v1/users/{id}"
@@ -351,6 +366,7 @@ func (c *UserServiceHTTPClientImpl) UpdateUser(ctx context.Context, in *UpdateUs
 	return &out, nil
 }
 
+// UpdateUserAccounts 更新用户关联账号
 func (c *UserServiceHTTPClientImpl) UpdateUserAccounts(ctx context.Context, in *UpdateUserAccountsRequest, opts ...http.CallOption) (*UpdateUserAccountsResponse, error) {
 	var out UpdateUserAccountsResponse
 	pattern := "/v1/users/{id}/accounts"

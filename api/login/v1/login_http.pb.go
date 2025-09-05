@@ -230,13 +230,21 @@ func _LoginService_OAuthCallback0_HTTP_Handler(srv LoginServiceHTTPServer) func(
 }
 
 type LoginServiceHTTPClient interface {
+	// GetCaptcha 获取图片验证码
 	GetCaptcha(ctx context.Context, req *GetCaptchaRequest, opts ...http.CallOption) (rsp *GetCaptchaResponse, err error)
+	// Login 登陆
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *LoginResponse, err error)
+	// LoginBySms 手机验证码登录
 	LoginBySms(ctx context.Context, req *LoginBySmsRequest, opts ...http.CallOption) (rsp *LoginResponse, err error)
+	// Logout 登出
 	Logout(ctx context.Context, req *LogoutRequest, opts ...http.CallOption) (rsp *LogoutResponse, err error)
+	// OAuthCallback OAuth2.0回调处理
 	OAuthCallback(ctx context.Context, req *OAuthCallbackRequest, opts ...http.CallOption) (rsp *OAuthCallbackResponse, err error)
+	// OAuthLogin OAuth2.0第三方登录
 	OAuthLogin(ctx context.Context, req *OAuthLoginRequest, opts ...http.CallOption) (rsp *OAuthLoginResponse, err error)
+	// SendSmsCode 发送手机验证码
 	SendSmsCode(ctx context.Context, req *SendSmsCodeRequest, opts ...http.CallOption) (rsp *SendSmsCodeResponse, err error)
+	// VerifyCaptcha 验证图片验证码
 	VerifyCaptcha(ctx context.Context, req *VerifyCaptchaRequest, opts ...http.CallOption) (rsp *VerifyCaptchaResponse, err error)
 }
 
@@ -248,6 +256,7 @@ func NewLoginServiceHTTPClient(client *http.Client) LoginServiceHTTPClient {
 	return &LoginServiceHTTPClientImpl{client}
 }
 
+// GetCaptcha 获取图片验证码
 func (c *LoginServiceHTTPClientImpl) GetCaptcha(ctx context.Context, in *GetCaptchaRequest, opts ...http.CallOption) (*GetCaptchaResponse, error) {
 	var out GetCaptchaResponse
 	pattern := "/v1/captcha"
@@ -261,6 +270,7 @@ func (c *LoginServiceHTTPClientImpl) GetCaptcha(ctx context.Context, in *GetCapt
 	return &out, nil
 }
 
+// Login 登陆
 func (c *LoginServiceHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*LoginResponse, error) {
 	var out LoginResponse
 	pattern := "/v1/login"
@@ -274,6 +284,7 @@ func (c *LoginServiceHTTPClientImpl) Login(ctx context.Context, in *LoginRequest
 	return &out, nil
 }
 
+// LoginBySms 手机验证码登录
 func (c *LoginServiceHTTPClientImpl) LoginBySms(ctx context.Context, in *LoginBySmsRequest, opts ...http.CallOption) (*LoginResponse, error) {
 	var out LoginResponse
 	pattern := "/v1/login/sms"
@@ -287,6 +298,7 @@ func (c *LoginServiceHTTPClientImpl) LoginBySms(ctx context.Context, in *LoginBy
 	return &out, nil
 }
 
+// Logout 登出
 func (c *LoginServiceHTTPClientImpl) Logout(ctx context.Context, in *LogoutRequest, opts ...http.CallOption) (*LogoutResponse, error) {
 	var out LogoutResponse
 	pattern := "/v1/logout"
@@ -300,6 +312,7 @@ func (c *LoginServiceHTTPClientImpl) Logout(ctx context.Context, in *LogoutReque
 	return &out, nil
 }
 
+// OAuthCallback OAuth2.0回调处理
 func (c *LoginServiceHTTPClientImpl) OAuthCallback(ctx context.Context, in *OAuthCallbackRequest, opts ...http.CallOption) (*OAuthCallbackResponse, error) {
 	var out OAuthCallbackResponse
 	pattern := "/v1/oauth/callback/{provider}"
@@ -313,6 +326,7 @@ func (c *LoginServiceHTTPClientImpl) OAuthCallback(ctx context.Context, in *OAut
 	return &out, nil
 }
 
+// OAuthLogin OAuth2.0第三方登录
 func (c *LoginServiceHTTPClientImpl) OAuthLogin(ctx context.Context, in *OAuthLoginRequest, opts ...http.CallOption) (*OAuthLoginResponse, error) {
 	var out OAuthLoginResponse
 	pattern := "/v1/oauth/login"
@@ -326,6 +340,7 @@ func (c *LoginServiceHTTPClientImpl) OAuthLogin(ctx context.Context, in *OAuthLo
 	return &out, nil
 }
 
+// SendSmsCode 发送手机验证码
 func (c *LoginServiceHTTPClientImpl) SendSmsCode(ctx context.Context, in *SendSmsCodeRequest, opts ...http.CallOption) (*SendSmsCodeResponse, error) {
 	var out SendSmsCodeResponse
 	pattern := "/v1/sms/code"
@@ -339,6 +354,7 @@ func (c *LoginServiceHTTPClientImpl) SendSmsCode(ctx context.Context, in *SendSm
 	return &out, nil
 }
 
+// VerifyCaptcha 验证图片验证码
 func (c *LoginServiceHTTPClientImpl) VerifyCaptcha(ctx context.Context, in *VerifyCaptchaRequest, opts ...http.CallOption) (*VerifyCaptchaResponse, error) {
 	var out VerifyCaptchaResponse
 	pattern := "/v1/captcha/verify"

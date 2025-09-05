@@ -158,10 +158,15 @@ func _SysMenuService_DeleteMenu0_HTTP_Handler(srv SysMenuServiceHTTPServer) func
 }
 
 type SysMenuServiceHTTPClient interface {
+	// CreateMenu 创建菜单
 	CreateMenu(ctx context.Context, req *CreateMenuRequest, opts ...http.CallOption) (rsp *CreateMenuResponse, err error)
+	// DeleteMenu 删除菜单
 	DeleteMenu(ctx context.Context, req *DeleteMenuRequest, opts ...http.CallOption) (rsp *DeleteMenuResponse, err error)
+	// GetMenu 获取菜单详情
 	GetMenu(ctx context.Context, req *GetMenuRequest, opts ...http.CallOption) (rsp *GetMenuResponse, err error)
+	// ListMenu 获取菜单列表
 	ListMenu(ctx context.Context, req *ListMenuRequest, opts ...http.CallOption) (rsp *ListMenuResponse, err error)
+	// UpdateMenu 更新菜单
 	UpdateMenu(ctx context.Context, req *UpdateMenuRequest, opts ...http.CallOption) (rsp *UpdateMenuResponse, err error)
 }
 
@@ -173,6 +178,7 @@ func NewSysMenuServiceHTTPClient(client *http.Client) SysMenuServiceHTTPClient {
 	return &SysMenuServiceHTTPClientImpl{client}
 }
 
+// CreateMenu 创建菜单
 func (c *SysMenuServiceHTTPClientImpl) CreateMenu(ctx context.Context, in *CreateMenuRequest, opts ...http.CallOption) (*CreateMenuResponse, error) {
 	var out CreateMenuResponse
 	pattern := "/v1/menus"
@@ -186,6 +192,7 @@ func (c *SysMenuServiceHTTPClientImpl) CreateMenu(ctx context.Context, in *Creat
 	return &out, nil
 }
 
+// DeleteMenu 删除菜单
 func (c *SysMenuServiceHTTPClientImpl) DeleteMenu(ctx context.Context, in *DeleteMenuRequest, opts ...http.CallOption) (*DeleteMenuResponse, error) {
 	var out DeleteMenuResponse
 	pattern := "/v1/menus/{id}"
@@ -199,6 +206,7 @@ func (c *SysMenuServiceHTTPClientImpl) DeleteMenu(ctx context.Context, in *Delet
 	return &out, nil
 }
 
+// GetMenu 获取菜单详情
 func (c *SysMenuServiceHTTPClientImpl) GetMenu(ctx context.Context, in *GetMenuRequest, opts ...http.CallOption) (*GetMenuResponse, error) {
 	var out GetMenuResponse
 	pattern := "/v1/menus/{id}"
@@ -212,6 +220,7 @@ func (c *SysMenuServiceHTTPClientImpl) GetMenu(ctx context.Context, in *GetMenuR
 	return &out, nil
 }
 
+// ListMenu 获取菜单列表
 func (c *SysMenuServiceHTTPClientImpl) ListMenu(ctx context.Context, in *ListMenuRequest, opts ...http.CallOption) (*ListMenuResponse, error) {
 	var out ListMenuResponse
 	pattern := "/v1/menus"
@@ -225,6 +234,7 @@ func (c *SysMenuServiceHTTPClientImpl) ListMenu(ctx context.Context, in *ListMen
 	return &out, nil
 }
 
+// UpdateMenu 更新菜单
 func (c *SysMenuServiceHTTPClientImpl) UpdateMenu(ctx context.Context, in *UpdateMenuRequest, opts ...http.CallOption) (*UpdateMenuResponse, error) {
 	var out UpdateMenuResponse
 	pattern := "/v1/menus/{id}"
