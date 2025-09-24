@@ -57,13 +57,28 @@ ifeq ($(GOHOSTOS), windows)
 		cd %%i && cd .. && \
 		atlas migrate diff $(tag) --to "ent://ent/schema" \
 		--dir "file://ent/migrate/migrations" \
-		--dev-url "postgres://postgres:1234@localhost:5432/admin?sslmode=disable"
+		--dev-url "$(DEV_DB_ADDR)"
 else
 	@for d in $(ENT_DIRS); do \
 		cd $$d && cd .. && \
 		atlas migrate diff $(tag) --to "ent://$$d/schema" \
 		--dir "file://$$d/migrate/migrations" \
-		--dev-url "postgres://postgres:1234@localhost:5432/admin?sslmode=disable"
+		--dev-url "$(DEV_DB_ADDR)"
+	done
+endif
+
+.PHONY: hash-migrations
+hash-migrations:
+ifeq ($(GOHOSTOS), windows)
+	@for %%i in ($(ENT_DIRS)) do \
+		cd %%i && cd .. && \
+		atlas migrate hash \
+		--dir "file://ent/migrate/migrations"
+else
+	@for d in $(ENT_DIRS); do \
+		cd $$d && cd .. && \
+		atlas migrate hash $(tag) \
+		--dir "file://$$d/migrate/migrations"
 	done
 endif
 
@@ -80,7 +95,7 @@ else
 		cd $$d && cd .. && \
 		atlas migrate apply \
 		--dir "file://ent/migrate/migrations" \
-		--url "postgres://postgres:1234@localhost:5432/admin?sslmode=disable"
+		--url "$(DB_ADDR)"
 	done
 endif
 

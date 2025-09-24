@@ -1,5 +1,5 @@
 -- createTenantFunc creates a helper function `app_current_tenant()` to fetch current tenant_id from session.
-CREATE FUNCTION app_current_tenant() RETURNS BIGINT AS $$
+CREATE OR REPLACE FUNCTION app_current_tenant() RETURNS BIGINT AS $$
 BEGIN
 	RETURN current_setting('app.current_tenant')::BIGINT;
 EXCEPTION WHEN others THEN
@@ -25,17 +25,17 @@ CREATE POLICY tenants_update_policy ON tenants
 
 -- Enable RLS for user_tenants table.
 ALTER TABLE user_tenants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY ut_select ON user_tenants 
+CREATE POLICY user_tenants_select ON user_tenants 
 	FOR SELECT 
 	USING (tenant_id = app_current_tenant());
-CREATE POLICY ut_insert ON user_tenants
+CREATE POLICY user_tenants_insert ON user_tenants
 	FOR INSERT
 	WITH CHECK (tenant_id = app_current_tenant());
-CREATE POLICY ut_update ON user_tenants
+CREATE POLICY user_tenants_update ON user_tenants
 	FOR UPDATE
 	USING (tenant_id = app_current_tenant())
 	WITH CHECK (tenant_id = app_current_tenant());
-CREATE POLICY ut_delete ON user_tenants
+CREATE POLICY user_tenants_delete ON user_tenants
 	FOR DELETE
 	USING (tenant_id = app_current_tenant());
 
@@ -71,7 +71,7 @@ CREATE POLICY users_insert ON users
 	WITH CHECK (
 		EXISTS (
 			SELECT 1 FROM user_tenants ut
-			WHERE ut.user_id = NEW.id
+			WHERE ut.user_id = users.id
 				AND ut.tenant_id = app_current_tenant()
 		)
 	);
@@ -87,7 +87,7 @@ CREATE POLICY users_update ON users
 	WITH CHECK (
 		EXISTS (
 			SELECT 1 FROM user_tenants ut
-			WHERE ut.user_id = NEW.id
+			WHERE ut.user_id = users.id
 			  AND ut.tenant_id = app_current_tenant()
 		)
 	);
@@ -100,3 +100,43 @@ CREATE POLICY users_delete ON users
 			  AND ut.tenant_id = app_current_tenant()
 		)
 	);
+
+-- function: ensure user_departments.tenant_id matches departments.tenant_id
+CREATE OR REPLACE FUNCTION enforce_user_departments_tenant()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- insert or update, enforce tenant_id to match departments
+  SELECT d.tenant_id INTO NEW.tenant_id
+  FROM departments d
+  WHERE d.id = NEW.department_id;
+
+  IF NEW.tenant_id IS NULL THEN
+    RAISE EXCEPTION 'Invalid department_id %, no tenant found', NEW.department_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- trigger: before insert or update on user_departments
+DROP TRIGGER IF EXISTS trg_user_departments_tenant ON user_departments;
+CREATE TRIGGER trg_user_departments_tenant
+BEFORE INSERT OR UPDATE ON user_departments
+FOR EACH ROW
+EXECUTE FUNCTION enforce_user_departments_tenant();
+
+-- Enable RLS for user_departments table.
+ALTER TABLE user_departments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY user_departments_select ON user_departments
+    FOR SELECT
+    USING (tenant_id = app_current_tenant());
+CREATE POLICY user_departments_insert ON user_departments
+    FOR INSERT
+    WITH CHECK (tenant_id = app_current_tenant());
+CREATE POLICY user_departments_update ON user_departments
+    FOR UPDATE
+    USING (tenant_id = app_current_tenant())
+    WITH CHECK (tenant_id = app_current_tenant());
+CREATE POLICY user_departments_delete ON user_departments
+    FOR DELETE
+    USING (tenant_id = app_current_tenant());
