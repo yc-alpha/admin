@@ -145,7 +145,7 @@ func (utu *UserTenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := utu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(usertenant.Table, usertenant.Columns, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewUpdateSpec(usertenant.Table, usertenant.Columns, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt))
 	if ps := utu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -370,7 +370,7 @@ func (utuo *UserTenantUpdateOne) sqlSave(ctx context.Context) (_node *UserTenant
 	if err := utuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(usertenant.Table, usertenant.Columns, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewUpdateSpec(usertenant.Table, usertenant.Columns, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt))
 	id, ok := utuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "UserTenant.id" for update`)}

@@ -120,8 +120,6 @@ var (
 	EmailValidator func(string) error
 	// PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
 	PhoneValidator func(string) error
-	// PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	PasswordValidator func(string) error
 	// DefaultLanguage holds the default value on creation for the "language" field.
 	DefaultLanguage string
 	// LanguageValidator is a validator for the "language" field. It is called by the builders before save.

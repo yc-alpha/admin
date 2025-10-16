@@ -47,12 +47,6 @@ func (udc *UserDepartmentCreate) SetAttributes(m map[string]interface{}) *UserDe
 	return udc
 }
 
-// SetID sets the "id" field.
-func (udc *UserDepartmentCreate) SetID(i int64) *UserDepartmentCreate {
-	udc.mutation.SetID(i)
-	return udc
-}
-
 // SetUser sets the "user" edge to the User entity.
 func (udc *UserDepartmentCreate) SetUser(u *User) *UserDepartmentCreate {
 	return udc.SetUserID(u.ID)
@@ -144,10 +138,8 @@ func (udc *UserDepartmentCreate) sqlSave(ctx context.Context) (*UserDepartment, 
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != _node.ID {
-		id := _spec.ID.Value.(int64)
-		_node.ID = int64(id)
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	udc.mutation.id = &_node.ID
 	udc.mutation.done = true
 	return _node, nil
@@ -156,13 +148,9 @@ func (udc *UserDepartmentCreate) sqlSave(ctx context.Context) (*UserDepartment, 
 func (udc *UserDepartmentCreate) createSpec() (*UserDepartment, *sqlgraph.CreateSpec) {
 	var (
 		_node = &UserDepartment{config: udc.config}
-		_spec = sqlgraph.NewCreateSpec(userdepartment.Table, sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64))
+		_spec = sqlgraph.NewCreateSpec(userdepartment.Table, sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = udc.conflict
-	if id, ok := udc.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = id
-	}
 	if value, ok := udc.mutation.TenantID(); ok {
 		_spec.SetField(userdepartment.FieldTenantID, field.TypeInt64, value)
 		_node.TenantID = value
@@ -311,24 +299,16 @@ func (u *UserDepartmentUpsert) UpdateAttributes() *UserDepartmentUpsert {
 	return u
 }
 
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
 //	client.UserDepartment.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(userdepartment.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *UserDepartmentUpsertOne) UpdateNewValues() *UserDepartmentUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(userdepartment.FieldID)
-		}
-	}))
 	return u
 }
 
@@ -438,7 +418,7 @@ func (u *UserDepartmentUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *UserDepartmentUpsertOne) ID(ctx context.Context) (id int64, err error) {
+func (u *UserDepartmentUpsertOne) ID(ctx context.Context) (id int, err error) {
 	node, err := u.create.Save(ctx)
 	if err != nil {
 		return id, err
@@ -447,7 +427,7 @@ func (u *UserDepartmentUpsertOne) ID(ctx context.Context) (id int64, err error) 
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *UserDepartmentUpsertOne) IDX(ctx context.Context) int64 {
+func (u *UserDepartmentUpsertOne) IDX(ctx context.Context) int {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -502,9 +482,9 @@ func (udcb *UserDepartmentCreateBulk) Save(ctx context.Context) ([]*UserDepartme
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+				if specs[i].ID.Value != nil {
 					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int64(id)
+					nodes[i].ID = int(id)
 				}
 				mutation.done = true
 				return nodes[i], nil
@@ -592,20 +572,10 @@ type UserDepartmentUpsertBulk struct {
 //	client.UserDepartment.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(userdepartment.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *UserDepartmentUpsertBulk) UpdateNewValues() *UserDepartmentUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(userdepartment.FieldID)
-			}
-		}
-	}))
 	return u
 }
 

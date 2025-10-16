@@ -41,12 +41,6 @@ func (utc *UserTenantCreate) SetRoleLabels(s []string) *UserTenantCreate {
 	return utc
 }
 
-// SetID sets the "id" field.
-func (utc *UserTenantCreate) SetID(i int64) *UserTenantCreate {
-	utc.mutation.SetID(i)
-	return utc
-}
-
 // SetUser sets the "user" edge to the User entity.
 func (utc *UserTenantCreate) SetUser(u *User) *UserTenantCreate {
 	return utc.SetUserID(u.ID)
@@ -117,10 +111,8 @@ func (utc *UserTenantCreate) sqlSave(ctx context.Context) (*UserTenant, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != _node.ID {
-		id := _spec.ID.Value.(int64)
-		_node.ID = int64(id)
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	utc.mutation.id = &_node.ID
 	utc.mutation.done = true
 	return _node, nil
@@ -129,13 +121,9 @@ func (utc *UserTenantCreate) sqlSave(ctx context.Context) (*UserTenant, error) {
 func (utc *UserTenantCreate) createSpec() (*UserTenant, *sqlgraph.CreateSpec) {
 	var (
 		_node = &UserTenant{config: utc.config}
-		_spec = sqlgraph.NewCreateSpec(usertenant.Table, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64))
+		_spec = sqlgraph.NewCreateSpec(usertenant.Table, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = utc.conflict
-	if id, ok := utc.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = id
-	}
 	if value, ok := utc.mutation.RoleLabels(); ok {
 		_spec.SetField(usertenant.FieldRoleLabels, field.TypeJSON, value)
 		_node.RoleLabels = value
@@ -268,24 +256,16 @@ func (u *UserTenantUpsert) ClearRoleLabels() *UserTenantUpsert {
 	return u
 }
 
-// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
 //	client.UserTenant.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(usertenant.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *UserTenantUpsertOne) UpdateNewValues() *UserTenantUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(usertenant.FieldID)
-		}
-	}))
 	return u
 }
 
@@ -381,7 +361,7 @@ func (u *UserTenantUpsertOne) ExecX(ctx context.Context) {
 }
 
 // Exec executes the UPSERT query and returns the inserted/updated ID.
-func (u *UserTenantUpsertOne) ID(ctx context.Context) (id int64, err error) {
+func (u *UserTenantUpsertOne) ID(ctx context.Context) (id int, err error) {
 	node, err := u.create.Save(ctx)
 	if err != nil {
 		return id, err
@@ -390,7 +370,7 @@ func (u *UserTenantUpsertOne) ID(ctx context.Context) (id int64, err error) {
 }
 
 // IDX is like ID, but panics if an error occurs.
-func (u *UserTenantUpsertOne) IDX(ctx context.Context) int64 {
+func (u *UserTenantUpsertOne) IDX(ctx context.Context) int {
 	id, err := u.ID(ctx)
 	if err != nil {
 		panic(err)
@@ -444,9 +424,9 @@ func (utcb *UserTenantCreateBulk) Save(ctx context.Context) ([]*UserTenant, erro
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil && nodes[i].ID == 0 {
+				if specs[i].ID.Value != nil {
 					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int64(id)
+					nodes[i].ID = int(id)
 				}
 				mutation.done = true
 				return nodes[i], nil
@@ -534,20 +514,10 @@ type UserTenantUpsertBulk struct {
 //	client.UserTenant.Create().
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
-//			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(usertenant.FieldID)
-//			}),
 //		).
 //		Exec(ctx)
 func (u *UserTenantUpsertBulk) UpdateNewValues() *UserTenantUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
-	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
-		for _, b := range u.create.builders {
-			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(usertenant.FieldID)
-			}
-		}
-	}))
 	return u
 }
 

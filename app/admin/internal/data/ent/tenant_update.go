@@ -186,14 +186,14 @@ func (tu *TenantUpdate) ClearDeletedAt() *TenantUpdate {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
-func (tu *TenantUpdate) AddUserTenantIDs(ids ...int64) *TenantUpdate {
+func (tu *TenantUpdate) AddUserTenantIDs(ids ...int) *TenantUpdate {
 	tu.mutation.AddUserTenantIDs(ids...)
 	return tu
 }
 
 // AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
 func (tu *TenantUpdate) AddUserTenants(u ...*UserTenant) *TenantUpdate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -227,14 +227,14 @@ func (tu *TenantUpdate) ClearUserTenants() *TenantUpdate {
 }
 
 // RemoveUserTenantIDs removes the "user_tenants" edge to UserTenant entities by IDs.
-func (tu *TenantUpdate) RemoveUserTenantIDs(ids ...int64) *TenantUpdate {
+func (tu *TenantUpdate) RemoveUserTenantIDs(ids ...int) *TenantUpdate {
 	tu.mutation.RemoveUserTenantIDs(ids...)
 	return tu
 }
 
 // RemoveUserTenants removes "user_tenants" edges to UserTenant entities.
 func (tu *TenantUpdate) RemoveUserTenants(u ...*UserTenant) *TenantUpdate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -381,7 +381,7 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -394,7 +394,7 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -410,7 +410,7 @@ func (tu *TenantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -639,14 +639,14 @@ func (tuo *TenantUpdateOne) ClearDeletedAt() *TenantUpdateOne {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
-func (tuo *TenantUpdateOne) AddUserTenantIDs(ids ...int64) *TenantUpdateOne {
+func (tuo *TenantUpdateOne) AddUserTenantIDs(ids ...int) *TenantUpdateOne {
 	tuo.mutation.AddUserTenantIDs(ids...)
 	return tuo
 }
 
 // AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
 func (tuo *TenantUpdateOne) AddUserTenants(u ...*UserTenant) *TenantUpdateOne {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -680,14 +680,14 @@ func (tuo *TenantUpdateOne) ClearUserTenants() *TenantUpdateOne {
 }
 
 // RemoveUserTenantIDs removes the "user_tenants" edge to UserTenant entities by IDs.
-func (tuo *TenantUpdateOne) RemoveUserTenantIDs(ids ...int64) *TenantUpdateOne {
+func (tuo *TenantUpdateOne) RemoveUserTenantIDs(ids ...int) *TenantUpdateOne {
 	tuo.mutation.RemoveUserTenantIDs(ids...)
 	return tuo
 }
 
 // RemoveUserTenants removes "user_tenants" edges to UserTenant entities.
 func (tuo *TenantUpdateOne) RemoveUserTenants(u ...*UserTenant) *TenantUpdateOne {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -864,7 +864,7 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -877,7 +877,7 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -893,7 +893,7 @@ func (tuo *TenantUpdateOne) sqlSave(ctx context.Context) (_node *Tenant, err err
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

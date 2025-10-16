@@ -18,7 +18,7 @@ import (
 type UserTenant struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int64 `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// SysUser ID
 	UserID int64 `json:"user_id,omitempty"`
 	// Tenant ID
@@ -93,7 +93,7 @@ func (ut *UserTenant) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ut.ID = int64(value.Int64)
+			ut.ID = int(value.Int64)
 		case usertenant.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])

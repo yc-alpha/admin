@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -10,10 +11,10 @@ import (
 var (
 	// DepartmentsColumns holds the columns for the "departments" table.
 	DepartmentsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Primary Key ID"},
 		{Name: "parent_id", Type: field.TypeInt64, Comment: "Parent Department ID"},
 		{Name: "name", Type: field.TypeString, Comment: "Name of the department"},
-		{Name: "path", Type: field.TypeString},
+		{Name: "path", Type: field.TypeString, Comment: "save ltree path", SchemaType: map[string]string{"postgres": "ltree"}},
 		{Name: "attributes", Type: field.TypeJSON},
 		{Name: "created_by", Type: field.TypeInt64, Nullable: true, Comment: "User who created this record"},
 		{Name: "updated_by", Type: field.TypeInt64, Nullable: true, Comment: "User who last updated this record"},
@@ -33,6 +34,36 @@ var (
 				Columns:    []*schema.Column{DepartmentsColumns[10]},
 				RefColumns: []*schema.Column{TenantsColumns[0]},
 				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "department_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{DepartmentsColumns[10]},
+			},
+			{
+				Name:    "department_tenant_id_parent_id",
+				Unique:  false,
+				Columns: []*schema.Column{DepartmentsColumns[10], DepartmentsColumns[1]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "department_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{DepartmentsColumns[7]},
+			},
+			{
+				Name:    "department_path",
+				Unique:  false,
+				Columns: []*schema.Column{DepartmentsColumns[3]},
+				Annotation: &entsql.IndexAnnotation{
+					Types: map[string]string{
+						"postgres": "GIST",
+					},
+				},
 			},
 		},
 	}
@@ -55,14 +86,39 @@ var (
 		Name:       "tenants",
 		Columns:    TenantsColumns,
 		PrimaryKey: []*schema.Column{TenantsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "tenant_owner_id",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[2]},
+			},
+			{
+				Name:    "tenant_status",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[3]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tenant_expired_at",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[4]},
+			},
+			{
+				Name:    "tenant_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[8]},
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Primary Key ID"},
 		{Name: "username", Type: field.TypeString, Unique: true, Size: 64, Comment: "Username of the user"},
-		{Name: "email", Type: field.TypeString, Unique: true, Comment: "Email address of the user"},
-		{Name: "phone", Type: field.TypeString, Unique: true, Size: 16, Comment: "Phone number of the user"},
-		{Name: "password", Type: field.TypeString, Comment: "Password of the user"},
+		{Name: "email", Type: field.TypeString, Unique: true, Nullable: true, Comment: "Email address of the user"},
+		{Name: "phone", Type: field.TypeString, Unique: true, Nullable: true, Comment: "Phone number of the user"},
+		{Name: "password", Type: field.TypeString, Nullable: true, Comment: "Password of the user"},
 		{Name: "status", Type: field.TypeEnum, Comment: "Status of the user", Enums: []string{"ACTIVE", "DISABLED", "PENDING"}, Default: "PENDING"},
 		{Name: "full_name", Type: field.TypeString, Nullable: true, Comment: "Full name of the user"},
 		{Name: "gender", Type: field.TypeEnum, Comment: "User gender", Enums: []string{"MALE", "FEMALE", "UNKNOWN"}, Default: "UNKNOWN"},
@@ -80,12 +136,19 @@ var (
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_status_updated_at",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[5], UsersColumns[14]},
+			},
+		},
 	}
 	// UserAccountsColumns holds the columns for the "user_accounts" table.
 	UserAccountsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "platform", Type: field.TypeString, Comment: "Social media platform (e.g., Twitter, Facebook)"},
-		{Name: "identifier", Type: field.TypeString, Comment: "User's account identifier on the platform"},
+		{Name: "platform", Type: field.TypeString, Size: 32, Comment: "Social media platform (e.g., Twitter, Facebook)"},
+		{Name: "identifier", Type: field.TypeString, Size: 255, Comment: "User's account identifier on the platform"},
 		{Name: "name", Type: field.TypeString, Comment: "User's name on the platform"},
 		{Name: "created_at", Type: field.TypeTime, Comment: "Record creation timestamp"},
 		{Name: "updated_at", Type: field.TypeTime, Comment: "Record last update timestamp"},
@@ -120,7 +183,7 @@ var (
 	}
 	// UserDepartmentsColumns holds the columns for the "user_departments" table.
 	UserDepartmentsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "tenant_id", Type: field.TypeInt64, Comment: "Tenant ID"},
 		{Name: "attributes", Type: field.TypeJSON},
 		{Name: "dept_id", Type: field.TypeInt64, Comment: "Department ID"},
@@ -145,10 +208,32 @@ var (
 				OnDelete:   schema.Cascade,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userdepartment_user_id_dept_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserDepartmentsColumns[4], UserDepartmentsColumns[3]},
+			},
+			{
+				Name:    "userdepartment_dept_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserDepartmentsColumns[3]},
+			},
+			{
+				Name:    "userdepartment_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserDepartmentsColumns[1]},
+			},
+			{
+				Name:    "userdepartment_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserDepartmentsColumns[4]},
+			},
+		},
 	}
 	// UserTenantsColumns holds the columns for the "user_tenants" table.
 	UserTenantsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "role_labels", Type: field.TypeJSON, Nullable: true},
 		{Name: "tenant_id", Type: field.TypeInt64, Comment: "Tenant ID"},
 		{Name: "user_id", Type: field.TypeInt64, Comment: "SysUser ID"},
@@ -172,6 +257,23 @@ var (
 				OnDelete:   schema.Cascade,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usertenant_user_id_tenant_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserTenantsColumns[3], UserTenantsColumns[2]},
+			},
+			{
+				Name:    "usertenant_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserTenantsColumns[2]},
+			},
+			{
+				Name:    "usertenant_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserTenantsColumns[3]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -186,6 +288,10 @@ var (
 
 func init() {
 	DepartmentsTable.ForeignKeys[0].RefTable = TenantsTable
+	UsersTable.Annotation = &entsql.Annotation{}
+	UsersTable.Annotation.Checks = map[string]string{
+		"users_contact_or_password_check": "(email IS NOT NULL) OR (phone IS NOT NULL) OR (password IS NOT NULL)",
+	}
 	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
 	UserDepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	UserDepartmentsTable.ForeignKeys[1].RefTable = UsersTable

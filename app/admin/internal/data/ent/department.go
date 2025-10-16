@@ -18,6 +18,7 @@ import (
 type Department struct {
 	config `json:"-"`
 	// ID of the ent.
+	// Primary Key ID
 	ID int64 `json:"id,omitempty"`
 	// Tenant ID
 	TenantID int64 `json:"tenant_id,omitempty"`
@@ -25,7 +26,7 @@ type Department struct {
 	ParentID int64 `json:"parent_id,omitempty"`
 	// Name of the department
 	Name string `json:"name,omitempty"`
-	// Path holds the value of the "path" field.
+	// save ltree path
 	Path string `json:"path,omitempty"`
 	// Attributes holds the value of the "attributes" field.
 	Attributes map[string]interface{} `json:"attributes,omitempty"`

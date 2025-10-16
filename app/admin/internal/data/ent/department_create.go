@@ -130,20 +130,28 @@ func (dc *DepartmentCreate) SetID(i int64) *DepartmentCreate {
 	return dc
 }
 
+// SetNillableID sets the "id" field if the given value is not nil.
+func (dc *DepartmentCreate) SetNillableID(i *int64) *DepartmentCreate {
+	if i != nil {
+		dc.SetID(*i)
+	}
+	return dc
+}
+
 // SetTenant sets the "tenant" edge to the Tenant entity.
 func (dc *DepartmentCreate) SetTenant(t *Tenant) *DepartmentCreate {
 	return dc.SetTenantID(t.ID)
 }
 
 // AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by IDs.
-func (dc *DepartmentCreate) AddUserDepartmentIDs(ids ...int64) *DepartmentCreate {
+func (dc *DepartmentCreate) AddUserDepartmentIDs(ids ...int) *DepartmentCreate {
 	dc.mutation.AddUserDepartmentIDs(ids...)
 	return dc
 }
 
 // AddUserDepartments adds the "user_departments" edges to the UserDepartment entity.
 func (dc *DepartmentCreate) AddUserDepartments(u ...*UserDepartment) *DepartmentCreate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -196,6 +204,10 @@ func (dc *DepartmentCreate) defaults() {
 	if _, ok := dc.mutation.UpdatedAt(); !ok {
 		v := department.DefaultUpdatedAt()
 		dc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := dc.mutation.ID(); !ok {
+		v := department.DefaultID()
+		dc.mutation.SetID(v)
 	}
 }
 
@@ -319,7 +331,7 @@ func (dc *DepartmentCreate) createSpec() (*Department, *sqlgraph.CreateSpec) {
 			Columns: []string{department.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

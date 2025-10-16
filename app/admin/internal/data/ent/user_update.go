@@ -59,6 +59,12 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearEmail clears the value of the "email" field.
+func (uu *UserUpdate) ClearEmail() *UserUpdate {
+	uu.mutation.ClearEmail()
+	return uu
+}
+
 // SetPhone sets the "phone" field.
 func (uu *UserUpdate) SetPhone(s string) *UserUpdate {
 	uu.mutation.SetPhone(s)
@@ -73,6 +79,12 @@ func (uu *UserUpdate) SetNillablePhone(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (uu *UserUpdate) ClearPhone() *UserUpdate {
+	uu.mutation.ClearPhone()
+	return uu
+}
+
 // SetPassword sets the "password" field.
 func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 	uu.mutation.SetPassword(s)
@@ -84,6 +96,12 @@ func (uu *UserUpdate) SetNillablePassword(s *string) *UserUpdate {
 	if s != nil {
 		uu.SetPassword(*s)
 	}
+	return uu
+}
+
+// ClearPassword clears the value of the "password" field.
+func (uu *UserUpdate) ClearPassword() *UserUpdate {
+	uu.mutation.ClearPassword()
 	return uu
 }
 
@@ -279,14 +297,14 @@ func (uu *UserUpdate) AddAccounts(u ...*UserAccount) *UserUpdate {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
-func (uu *UserUpdate) AddUserTenantIDs(ids ...int64) *UserUpdate {
+func (uu *UserUpdate) AddUserTenantIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddUserTenantIDs(ids...)
 	return uu
 }
 
 // AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
 func (uu *UserUpdate) AddUserTenants(u ...*UserTenant) *UserUpdate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -294,14 +312,14 @@ func (uu *UserUpdate) AddUserTenants(u ...*UserTenant) *UserUpdate {
 }
 
 // AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by IDs.
-func (uu *UserUpdate) AddUserDepartmentIDs(ids ...int64) *UserUpdate {
+func (uu *UserUpdate) AddUserDepartmentIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddUserDepartmentIDs(ids...)
 	return uu
 }
 
 // AddUserDepartments adds the "user_departments" edges to the UserDepartment entity.
 func (uu *UserUpdate) AddUserDepartments(u ...*UserDepartment) *UserUpdate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -341,14 +359,14 @@ func (uu *UserUpdate) ClearUserTenants() *UserUpdate {
 }
 
 // RemoveUserTenantIDs removes the "user_tenants" edge to UserTenant entities by IDs.
-func (uu *UserUpdate) RemoveUserTenantIDs(ids ...int64) *UserUpdate {
+func (uu *UserUpdate) RemoveUserTenantIDs(ids ...int) *UserUpdate {
 	uu.mutation.RemoveUserTenantIDs(ids...)
 	return uu
 }
 
 // RemoveUserTenants removes "user_tenants" edges to UserTenant entities.
 func (uu *UserUpdate) RemoveUserTenants(u ...*UserTenant) *UserUpdate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -362,14 +380,14 @@ func (uu *UserUpdate) ClearUserDepartments() *UserUpdate {
 }
 
 // RemoveUserDepartmentIDs removes the "user_departments" edge to UserDepartment entities by IDs.
-func (uu *UserUpdate) RemoveUserDepartmentIDs(ids ...int64) *UserUpdate {
+func (uu *UserUpdate) RemoveUserDepartmentIDs(ids ...int) *UserUpdate {
 	uu.mutation.RemoveUserDepartmentIDs(ids...)
 	return uu
 }
 
 // RemoveUserDepartments removes "user_departments" edges to UserDepartment entities.
 func (uu *UserUpdate) RemoveUserDepartments(u ...*UserDepartment) *UserUpdate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -435,11 +453,6 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
 		}
 	}
-	if v, ok := uu.mutation.Password(); ok {
-		if err := user.PasswordValidator(v); err != nil {
-			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "User.password": %w`, err)}
-		}
-	}
 	if v, ok := uu.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -481,11 +494,20 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if uu.mutation.EmailCleared() {
+		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
 	if value, ok := uu.mutation.Phone(); ok {
 		_spec.SetField(user.FieldPhone, field.TypeString, value)
 	}
+	if uu.mutation.PhoneCleared() {
+		_spec.ClearField(user.FieldPhone, field.TypeString)
+	}
 	if value, ok := uu.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if uu.mutation.PasswordCleared() {
+		_spec.ClearField(user.FieldPassword, field.TypeString)
 	}
 	if value, ok := uu.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
@@ -591,7 +613,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -604,7 +626,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -620,7 +642,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -636,7 +658,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -649,7 +671,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -665,7 +687,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{user.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -721,6 +743,12 @@ func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// ClearEmail clears the value of the "email" field.
+func (uuo *UserUpdateOne) ClearEmail() *UserUpdateOne {
+	uuo.mutation.ClearEmail()
+	return uuo
+}
+
 // SetPhone sets the "phone" field.
 func (uuo *UserUpdateOne) SetPhone(s string) *UserUpdateOne {
 	uuo.mutation.SetPhone(s)
@@ -735,6 +763,12 @@ func (uuo *UserUpdateOne) SetNillablePhone(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (uuo *UserUpdateOne) ClearPhone() *UserUpdateOne {
+	uuo.mutation.ClearPhone()
+	return uuo
+}
+
 // SetPassword sets the "password" field.
 func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 	uuo.mutation.SetPassword(s)
@@ -746,6 +780,12 @@ func (uuo *UserUpdateOne) SetNillablePassword(s *string) *UserUpdateOne {
 	if s != nil {
 		uuo.SetPassword(*s)
 	}
+	return uuo
+}
+
+// ClearPassword clears the value of the "password" field.
+func (uuo *UserUpdateOne) ClearPassword() *UserUpdateOne {
+	uuo.mutation.ClearPassword()
 	return uuo
 }
 
@@ -941,14 +981,14 @@ func (uuo *UserUpdateOne) AddAccounts(u ...*UserAccount) *UserUpdateOne {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
-func (uuo *UserUpdateOne) AddUserTenantIDs(ids ...int64) *UserUpdateOne {
+func (uuo *UserUpdateOne) AddUserTenantIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddUserTenantIDs(ids...)
 	return uuo
 }
 
 // AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
 func (uuo *UserUpdateOne) AddUserTenants(u ...*UserTenant) *UserUpdateOne {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -956,14 +996,14 @@ func (uuo *UserUpdateOne) AddUserTenants(u ...*UserTenant) *UserUpdateOne {
 }
 
 // AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by IDs.
-func (uuo *UserUpdateOne) AddUserDepartmentIDs(ids ...int64) *UserUpdateOne {
+func (uuo *UserUpdateOne) AddUserDepartmentIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddUserDepartmentIDs(ids...)
 	return uuo
 }
 
 // AddUserDepartments adds the "user_departments" edges to the UserDepartment entity.
 func (uuo *UserUpdateOne) AddUserDepartments(u ...*UserDepartment) *UserUpdateOne {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -1003,14 +1043,14 @@ func (uuo *UserUpdateOne) ClearUserTenants() *UserUpdateOne {
 }
 
 // RemoveUserTenantIDs removes the "user_tenants" edge to UserTenant entities by IDs.
-func (uuo *UserUpdateOne) RemoveUserTenantIDs(ids ...int64) *UserUpdateOne {
+func (uuo *UserUpdateOne) RemoveUserTenantIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.RemoveUserTenantIDs(ids...)
 	return uuo
 }
 
 // RemoveUserTenants removes "user_tenants" edges to UserTenant entities.
 func (uuo *UserUpdateOne) RemoveUserTenants(u ...*UserTenant) *UserUpdateOne {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -1024,14 +1064,14 @@ func (uuo *UserUpdateOne) ClearUserDepartments() *UserUpdateOne {
 }
 
 // RemoveUserDepartmentIDs removes the "user_departments" edge to UserDepartment entities by IDs.
-func (uuo *UserUpdateOne) RemoveUserDepartmentIDs(ids ...int64) *UserUpdateOne {
+func (uuo *UserUpdateOne) RemoveUserDepartmentIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.RemoveUserDepartmentIDs(ids...)
 	return uuo
 }
 
 // RemoveUserDepartments removes "user_departments" edges to UserDepartment entities.
 func (uuo *UserUpdateOne) RemoveUserDepartments(u ...*UserDepartment) *UserUpdateOne {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -1110,11 +1150,6 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "User.phone": %w`, err)}
 		}
 	}
-	if v, ok := uuo.mutation.Password(); ok {
-		if err := user.PasswordValidator(v); err != nil {
-			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "User.password": %w`, err)}
-		}
-	}
 	if v, ok := uuo.mutation.Status(); ok {
 		if err := user.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "User.status": %w`, err)}
@@ -1173,11 +1208,20 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if uuo.mutation.EmailCleared() {
+		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
 	if value, ok := uuo.mutation.Phone(); ok {
 		_spec.SetField(user.FieldPhone, field.TypeString, value)
 	}
+	if uuo.mutation.PhoneCleared() {
+		_spec.ClearField(user.FieldPhone, field.TypeString)
+	}
 	if value, ok := uuo.mutation.Password(); ok {
 		_spec.SetField(user.FieldPassword, field.TypeString, value)
+	}
+	if uuo.mutation.PasswordCleared() {
+		_spec.ClearField(user.FieldPassword, field.TypeString)
 	}
 	if value, ok := uuo.mutation.Status(); ok {
 		_spec.SetField(user.FieldStatus, field.TypeEnum, value)
@@ -1283,7 +1327,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1296,7 +1340,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1312,7 +1356,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1328,7 +1372,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1341,7 +1385,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1357,7 +1401,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Columns: []string{user.UserDepartmentsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(userdepartment.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

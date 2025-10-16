@@ -155,14 +155,14 @@ func (tc *TenantCreate) SetNillableID(i *int64) *TenantCreate {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by IDs.
-func (tc *TenantCreate) AddUserTenantIDs(ids ...int64) *TenantCreate {
+func (tc *TenantCreate) AddUserTenantIDs(ids ...int) *TenantCreate {
 	tc.mutation.AddUserTenantIDs(ids...)
 	return tc
 }
 
 // AddUserTenants adds the "user_tenants" edges to the UserTenant entity.
 func (tc *TenantCreate) AddUserTenants(u ...*UserTenant) *TenantCreate {
-	ids := make([]int64, len(u))
+	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
@@ -352,7 +352,7 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Columns: []string{tenant.UserTenantsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64),
+				IDSpec: sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

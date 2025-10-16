@@ -184,6 +184,16 @@ func (uau *UserAccountUpdate) check() error {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "UserAccount.user_id": %w`, err)}
 		}
 	}
+	if v, ok := uau.mutation.Platform(); ok {
+		if err := useraccount.PlatformValidator(v); err != nil {
+			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "UserAccount.platform": %w`, err)}
+		}
+	}
+	if v, ok := uau.mutation.Identifier(); ok {
+		if err := useraccount.IdentifierValidator(v); err != nil {
+			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "UserAccount.identifier": %w`, err)}
+		}
+	}
 	if uau.mutation.UserCleared() && len(uau.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "UserAccount.user"`)
 	}
@@ -438,6 +448,16 @@ func (uauo *UserAccountUpdateOne) check() error {
 	if v, ok := uauo.mutation.UserID(); ok {
 		if err := useraccount.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "UserAccount.user_id": %w`, err)}
+		}
+	}
+	if v, ok := uauo.mutation.Platform(); ok {
+		if err := useraccount.PlatformValidator(v); err != nil {
+			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "UserAccount.platform": %w`, err)}
+		}
+	}
+	if v, ok := uauo.mutation.Identifier(); ok {
+		if err := useraccount.IdentifierValidator(v); err != nil {
+			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "UserAccount.identifier": %w`, err)}
 		}
 	}
 	if uauo.mutation.UserCleared() && len(uauo.mutation.UserIDs()) > 0 {

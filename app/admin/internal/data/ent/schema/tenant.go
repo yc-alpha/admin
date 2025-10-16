@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/yc-alpha/admin/common/snowflake"
 )
 
@@ -33,6 +34,19 @@ func (Tenant) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("user_tenants", UserTenant.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("departments", Department.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+	}
+}
+
+func (Tenant) Indexes() []ent.Index {
+	return []ent.Index{
+		// 根据 owner_id 查询租户
+		index.Fields("owner_id"),
+		// 有效租户（未删除）
+		index.Fields("status").Annotations(entsql.IndexWhere("deleted_at IS NULL")),
+		// 到期时间查询（批量清理/检查即将过期的租户）
+		index.Fields("expired_at"),
+		// 创建时间排序（最新租户）
+		index.Fields("created_at"),
 	}
 }
 

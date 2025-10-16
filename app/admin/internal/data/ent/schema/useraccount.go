@@ -20,8 +20,8 @@ type UserAccount struct {
 func (UserAccount) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("user_id").Positive().Comment("Reference to SysUser ID"),
-		field.String("platform").Comment("Social media platform (e.g., Twitter, Facebook)"),
-		field.String("identifier").Comment("User's account identifier on the platform"),
+		field.String("platform").MaxLen(32).Comment("Social media platform (e.g., Twitter, Facebook)"),
+		field.String("identifier").MaxLen(255).Comment("User's account identifier on the platform"),
 		field.String("name").Nillable().Comment("User's name on the platform"),
 		field.Time("created_at").Default(time.Now).Comment("Record creation timestamp"),
 		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now).Comment("Record last update timestamp"),

@@ -108,10 +108,10 @@ BEGIN
   -- insert or update, enforce tenant_id to match departments
   SELECT d.tenant_id INTO NEW.tenant_id
   FROM departments d
-  WHERE d.id = NEW.department_id;
+  WHERE d.id = NEW.dept_id;
 
   IF NEW.tenant_id IS NULL THEN
-    RAISE EXCEPTION 'Invalid department_id %, no tenant found', NEW.department_id;
+    RAISE EXCEPTION 'Invalid department_id %, no tenant found', NEW.dept_id;
   END IF;
 
   RETURN NEW;

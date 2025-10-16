@@ -152,8 +152,18 @@ func (uac *UserAccountCreate) check() error {
 	if _, ok := uac.mutation.Platform(); !ok {
 		return &ValidationError{Name: "platform", err: errors.New(`ent: missing required field "UserAccount.platform"`)}
 	}
+	if v, ok := uac.mutation.Platform(); ok {
+		if err := useraccount.PlatformValidator(v); err != nil {
+			return &ValidationError{Name: "platform", err: fmt.Errorf(`ent: validator failed for field "UserAccount.platform": %w`, err)}
+		}
+	}
 	if _, ok := uac.mutation.Identifier(); !ok {
 		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "UserAccount.identifier"`)}
+	}
+	if v, ok := uac.mutation.Identifier(); ok {
+		if err := useraccount.IdentifierValidator(v); err != nil {
+			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "UserAccount.identifier": %w`, err)}
+		}
 	}
 	if _, ok := uac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "UserAccount.name"`)}

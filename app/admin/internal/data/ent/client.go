@@ -967,7 +967,7 @@ func (c *UserDepartmentClient) UpdateOne(ud *UserDepartment) *UserDepartmentUpda
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserDepartmentClient) UpdateOneID(id int64) *UserDepartmentUpdateOne {
+func (c *UserDepartmentClient) UpdateOneID(id int) *UserDepartmentUpdateOne {
 	mutation := newUserDepartmentMutation(c.config, OpUpdateOne, withUserDepartmentID(id))
 	return &UserDepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -984,7 +984,7 @@ func (c *UserDepartmentClient) DeleteOne(ud *UserDepartment) *UserDepartmentDele
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserDepartmentClient) DeleteOneID(id int64) *UserDepartmentDeleteOne {
+func (c *UserDepartmentClient) DeleteOneID(id int) *UserDepartmentDeleteOne {
 	builder := c.Delete().Where(userdepartment.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1001,12 +1001,12 @@ func (c *UserDepartmentClient) Query() *UserDepartmentQuery {
 }
 
 // Get returns a UserDepartment entity by its id.
-func (c *UserDepartmentClient) Get(ctx context.Context, id int64) (*UserDepartment, error) {
+func (c *UserDepartmentClient) Get(ctx context.Context, id int) (*UserDepartment, error) {
 	return c.Query().Where(userdepartment.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserDepartmentClient) GetX(ctx context.Context, id int64) *UserDepartment {
+func (c *UserDepartmentClient) GetX(ctx context.Context, id int) *UserDepartment {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -1132,7 +1132,7 @@ func (c *UserTenantClient) UpdateOne(ut *UserTenant) *UserTenantUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserTenantClient) UpdateOneID(id int64) *UserTenantUpdateOne {
+func (c *UserTenantClient) UpdateOneID(id int) *UserTenantUpdateOne {
 	mutation := newUserTenantMutation(c.config, OpUpdateOne, withUserTenantID(id))
 	return &UserTenantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -1149,7 +1149,7 @@ func (c *UserTenantClient) DeleteOne(ut *UserTenant) *UserTenantDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserTenantClient) DeleteOneID(id int64) *UserTenantDeleteOne {
+func (c *UserTenantClient) DeleteOneID(id int) *UserTenantDeleteOne {
 	builder := c.Delete().Where(usertenant.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -1166,12 +1166,12 @@ func (c *UserTenantClient) Query() *UserTenantQuery {
 }
 
 // Get returns a UserTenant entity by its id.
-func (c *UserTenantClient) Get(ctx context.Context, id int64) (*UserTenant, error) {
+func (c *UserTenantClient) Get(ctx context.Context, id int) (*UserTenant, error) {
 	return c.Query().Where(usertenant.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserTenantClient) GetX(ctx context.Context, id int64) *UserTenant {
+func (c *UserTenantClient) GetX(ctx context.Context, id int) *UserTenant {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

@@ -132,8 +132,8 @@ func (utq *UserTenantQuery) FirstX(ctx context.Context) *UserTenant {
 
 // FirstID returns the first UserTenant ID from the query.
 // Returns a *NotFoundError when no UserTenant ID was found.
-func (utq *UserTenantQuery) FirstID(ctx context.Context) (id int64, err error) {
-	var ids []int64
+func (utq *UserTenantQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = utq.Limit(1).IDs(setContextOp(ctx, utq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -145,7 +145,7 @@ func (utq *UserTenantQuery) FirstID(ctx context.Context) (id int64, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (utq *UserTenantQuery) FirstIDX(ctx context.Context) int64 {
+func (utq *UserTenantQuery) FirstIDX(ctx context.Context) int {
 	id, err := utq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -183,8 +183,8 @@ func (utq *UserTenantQuery) OnlyX(ctx context.Context) *UserTenant {
 // OnlyID is like Only, but returns the only UserTenant ID in the query.
 // Returns a *NotSingularError when more than one UserTenant ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (utq *UserTenantQuery) OnlyID(ctx context.Context) (id int64, err error) {
-	var ids []int64
+func (utq *UserTenantQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = utq.Limit(2).IDs(setContextOp(ctx, utq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -200,7 +200,7 @@ func (utq *UserTenantQuery) OnlyID(ctx context.Context) (id int64, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (utq *UserTenantQuery) OnlyIDX(ctx context.Context) int64 {
+func (utq *UserTenantQuery) OnlyIDX(ctx context.Context) int {
 	id, err := utq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -228,7 +228,7 @@ func (utq *UserTenantQuery) AllX(ctx context.Context) []*UserTenant {
 }
 
 // IDs executes the query and returns a list of UserTenant IDs.
-func (utq *UserTenantQuery) IDs(ctx context.Context) (ids []int64, err error) {
+func (utq *UserTenantQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if utq.ctx.Unique == nil && utq.path != nil {
 		utq.Unique(true)
 	}
@@ -240,7 +240,7 @@ func (utq *UserTenantQuery) IDs(ctx context.Context) (ids []int64, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (utq *UserTenantQuery) IDsX(ctx context.Context) []int64 {
+func (utq *UserTenantQuery) IDsX(ctx context.Context) []int {
 	ids, err := utq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -521,7 +521,7 @@ func (utq *UserTenantQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (utq *UserTenantQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(usertenant.Table, usertenant.Columns, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt64))
+	_spec := sqlgraph.NewQuerySpec(usertenant.Table, usertenant.Columns, sqlgraph.NewFieldSpec(usertenant.FieldID, field.TypeInt))
 	_spec.From = utq.sql
 	if unique := utq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/hook"
 	"github.com/yc-alpha/admin/common/snowflake"
 	"golang.org/x/crypto/bcrypt"
@@ -45,9 +46,9 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("id").Unique().Immutable().DefaultFunc(snowflake.GenId).Comment("Primary Key ID"),
 		field.String("username").MaxLen(64).NotEmpty().Unique().Comment("Username of the user"),
-		field.String("email").Match(EmailRegex).NotEmpty().Nillable().Unique().Comment("Email address of the user"),
-		field.String("phone").Match(PhoneRegex).MaxLen(16).NotEmpty().Nillable().Unique().Comment("Phone number of the user"),
-		field.String("password").NotEmpty().Nillable().Sensitive().Comment("Password of the user"),
+		field.String("email").Optional().Nillable().Match(EmailRegex).Unique().Comment("Email address of the user"),
+		field.String("phone").Optional().Nillable().Match(PhoneRegex).Unique().Comment("Phone number of the user"),
+		field.String("password").Optional().Nillable().Sensitive().Comment("Password of the user"),
 		field.Enum("status").Values("ACTIVE", "DISABLED", "PENDING").Default("PENDING").Comment("Status of the user"),
 		field.String("full_name").Optional().Nillable().Comment("Full name of the user"),
 		field.Enum("gender").Values("MALE", "FEMALE", "UNKNOWN").Default("UNKNOWN").Comment("User gender"),
@@ -71,11 +72,21 @@ func (User) Edges() []ent.Edge {
 	}
 }
 
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		// 唯一约束索引已经在字段上定义了 Unique()
+		index.Fields("status", "updated_at"),
+	}
+}
+
 func (User) Annotations() []schema.Annotation {
 	// 把 WithComments 放这里，ent 在迁移时会把 field.Comment 写入 DB
 	return []schema.Annotation{
 		entsql.WithComments(true),
 		// 你也可以在这里设置表名、表注释等 entsql.Table / entsql.View 等
+		entsql.Checks(map[string]string{
+			"users_contact_or_password_check": "(email IS NOT NULL) OR (phone IS NOT NULL) OR (password IS NOT NULL)",
+		}),
 	}
 }
 
@@ -84,6 +95,13 @@ func (User) Hooks() []ent.Hook {
 	return []ent.Hook{
 		hook.On(func(next ent.Mutator) ent.Mutator {
 			return ent.MutateFunc(func(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+				// ensure at least one of email, phone, password is provided
+				email, _ := m.Field("email")
+				phone, _ := m.Field("phone")
+				password, _ := m.Field("password")
+				if email == "" && phone == "" && password == "" {
+					return nil, errors.New("either email, phone or password must be provided")
+				}
 				// hashes the password before saving it to the database.
 				if password, ok := m.Field("password"); ok && password != nil {
 					if passStr, ok := password.(string); ok {

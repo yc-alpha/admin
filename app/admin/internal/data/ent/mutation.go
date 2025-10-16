@@ -58,8 +58,8 @@ type DepartmentMutation struct {
 	clearedFields           map[string]struct{}
 	tenant                  *int64
 	clearedtenant           bool
-	user_departments        map[int64]struct{}
-	removeduser_departments map[int64]struct{}
+	user_departments        map[int]struct{}
+	removeduser_departments map[int]struct{}
 	cleareduser_departments bool
 	done                    bool
 	oldValue                func(context.Context) (*Department, error)
@@ -659,9 +659,9 @@ func (m *DepartmentMutation) ResetTenant() {
 }
 
 // AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by ids.
-func (m *DepartmentMutation) AddUserDepartmentIDs(ids ...int64) {
+func (m *DepartmentMutation) AddUserDepartmentIDs(ids ...int) {
 	if m.user_departments == nil {
-		m.user_departments = make(map[int64]struct{})
+		m.user_departments = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.user_departments[ids[i]] = struct{}{}
@@ -679,9 +679,9 @@ func (m *DepartmentMutation) UserDepartmentsCleared() bool {
 }
 
 // RemoveUserDepartmentIDs removes the "user_departments" edge to the UserDepartment entity by IDs.
-func (m *DepartmentMutation) RemoveUserDepartmentIDs(ids ...int64) {
+func (m *DepartmentMutation) RemoveUserDepartmentIDs(ids ...int) {
 	if m.removeduser_departments == nil {
-		m.removeduser_departments = make(map[int64]struct{})
+		m.removeduser_departments = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.user_departments, ids[i])
@@ -690,7 +690,7 @@ func (m *DepartmentMutation) RemoveUserDepartmentIDs(ids ...int64) {
 }
 
 // RemovedUserDepartments returns the removed IDs of the "user_departments" edge to the UserDepartment entity.
-func (m *DepartmentMutation) RemovedUserDepartmentsIDs() (ids []int64) {
+func (m *DepartmentMutation) RemovedUserDepartmentsIDs() (ids []int) {
 	for id := range m.removeduser_departments {
 		ids = append(ids, id)
 	}
@@ -698,7 +698,7 @@ func (m *DepartmentMutation) RemovedUserDepartmentsIDs() (ids []int64) {
 }
 
 // UserDepartmentsIDs returns the "user_departments" edge IDs in the mutation.
-func (m *DepartmentMutation) UserDepartmentsIDs() (ids []int64) {
+func (m *DepartmentMutation) UserDepartmentsIDs() (ids []int) {
 	for id := range m.user_departments {
 		ids = append(ids, id)
 	}
@@ -1178,8 +1178,8 @@ type TenantMutation struct {
 	updated_at          *time.Time
 	deleted_at          *time.Time
 	clearedFields       map[string]struct{}
-	user_tenants        map[int64]struct{}
-	removeduser_tenants map[int64]struct{}
+	user_tenants        map[int]struct{}
+	removeduser_tenants map[int]struct{}
 	cleareduser_tenants bool
 	departments         map[int64]struct{}
 	removeddepartments  map[int64]struct{}
@@ -1768,9 +1768,9 @@ func (m *TenantMutation) ResetDeletedAt() {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by ids.
-func (m *TenantMutation) AddUserTenantIDs(ids ...int64) {
+func (m *TenantMutation) AddUserTenantIDs(ids ...int) {
 	if m.user_tenants == nil {
-		m.user_tenants = make(map[int64]struct{})
+		m.user_tenants = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.user_tenants[ids[i]] = struct{}{}
@@ -1788,9 +1788,9 @@ func (m *TenantMutation) UserTenantsCleared() bool {
 }
 
 // RemoveUserTenantIDs removes the "user_tenants" edge to the UserTenant entity by IDs.
-func (m *TenantMutation) RemoveUserTenantIDs(ids ...int64) {
+func (m *TenantMutation) RemoveUserTenantIDs(ids ...int) {
 	if m.removeduser_tenants == nil {
-		m.removeduser_tenants = make(map[int64]struct{})
+		m.removeduser_tenants = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.user_tenants, ids[i])
@@ -1799,7 +1799,7 @@ func (m *TenantMutation) RemoveUserTenantIDs(ids ...int64) {
 }
 
 // RemovedUserTenants returns the removed IDs of the "user_tenants" edge to the UserTenant entity.
-func (m *TenantMutation) RemovedUserTenantsIDs() (ids []int64) {
+func (m *TenantMutation) RemovedUserTenantsIDs() (ids []int) {
 	for id := range m.removeduser_tenants {
 		ids = append(ids, id)
 	}
@@ -1807,7 +1807,7 @@ func (m *TenantMutation) RemovedUserTenantsIDs() (ids []int64) {
 }
 
 // UserTenantsIDs returns the "user_tenants" edge IDs in the mutation.
-func (m *TenantMutation) UserTenantsIDs() (ids []int64) {
+func (m *TenantMutation) UserTenantsIDs() (ids []int) {
 	for id := range m.user_tenants {
 		ids = append(ids, id)
 	}
@@ -2362,11 +2362,11 @@ type UserMutation struct {
 	accounts                map[int]struct{}
 	removedaccounts         map[int]struct{}
 	clearedaccounts         bool
-	user_tenants            map[int64]struct{}
-	removeduser_tenants     map[int64]struct{}
+	user_tenants            map[int]struct{}
+	removeduser_tenants     map[int]struct{}
 	cleareduser_tenants     bool
-	user_departments        map[int64]struct{}
-	removeduser_departments map[int64]struct{}
+	user_departments        map[int]struct{}
+	removeduser_departments map[int]struct{}
 	cleareduser_departments bool
 	done                    bool
 	oldValue                func(context.Context) (*User, error)
@@ -2544,9 +2544,22 @@ func (m *UserMutation) OldEmail(ctx context.Context) (v *string, err error) {
 	return oldValue.Email, nil
 }
 
+// ClearEmail clears the value of the "email" field.
+func (m *UserMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[user.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *UserMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[user.FieldEmail]
+	return ok
+}
+
 // ResetEmail resets all changes to the "email" field.
 func (m *UserMutation) ResetEmail() {
 	m.email = nil
+	delete(m.clearedFields, user.FieldEmail)
 }
 
 // SetPhone sets the "phone" field.
@@ -2580,9 +2593,22 @@ func (m *UserMutation) OldPhone(ctx context.Context) (v *string, err error) {
 	return oldValue.Phone, nil
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (m *UserMutation) ClearPhone() {
+	m.phone = nil
+	m.clearedFields[user.FieldPhone] = struct{}{}
+}
+
+// PhoneCleared returns if the "phone" field was cleared in this mutation.
+func (m *UserMutation) PhoneCleared() bool {
+	_, ok := m.clearedFields[user.FieldPhone]
+	return ok
+}
+
 // ResetPhone resets all changes to the "phone" field.
 func (m *UserMutation) ResetPhone() {
 	m.phone = nil
+	delete(m.clearedFields, user.FieldPhone)
 }
 
 // SetPassword sets the "password" field.
@@ -2616,9 +2642,22 @@ func (m *UserMutation) OldPassword(ctx context.Context) (v *string, err error) {
 	return oldValue.Password, nil
 }
 
+// ClearPassword clears the value of the "password" field.
+func (m *UserMutation) ClearPassword() {
+	m.password = nil
+	m.clearedFields[user.FieldPassword] = struct{}{}
+}
+
+// PasswordCleared returns if the "password" field was cleared in this mutation.
+func (m *UserMutation) PasswordCleared() bool {
+	_, ok := m.clearedFields[user.FieldPassword]
+	return ok
+}
+
 // ResetPassword resets all changes to the "password" field.
 func (m *UserMutation) ResetPassword() {
 	m.password = nil
+	delete(m.clearedFields, user.FieldPassword)
 }
 
 // SetStatus sets the "status" field.
@@ -3179,9 +3218,9 @@ func (m *UserMutation) ResetAccounts() {
 }
 
 // AddUserTenantIDs adds the "user_tenants" edge to the UserTenant entity by ids.
-func (m *UserMutation) AddUserTenantIDs(ids ...int64) {
+func (m *UserMutation) AddUserTenantIDs(ids ...int) {
 	if m.user_tenants == nil {
-		m.user_tenants = make(map[int64]struct{})
+		m.user_tenants = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.user_tenants[ids[i]] = struct{}{}
@@ -3199,9 +3238,9 @@ func (m *UserMutation) UserTenantsCleared() bool {
 }
 
 // RemoveUserTenantIDs removes the "user_tenants" edge to the UserTenant entity by IDs.
-func (m *UserMutation) RemoveUserTenantIDs(ids ...int64) {
+func (m *UserMutation) RemoveUserTenantIDs(ids ...int) {
 	if m.removeduser_tenants == nil {
-		m.removeduser_tenants = make(map[int64]struct{})
+		m.removeduser_tenants = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.user_tenants, ids[i])
@@ -3210,7 +3249,7 @@ func (m *UserMutation) RemoveUserTenantIDs(ids ...int64) {
 }
 
 // RemovedUserTenants returns the removed IDs of the "user_tenants" edge to the UserTenant entity.
-func (m *UserMutation) RemovedUserTenantsIDs() (ids []int64) {
+func (m *UserMutation) RemovedUserTenantsIDs() (ids []int) {
 	for id := range m.removeduser_tenants {
 		ids = append(ids, id)
 	}
@@ -3218,7 +3257,7 @@ func (m *UserMutation) RemovedUserTenantsIDs() (ids []int64) {
 }
 
 // UserTenantsIDs returns the "user_tenants" edge IDs in the mutation.
-func (m *UserMutation) UserTenantsIDs() (ids []int64) {
+func (m *UserMutation) UserTenantsIDs() (ids []int) {
 	for id := range m.user_tenants {
 		ids = append(ids, id)
 	}
@@ -3233,9 +3272,9 @@ func (m *UserMutation) ResetUserTenants() {
 }
 
 // AddUserDepartmentIDs adds the "user_departments" edge to the UserDepartment entity by ids.
-func (m *UserMutation) AddUserDepartmentIDs(ids ...int64) {
+func (m *UserMutation) AddUserDepartmentIDs(ids ...int) {
 	if m.user_departments == nil {
-		m.user_departments = make(map[int64]struct{})
+		m.user_departments = make(map[int]struct{})
 	}
 	for i := range ids {
 		m.user_departments[ids[i]] = struct{}{}
@@ -3253,9 +3292,9 @@ func (m *UserMutation) UserDepartmentsCleared() bool {
 }
 
 // RemoveUserDepartmentIDs removes the "user_departments" edge to the UserDepartment entity by IDs.
-func (m *UserMutation) RemoveUserDepartmentIDs(ids ...int64) {
+func (m *UserMutation) RemoveUserDepartmentIDs(ids ...int) {
 	if m.removeduser_departments == nil {
-		m.removeduser_departments = make(map[int64]struct{})
+		m.removeduser_departments = make(map[int]struct{})
 	}
 	for i := range ids {
 		delete(m.user_departments, ids[i])
@@ -3264,7 +3303,7 @@ func (m *UserMutation) RemoveUserDepartmentIDs(ids ...int64) {
 }
 
 // RemovedUserDepartments returns the removed IDs of the "user_departments" edge to the UserDepartment entity.
-func (m *UserMutation) RemovedUserDepartmentsIDs() (ids []int64) {
+func (m *UserMutation) RemovedUserDepartmentsIDs() (ids []int) {
 	for id := range m.removeduser_departments {
 		ids = append(ids, id)
 	}
@@ -3272,7 +3311,7 @@ func (m *UserMutation) RemovedUserDepartmentsIDs() (ids []int64) {
 }
 
 // UserDepartmentsIDs returns the "user_departments" edge IDs in the mutation.
-func (m *UserMutation) UserDepartmentsIDs() (ids []int64) {
+func (m *UserMutation) UserDepartmentsIDs() (ids []int) {
 	for id := range m.user_departments {
 		ids = append(ids, id)
 	}
@@ -3614,6 +3653,15 @@ func (m *UserMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *UserMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(user.FieldEmail) {
+		fields = append(fields, user.FieldEmail)
+	}
+	if m.FieldCleared(user.FieldPhone) {
+		fields = append(fields, user.FieldPhone)
+	}
+	if m.FieldCleared(user.FieldPassword) {
+		fields = append(fields, user.FieldPassword)
+	}
 	if m.FieldCleared(user.FieldFullName) {
 		fields = append(fields, user.FieldFullName)
 	}
@@ -3643,6 +3691,15 @@ func (m *UserMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *UserMutation) ClearField(name string) error {
 	switch name {
+	case user.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case user.FieldPhone:
+		m.ClearPhone()
+		return nil
+	case user.FieldPassword:
+		m.ClearPassword()
+		return nil
 	case user.FieldFullName:
 		m.ClearFullName()
 		return nil
@@ -4585,7 +4642,7 @@ type UserDepartmentMutation struct {
 	config
 	op                Op
 	typ               string
-	id                *int64
+	id                *int
 	tenant_id         *int64
 	addtenant_id      *int64
 	attributes        *map[string]interface{}
@@ -4619,7 +4676,7 @@ func newUserDepartmentMutation(c config, op Op, opts ...userdepartmentOption) *U
 }
 
 // withUserDepartmentID sets the ID field of the mutation.
-func withUserDepartmentID(id int64) userdepartmentOption {
+func withUserDepartmentID(id int) userdepartmentOption {
 	return func(m *UserDepartmentMutation) {
 		var (
 			err   error
@@ -4669,15 +4726,9 @@ func (m UserDepartmentMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of UserDepartment entities.
-func (m *UserDepartmentMutation) SetID(id int64) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UserDepartmentMutation) ID() (id int64, exists bool) {
+func (m *UserDepartmentMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -4688,12 +4739,12 @@ func (m *UserDepartmentMutation) ID() (id int64, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UserDepartmentMutation) IDs(ctx context.Context) ([]int64, error) {
+func (m *UserDepartmentMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int64{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -5228,7 +5279,7 @@ type UserTenantMutation struct {
 	config
 	op                Op
 	typ               string
-	id                *int64
+	id                *int
 	role_labels       *[]string
 	appendrole_labels []string
 	clearedFields     map[string]struct{}
@@ -5261,7 +5312,7 @@ func newUserTenantMutation(c config, op Op, opts ...usertenantOption) *UserTenan
 }
 
 // withUserTenantID sets the ID field of the mutation.
-func withUserTenantID(id int64) usertenantOption {
+func withUserTenantID(id int) usertenantOption {
 	return func(m *UserTenantMutation) {
 		var (
 			err   error
@@ -5311,15 +5362,9 @@ func (m UserTenantMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of UserTenant entities.
-func (m *UserTenantMutation) SetID(id int64) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UserTenantMutation) ID() (id int64, exists bool) {
+func (m *UserTenantMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -5330,12 +5375,12 @@ func (m *UserTenantMutation) ID() (id int64, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UserTenantMutation) IDs(ctx context.Context) ([]int64, error) {
+func (m *UserTenantMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int64{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):

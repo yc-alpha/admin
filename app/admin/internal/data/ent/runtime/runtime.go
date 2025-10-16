@@ -33,6 +33,10 @@ func init() {
 	department.DefaultUpdatedAt = departmentDescUpdatedAt.Default.(func() time.Time)
 	// department.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	department.UpdateDefaultUpdatedAt = departmentDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// departmentDescID is the schema descriptor for id field.
+	departmentDescID := departmentFields[0].Descriptor()
+	// department.DefaultID holds the default value on creation for the id field.
+	department.DefaultID = departmentDescID.Default.(func() int64)
 	tenantFields := schema.Tenant{}.Fields()
 	_ = tenantFields
 	// tenantDescName is the schema descriptor for name field.
@@ -96,44 +100,11 @@ func init() {
 	// userDescEmail is the schema descriptor for email field.
 	userDescEmail := userFields[2].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	user.EmailValidator = func() func(string) error {
-		validators := userDescEmail.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-		}
-		return func(email string) error {
-			for _, fn := range fns {
-				if err := fn(email); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
+	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
 	// userDescPhone is the schema descriptor for phone field.
 	userDescPhone := userFields[3].Descriptor()
 	// user.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
-	user.PhoneValidator = func() func(string) error {
-		validators := userDescPhone.Validators
-		fns := [...]func(string) error{
-			validators[0].(func(string) error),
-			validators[1].(func(string) error),
-			validators[2].(func(string) error),
-		}
-		return func(phone string) error {
-			for _, fn := range fns {
-				if err := fn(phone); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-	}()
-	// userDescPassword is the schema descriptor for password field.
-	userDescPassword := userFields[4].Descriptor()
-	// user.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
-	user.PasswordValidator = userDescPassword.Validators[0].(func(string) error)
+	user.PhoneValidator = userDescPhone.Validators[0].(func(string) error)
 	// userDescLanguage is the schema descriptor for language field.
 	userDescLanguage := userFields[9].Descriptor()
 	// user.DefaultLanguage holds the default value on creation for the language field.
@@ -166,6 +137,14 @@ func init() {
 	useraccountDescUserID := useraccountFields[0].Descriptor()
 	// useraccount.UserIDValidator is a validator for the "user_id" field. It is called by the builders before save.
 	useraccount.UserIDValidator = useraccountDescUserID.Validators[0].(func(int64) error)
+	// useraccountDescPlatform is the schema descriptor for platform field.
+	useraccountDescPlatform := useraccountFields[1].Descriptor()
+	// useraccount.PlatformValidator is a validator for the "platform" field. It is called by the builders before save.
+	useraccount.PlatformValidator = useraccountDescPlatform.Validators[0].(func(string) error)
+	// useraccountDescIdentifier is the schema descriptor for identifier field.
+	useraccountDescIdentifier := useraccountFields[2].Descriptor()
+	// useraccount.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
+	useraccount.IdentifierValidator = useraccountDescIdentifier.Validators[0].(func(string) error)
 	// useraccountDescCreatedAt is the schema descriptor for created_at field.
 	useraccountDescCreatedAt := useraccountFields[4].Descriptor()
 	// useraccount.DefaultCreatedAt holds the default value on creation for the created_at field.
@@ -179,7 +158,7 @@ func init() {
 	userdepartmentFields := schema.UserDepartment{}.Fields()
 	_ = userdepartmentFields
 	// userdepartmentDescAttributes is the schema descriptor for attributes field.
-	userdepartmentDescAttributes := userdepartmentFields[4].Descriptor()
+	userdepartmentDescAttributes := userdepartmentFields[3].Descriptor()
 	// userdepartment.DefaultAttributes holds the default value on creation for the attributes field.
 	userdepartment.DefaultAttributes = userdepartmentDescAttributes.Default.(map[string]interface{})
 }
