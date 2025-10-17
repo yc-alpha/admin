@@ -27,4 +27,9 @@ registry:
     port: 2379
 system:
   skip_activate: false
+  init:
+    auto_init: true
+    tenant_name: "系统"
+    tenant_owner_id: 0
+    root_dept_name: "总公司"
 

@@ -72,20 +72,32 @@ var (
 		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Primary Key ID"},
 		{Name: "name", Type: field.TypeString, Size: 128, Comment: "Name of the tenant"},
 		{Name: "owner_id", Type: field.TypeInt64, Comment: "Owner user ID of the tenant"},
+		{Name: "type", Type: field.TypeEnum, Comment: "Tenant type: ROOT(系统租户), NORMAL(普通租户), GROUP(集团型租户), SUB(子租户)", Enums: []string{"ROOT", "NORMAL", "GROUP", "SUB"}, Default: "NORMAL"},
+		{Name: "path", Type: field.TypeString, Nullable: true, Comment: "Tenant hierarchy path using ltree", SchemaType: map[string]string{"postgres": "ltree"}},
+		{Name: "level", Type: field.TypeInt32, Comment: "Tenant hierarchy level (0 for root tenants)", Default: 0},
 		{Name: "status", Type: field.TypeEnum, Comment: "Status of the tenant", Enums: []string{"ACTIVE", "DISABLED", "EXPIRED", "PENDING"}, Default: "PENDING"},
 		{Name: "expired_at", Type: field.TypeTime, Nullable: true, Comment: "Expiration time of the tenant"},
-		{Name: "attributes", Type: field.TypeJSON},
+		{Name: "attributes", Type: field.TypeJSON, Comment: "Tenant attributes and metadata"},
 		{Name: "created_by", Type: field.TypeInt64, Nullable: true, Comment: "User who created this record"},
 		{Name: "updated_by", Type: field.TypeInt64, Nullable: true, Comment: "User who last updated this record"},
 		{Name: "created_at", Type: field.TypeTime, Comment: "Creation timestamp of this record"},
 		{Name: "updated_at", Type: field.TypeTime, Comment: "Last update timestamp of this record"},
 		{Name: "deleted_at", Type: field.TypeTime, Nullable: true, Comment: "Timestamp when the record was deleted, if applicable"},
+		{Name: "parent_id", Type: field.TypeInt64, Nullable: true, Comment: "Parent tenant ID for sub-tenants"},
 	}
 	// TenantsTable holds the schema information for the "tenants" table.
 	TenantsTable = &schema.Table{
 		Name:       "tenants",
 		Columns:    TenantsColumns,
 		PrimaryKey: []*schema.Column{TenantsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tenants_tenants_children",
+				Columns:    []*schema.Column{TenantsColumns[14]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "tenant_owner_id",
@@ -93,9 +105,42 @@ var (
 				Columns: []*schema.Column{TenantsColumns[2]},
 			},
 			{
-				Name:    "tenant_status",
+				Name:    "tenant_type",
 				Unique:  false,
 				Columns: []*schema.Column{TenantsColumns[3]},
+			},
+			{
+				Name:    "tenant_parent_id",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[14]},
+			},
+			{
+				Name:    "tenant_type_parent_id",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[3], TenantsColumns[14]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "deleted_at IS NULL",
+				},
+			},
+			{
+				Name:    "tenant_level",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[5]},
+			},
+			{
+				Name:    "tenant_path",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[4]},
+				Annotation: &entsql.IndexAnnotation{
+					Types: map[string]string{
+						"postgres": "GIST",
+					},
+				},
+			},
+			{
+				Name:    "tenant_status",
+				Unique:  false,
+				Columns: []*schema.Column{TenantsColumns[6]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "deleted_at IS NULL",
 				},
@@ -103,12 +148,12 @@ var (
 			{
 				Name:    "tenant_expired_at",
 				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[4]},
+				Columns: []*schema.Column{TenantsColumns[7]},
 			},
 			{
 				Name:    "tenant_created_at",
 				Unique:  false,
-				Columns: []*schema.Column{TenantsColumns[8]},
+				Columns: []*schema.Column{TenantsColumns[11]},
 			},
 		},
 	}
@@ -288,6 +333,11 @@ var (
 
 func init() {
 	DepartmentsTable.ForeignKeys[0].RefTable = TenantsTable
+	TenantsTable.ForeignKeys[0].RefTable = TenantsTable
+	TenantsTable.Annotation = &entsql.Annotation{}
+	TenantsTable.Annotation.Checks = map[string]string{
+		"tenant_type_check": "\n\t\t\t\t(type = 'ROOT' AND parent_id IS NULL) OR\n\t\t\t\t(type IN ('GROUP','NORMAL') AND parent_id = 100) OR \n\t\t\t\t(type = 'SUB' AND parent_id IS NOT NULL)",
+	}
 	UsersTable.Annotation = &entsql.Annotation{}
 	UsersTable.Annotation.Checks = map[string]string{
 		"users_contact_or_password_check": "(email IS NOT NULL) OR (phone IS NOT NULL) OR (password IS NOT NULL)",

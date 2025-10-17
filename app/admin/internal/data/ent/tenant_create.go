@@ -36,6 +36,62 @@ func (tc *TenantCreate) SetOwnerID(i int64) *TenantCreate {
 	return tc
 }
 
+// SetType sets the "type" field.
+func (tc *TenantCreate) SetType(t tenant.Type) *TenantCreate {
+	tc.mutation.SetType(t)
+	return tc
+}
+
+// SetNillableType sets the "type" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableType(t *tenant.Type) *TenantCreate {
+	if t != nil {
+		tc.SetType(*t)
+	}
+	return tc
+}
+
+// SetParentID sets the "parent_id" field.
+func (tc *TenantCreate) SetParentID(i int64) *TenantCreate {
+	tc.mutation.SetParentID(i)
+	return tc
+}
+
+// SetNillableParentID sets the "parent_id" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableParentID(i *int64) *TenantCreate {
+	if i != nil {
+		tc.SetParentID(*i)
+	}
+	return tc
+}
+
+// SetPath sets the "path" field.
+func (tc *TenantCreate) SetPath(s string) *TenantCreate {
+	tc.mutation.SetPath(s)
+	return tc
+}
+
+// SetNillablePath sets the "path" field if the given value is not nil.
+func (tc *TenantCreate) SetNillablePath(s *string) *TenantCreate {
+	if s != nil {
+		tc.SetPath(*s)
+	}
+	return tc
+}
+
+// SetLevel sets the "level" field.
+func (tc *TenantCreate) SetLevel(i int32) *TenantCreate {
+	tc.mutation.SetLevel(i)
+	return tc
+}
+
+// SetNillableLevel sets the "level" field if the given value is not nil.
+func (tc *TenantCreate) SetNillableLevel(i *int32) *TenantCreate {
+	if i != nil {
+		tc.SetLevel(*i)
+	}
+	return tc
+}
+
 // SetStatus sets the "status" field.
 func (tc *TenantCreate) SetStatus(t tenant.Status) *TenantCreate {
 	tc.mutation.SetStatus(t)
@@ -184,6 +240,26 @@ func (tc *TenantCreate) AddDepartments(d ...*Department) *TenantCreate {
 	return tc.AddDepartmentIDs(ids...)
 }
 
+// SetParent sets the "parent" edge to the Tenant entity.
+func (tc *TenantCreate) SetParent(t *Tenant) *TenantCreate {
+	return tc.SetParentID(t.ID)
+}
+
+// AddChildIDs adds the "children" edge to the Tenant entity by IDs.
+func (tc *TenantCreate) AddChildIDs(ids ...int64) *TenantCreate {
+	tc.mutation.AddChildIDs(ids...)
+	return tc
+}
+
+// AddChildren adds the "children" edges to the Tenant entity.
+func (tc *TenantCreate) AddChildren(t ...*Tenant) *TenantCreate {
+	ids := make([]int64, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddChildIDs(ids...)
+}
+
 // Mutation returns the TenantMutation object of the builder.
 func (tc *TenantCreate) Mutation() *TenantMutation {
 	return tc.mutation
@@ -191,7 +267,9 @@ func (tc *TenantCreate) Mutation() *TenantMutation {
 
 // Save creates the Tenant in the database.
 func (tc *TenantCreate) Save(ctx context.Context) (*Tenant, error) {
-	tc.defaults()
+	if err := tc.defaults(); err != nil {
+		return nil, err
+	}
 	return withHooks(ctx, tc.sqlSave, tc.mutation, tc.hooks)
 }
 
@@ -218,7 +296,15 @@ func (tc *TenantCreate) ExecX(ctx context.Context) {
 }
 
 // defaults sets the default values of the builder before save.
-func (tc *TenantCreate) defaults() {
+func (tc *TenantCreate) defaults() error {
+	if _, ok := tc.mutation.GetType(); !ok {
+		v := tenant.DefaultType
+		tc.mutation.SetType(v)
+	}
+	if _, ok := tc.mutation.Level(); !ok {
+		v := tenant.DefaultLevel
+		tc.mutation.SetLevel(v)
+	}
 	if _, ok := tc.mutation.Status(); !ok {
 		v := tenant.DefaultStatus
 		tc.mutation.SetStatus(v)
@@ -228,17 +314,27 @@ func (tc *TenantCreate) defaults() {
 		tc.mutation.SetAttributes(v)
 	}
 	if _, ok := tc.mutation.CreatedAt(); !ok {
+		if tenant.DefaultCreatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultCreatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultCreatedAt()
 		tc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := tc.mutation.UpdatedAt(); !ok {
+		if tenant.DefaultUpdatedAt == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultUpdatedAt (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultUpdatedAt()
 		tc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := tc.mutation.ID(); !ok {
+		if tenant.DefaultID == nil {
+			return fmt.Errorf("ent: uninitialized tenant.DefaultID (forgotten import ent/runtime?)")
+		}
 		v := tenant.DefaultID()
 		tc.mutation.SetID(v)
 	}
+	return nil
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -253,6 +349,17 @@ func (tc *TenantCreate) check() error {
 	}
 	if _, ok := tc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Tenant.owner_id"`)}
+	}
+	if _, ok := tc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Tenant.type"`)}
+	}
+	if v, ok := tc.mutation.GetType(); ok {
+		if err := tenant.TypeValidator(v); err != nil {
+			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "Tenant.type": %w`, err)}
+		}
+	}
+	if _, ok := tc.mutation.Level(); !ok {
+		return &ValidationError{Name: "level", err: errors.New(`ent: missing required field "Tenant.level"`)}
 	}
 	if _, ok := tc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Tenant.status"`)}
@@ -312,6 +419,18 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 		_spec.SetField(tenant.FieldOwnerID, field.TypeInt64, value)
 		_node.OwnerID = value
 	}
+	if value, ok := tc.mutation.GetType(); ok {
+		_spec.SetField(tenant.FieldType, field.TypeEnum, value)
+		_node.Type = value
+	}
+	if value, ok := tc.mutation.Path(); ok {
+		_spec.SetField(tenant.FieldPath, field.TypeString, value)
+		_node.Path = &value
+	}
+	if value, ok := tc.mutation.Level(); ok {
+		_spec.SetField(tenant.FieldLevel, field.TypeInt32, value)
+		_node.Level = value
+	}
 	if value, ok := tc.mutation.Status(); ok {
 		_spec.SetField(tenant.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
@@ -369,6 +488,39 @@ func (tc *TenantCreate) createSpec() (*Tenant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ParentIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   tenant.ParentTable,
+			Columns: []string{tenant.ParentColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.ParentID = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tenant.ChildrenTable,
+			Columns: []string{tenant.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {
@@ -455,6 +607,72 @@ func (u *TenantUpsert) UpdateOwnerID() *TenantUpsert {
 // AddOwnerID adds v to the "owner_id" field.
 func (u *TenantUpsert) AddOwnerID(v int64) *TenantUpsert {
 	u.Add(tenant.FieldOwnerID, v)
+	return u
+}
+
+// SetType sets the "type" field.
+func (u *TenantUpsert) SetType(v tenant.Type) *TenantUpsert {
+	u.Set(tenant.FieldType, v)
+	return u
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *TenantUpsert) UpdateType() *TenantUpsert {
+	u.SetExcluded(tenant.FieldType)
+	return u
+}
+
+// SetParentID sets the "parent_id" field.
+func (u *TenantUpsert) SetParentID(v int64) *TenantUpsert {
+	u.Set(tenant.FieldParentID, v)
+	return u
+}
+
+// UpdateParentID sets the "parent_id" field to the value that was provided on create.
+func (u *TenantUpsert) UpdateParentID() *TenantUpsert {
+	u.SetExcluded(tenant.FieldParentID)
+	return u
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (u *TenantUpsert) ClearParentID() *TenantUpsert {
+	u.SetNull(tenant.FieldParentID)
+	return u
+}
+
+// SetPath sets the "path" field.
+func (u *TenantUpsert) SetPath(v string) *TenantUpsert {
+	u.Set(tenant.FieldPath, v)
+	return u
+}
+
+// UpdatePath sets the "path" field to the value that was provided on create.
+func (u *TenantUpsert) UpdatePath() *TenantUpsert {
+	u.SetExcluded(tenant.FieldPath)
+	return u
+}
+
+// ClearPath clears the value of the "path" field.
+func (u *TenantUpsert) ClearPath() *TenantUpsert {
+	u.SetNull(tenant.FieldPath)
+	return u
+}
+
+// SetLevel sets the "level" field.
+func (u *TenantUpsert) SetLevel(v int32) *TenantUpsert {
+	u.Set(tenant.FieldLevel, v)
+	return u
+}
+
+// UpdateLevel sets the "level" field to the value that was provided on create.
+func (u *TenantUpsert) UpdateLevel() *TenantUpsert {
+	u.SetExcluded(tenant.FieldLevel)
+	return u
+}
+
+// AddLevel adds v to the "level" field.
+func (u *TenantUpsert) AddLevel(v int32) *TenantUpsert {
+	u.Add(tenant.FieldLevel, v)
 	return u
 }
 
@@ -661,6 +879,83 @@ func (u *TenantUpsertOne) AddOwnerID(v int64) *TenantUpsertOne {
 func (u *TenantUpsertOne) UpdateOwnerID() *TenantUpsertOne {
 	return u.Update(func(s *TenantUpsert) {
 		s.UpdateOwnerID()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *TenantUpsertOne) SetType(v tenant.Type) *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *TenantUpsertOne) UpdateType() *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdateType()
+	})
+}
+
+// SetParentID sets the "parent_id" field.
+func (u *TenantUpsertOne) SetParentID(v int64) *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetParentID(v)
+	})
+}
+
+// UpdateParentID sets the "parent_id" field to the value that was provided on create.
+func (u *TenantUpsertOne) UpdateParentID() *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdateParentID()
+	})
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (u *TenantUpsertOne) ClearParentID() *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.ClearParentID()
+	})
+}
+
+// SetPath sets the "path" field.
+func (u *TenantUpsertOne) SetPath(v string) *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetPath(v)
+	})
+}
+
+// UpdatePath sets the "path" field to the value that was provided on create.
+func (u *TenantUpsertOne) UpdatePath() *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdatePath()
+	})
+}
+
+// ClearPath clears the value of the "path" field.
+func (u *TenantUpsertOne) ClearPath() *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.ClearPath()
+	})
+}
+
+// SetLevel sets the "level" field.
+func (u *TenantUpsertOne) SetLevel(v int32) *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetLevel(v)
+	})
+}
+
+// AddLevel adds v to the "level" field.
+func (u *TenantUpsertOne) AddLevel(v int32) *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.AddLevel(v)
+	})
+}
+
+// UpdateLevel sets the "level" field to the value that was provided on create.
+func (u *TenantUpsertOne) UpdateLevel() *TenantUpsertOne {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdateLevel()
 	})
 }
 
@@ -1053,6 +1348,83 @@ func (u *TenantUpsertBulk) AddOwnerID(v int64) *TenantUpsertBulk {
 func (u *TenantUpsertBulk) UpdateOwnerID() *TenantUpsertBulk {
 	return u.Update(func(s *TenantUpsert) {
 		s.UpdateOwnerID()
+	})
+}
+
+// SetType sets the "type" field.
+func (u *TenantUpsertBulk) SetType(v tenant.Type) *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetType(v)
+	})
+}
+
+// UpdateType sets the "type" field to the value that was provided on create.
+func (u *TenantUpsertBulk) UpdateType() *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdateType()
+	})
+}
+
+// SetParentID sets the "parent_id" field.
+func (u *TenantUpsertBulk) SetParentID(v int64) *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetParentID(v)
+	})
+}
+
+// UpdateParentID sets the "parent_id" field to the value that was provided on create.
+func (u *TenantUpsertBulk) UpdateParentID() *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdateParentID()
+	})
+}
+
+// ClearParentID clears the value of the "parent_id" field.
+func (u *TenantUpsertBulk) ClearParentID() *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.ClearParentID()
+	})
+}
+
+// SetPath sets the "path" field.
+func (u *TenantUpsertBulk) SetPath(v string) *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetPath(v)
+	})
+}
+
+// UpdatePath sets the "path" field to the value that was provided on create.
+func (u *TenantUpsertBulk) UpdatePath() *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdatePath()
+	})
+}
+
+// ClearPath clears the value of the "path" field.
+func (u *TenantUpsertBulk) ClearPath() *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.ClearPath()
+	})
+}
+
+// SetLevel sets the "level" field.
+func (u *TenantUpsertBulk) SetLevel(v int32) *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.SetLevel(v)
+	})
+}
+
+// AddLevel adds v to the "level" field.
+func (u *TenantUpsertBulk) AddLevel(v int32) *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.AddLevel(v)
+	})
+}
+
+// UpdateLevel sets the "level" field to the value that was provided on create.
+func (u *TenantUpsertBulk) UpdateLevel() *TenantUpsertBulk {
+	return u.Update(func(s *TenantUpsert) {
+		s.UpdateLevel()
 	})
 }
 

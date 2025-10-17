@@ -11,7 +11,6 @@ import (
 	"github.com/go-kratos/kratos/v2/registry"
 	_ "github.com/lib/pq"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/migrate"
 	_ "github.com/yc-alpha/admin/app/admin/internal/data/ent/runtime"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/logger"
@@ -55,14 +54,13 @@ func NewDBClient() (*ent.Client, *sql.DB) {
 	return client, db
 }
 
-func (d *Data) Migrate(ctx context.Context) {
-	// Run the auto migration tool.
-	if err := d.Client.Schema.Create(ctx,
-		migrate.WithDropIndex(false),
-		migrate.WithDropColumn(false),
-	); err != nil {
-		logger.Fatalf("failed creating schema resources: %v", err)
+// 初始化数据
+func (d *Data) InitDatabase(ctx context.Context) {
+	if !config.GetBool("system.init.auto_init", true) {
+		return
 	}
+	logger.Info("开始初始化系统数据...")
+
 }
 
 func NewRegistrar() registry.Registrar {

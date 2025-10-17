@@ -587,6 +587,207 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/login.v1.SendSmsCodeResponse'
+    /v1/tenants:
+        post:
+            tags:
+                - TenantService
+            description: 创建租户
+            operationId: TenantService_CreateTenant
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/admin.v1.CreateTenantRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.CreateTenantResponse'
+    /v1/tenants/groups:
+        get:
+            tags:
+                - TenantService
+            description: 获取集团型租户列表
+            operationId: TenantService_ListGroupTenants
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: keyword
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.ListGroupTenantsResponse'
+    /v1/tenants/root:
+        get:
+            tags:
+                - TenantService
+            description: 获取根租户列表
+            operationId: TenantService_ListRootTenants
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: keyword
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.ListRootTenantsResponse'
+    /v1/tenants/statistics:
+        get:
+            tags:
+                - TenantService
+            description: 获取租户统计信息
+            operationId: TenantService_GetTenantStatistics
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.GetTenantStatisticsResponse'
+    /v1/tenants/{id}:
+        get:
+            tags:
+                - TenantService
+            description: 获取租户详情
+            operationId: TenantService_GetTenant
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.GetTenantResponse'
+        put:
+            tags:
+                - TenantService
+            description: 更新租户
+            operationId: TenantService_UpdateTenant
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/admin.v1.UpdateTenantRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.UpdateTenantResponse'
+        delete:
+            tags:
+                - TenantService
+            description: 删除租户
+            operationId: TenantService_DeleteTenant
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.DeleteTenantResponse'
+    /v1/tenants/{id}/hierarchy:
+        get:
+            tags:
+                - TenantService
+            description: 获取租户层级结构
+            operationId: TenantService_GetTenantHierarchy
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.GetTenantHierarchyResponse'
+    /v1/tenants/{parentId}/children:
+        get:
+            tags:
+                - TenantService
+            description: 获取子租户列表
+            operationId: TenantService_ListSubTenants
+            parameters:
+                - name: parentId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: keyword
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/admin.v1.ListSubTenantsResponse'
     /v1/userInfo:
         get:
             tags:
@@ -889,6 +1090,43 @@ components:
                 id:
                     type: string
             description: 创建菜单响应
+        admin.v1.CreateTenantRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                ownerId:
+                    type: string
+                type:
+                    type: integer
+                    format: enum
+                parentId:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                expiredAt:
+                    type: string
+                attributes:
+                    type: object
+                    additionalProperties:
+                        type: string
+                createdBy:
+                    type: string
+            description: 创建租户请求
+        admin.v1.CreateTenantResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenant:
+                    $ref: '#/components/schemas/admin.v1.Tenant'
+            description: 创建租户响应
         admin.v1.CreateUserRequest:
             type: object
             properties:
@@ -942,6 +1180,17 @@ components:
                 success:
                     type: boolean
             description: 删除菜单响应
+        admin.v1.DeleteTenantResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+            description: 删除租户响应
         admin.v1.DeleteUserResponse:
             type: object
             properties:
@@ -958,6 +1207,48 @@ components:
                 menu:
                     $ref: '#/components/schemas/admin.v1.Menu'
             description: 获取菜单详情响应
+        admin.v1.GetTenantHierarchyResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenant:
+                    $ref: '#/components/schemas/admin.v1.Tenant'
+            description: 获取租户层级响应
+        admin.v1.GetTenantResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenant:
+                    $ref: '#/components/schemas/admin.v1.Tenant'
+            description: 获取租户响应
+        admin.v1.GetTenantStatisticsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                statistics:
+                    type: object
+                    additionalProperties:
+                        type: integer
+                        format: int32
+            description: 获取租户统计响应
         admin.v1.GetUserInfoResponse:
             type: object
             properties:
@@ -970,6 +1261,24 @@ components:
                     $ref: '#/components/schemas/admin.v1.User'
                 msg:
                     type: string
+        admin.v1.ListGroupTenantsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenants:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.Tenant'
+                total:
+                    type: integer
+                    format: int32
+            description: 获取集团型租户列表响应
         admin.v1.ListMenuResponse:
             type: object
             properties:
@@ -981,6 +1290,42 @@ components:
                     type: integer
                     format: int32
             description: 获取菜单列表响应
+        admin.v1.ListRootTenantsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenants:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.Tenant'
+                total:
+                    type: integer
+                    format: int32
+            description: 获取根租户列表响应
+        admin.v1.ListSubTenantsResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenants:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.Tenant'
+                total:
+                    type: integer
+                    format: int32
+            description: 获取子租户列表响应
         admin.v1.ListUsersResponse:
             type: object
             properties:
@@ -1079,6 +1424,52 @@ components:
                     type: string
                 deleted:
                     type: boolean
+        admin.v1.Tenant:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                ownerId:
+                    type: string
+                type:
+                    type: integer
+                    format: enum
+                parentId:
+                    type: string
+                path:
+                    type: string
+                level:
+                    type: integer
+                    format: int32
+                status:
+                    type: integer
+                    format: enum
+                expiredAt:
+                    type: string
+                attributes:
+                    type: object
+                    additionalProperties:
+                        type: string
+                createdBy:
+                    type: string
+                updatedBy:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                deleted:
+                    type: boolean
+                children:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/admin.v1.Tenant'
+                    description: 关联信息
+                parent:
+                    $ref: '#/components/schemas/admin.v1.Tenant'
+            description: 租户信息
         admin.v1.UpdateMenuRequest:
             type: object
             properties:
@@ -1116,6 +1507,40 @@ components:
                 success:
                     type: boolean
             description: 更新菜单响应
+        admin.v1.UpdateTenantRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                ownerId:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+                expiredAt:
+                    type: string
+                attributes:
+                    type: object
+                    additionalProperties:
+                        type: string
+                updatedBy:
+                    type: string
+            description: 更新租户请求
+        admin.v1.UpdateTenantResponse:
+            type: object
+            properties:
+                result:
+                    type: boolean
+                code:
+                    type: integer
+                    format: int32
+                msg:
+                    type: string
+                tenant:
+                    $ref: '#/components/schemas/admin.v1.Tenant'
+            description: 更新租户响应
         admin.v1.UpdateUserAccountsRequest:
             type: object
             properties:
@@ -2039,6 +2464,8 @@ tags:
     - name: PositionService
     - name: SysMenuService
       description: 系统菜单服务
+    - name: TenantService
+      description: 租户管理服务
     - name: UserService
       description: 定义服务
     - name: UserService

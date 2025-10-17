@@ -37,6 +37,10 @@ func init() {
 	departmentDescID := departmentFields[0].Descriptor()
 	// department.DefaultID holds the default value on creation for the id field.
 	department.DefaultID = departmentDescID.Default.(func() int64)
+	tenantHooks := schema.Tenant{}.Hooks()
+	tenant.Hooks[0] = tenantHooks[0]
+	tenant.Hooks[1] = tenantHooks[1]
+	tenant.Hooks[2] = tenantHooks[2]
 	tenantFields := schema.Tenant{}.Fields()
 	_ = tenantFields
 	// tenantDescName is the schema descriptor for name field.
@@ -57,16 +61,20 @@ func init() {
 			return nil
 		}
 	}()
+	// tenantDescLevel is the schema descriptor for level field.
+	tenantDescLevel := tenantFields[6].Descriptor()
+	// tenant.DefaultLevel holds the default value on creation for the level field.
+	tenant.DefaultLevel = tenantDescLevel.Default.(int32)
 	// tenantDescAttributes is the schema descriptor for attributes field.
-	tenantDescAttributes := tenantFields[5].Descriptor()
+	tenantDescAttributes := tenantFields[9].Descriptor()
 	// tenant.DefaultAttributes holds the default value on creation for the attributes field.
 	tenant.DefaultAttributes = tenantDescAttributes.Default.(map[string]interface{})
 	// tenantDescCreatedAt is the schema descriptor for created_at field.
-	tenantDescCreatedAt := tenantFields[8].Descriptor()
+	tenantDescCreatedAt := tenantFields[12].Descriptor()
 	// tenant.DefaultCreatedAt holds the default value on creation for the created_at field.
 	tenant.DefaultCreatedAt = tenantDescCreatedAt.Default.(func() time.Time)
 	// tenantDescUpdatedAt is the schema descriptor for updated_at field.
-	tenantDescUpdatedAt := tenantFields[9].Descriptor()
+	tenantDescUpdatedAt := tenantFields[13].Descriptor()
 	// tenant.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	tenant.DefaultUpdatedAt = tenantDescUpdatedAt.Default.(func() time.Time)
 	// tenant.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
