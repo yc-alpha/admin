@@ -26,10 +26,15 @@ registry:
     host: localhost
     port: 2379
 system:
-  skip_activate: false
+  # 是否跳过激活系统，默认false。如果跳过，所有用户创建后将自动激活。
+  skip_activate: false 
   init:
+    # 是否初始化系统
     auto_init: true
     tenant_name: "系统"
     tenant_owner_id: 0
     root_dept_name: "总公司"
+    root_name: "admin"
+    root_password: "Admin@2026"
+    root_full_name: "系统管理员"
 

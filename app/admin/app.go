@@ -15,7 +15,6 @@ import (
 
 func RegisteApplication(http *http.Server, grpc *grpc.Server) {
 	basicData := data.NewData()
-	basicData.InitDatabase(context.Background())
 
 	// 初始化系统数据
 	initService := service.NewInitService(basicData.Client)

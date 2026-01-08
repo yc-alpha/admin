@@ -1,7 +1,6 @@
 package data
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -52,15 +51,6 @@ func NewDBClient() (*ent.Client, *sql.DB) {
 	client := ent.NewClient(ent.Driver(drv))
 	// defer client.Close()
 	return client, db
-}
-
-// 初始化数据
-func (d *Data) InitDatabase(ctx context.Context) {
-	if !config.GetBool("system.init.auto_init", true) {
-		return
-	}
-	logger.Info("开始初始化系统数据...")
-
 }
 
 func NewRegistrar() registry.Registrar {

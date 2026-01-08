@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/yc-alpha/admin/app/admin/internal/config"
 	"github.com/yc-alpha/admin/app/admin/internal/constant"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/logger"
 )
 
@@ -16,21 +18,16 @@ type InitService struct {
 	client *ent.Client
 }
 
-// InitConfig 初始化配置
-type InitConfig struct {
-	SystemTenantName    string
-	SystemTenantOwnerID int64
-	RootDeptName        string
-	AutoInit            bool // 是否自动初始化
-}
-
 // DefaultInitConfig 默认初始化配置
-func DefaultInitConfig() *InitConfig {
-	return &InitConfig{
+func DefaultInitConfig() *config.InitConfig {
+	return &config.InitConfig{
+		AutoInit:            true,
 		SystemTenantName:    "系统",
 		SystemTenantOwnerID: 0,
 		RootDeptName:        "总公司",
-		AutoInit:            true,
+		RootName:            "admin",
+		RootPassword:        "Admin@2026",
+		RootFullName:        "系统管理员",
 	}
 }
 
@@ -47,7 +44,7 @@ func (s *InitService) InitializeSystem(ctx context.Context) error {
 }
 
 // InitializeSystemWithConfig 使用配置初始化系统数据
-func (s *InitService) InitializeSystemWithConfig(ctx context.Context, config *InitConfig) error {
+func (s *InitService) InitializeSystemWithConfig(ctx context.Context, config *config.InitConfig) error {
 	if !config.AutoInit {
 		logger.Info("自动初始化已禁用，跳过系统初始化")
 		return nil
@@ -63,23 +60,25 @@ func (s *InitService) InitializeSystemWithConfig(ctx context.Context, config *In
 	logger.Infof("系统租户已就绪，ID: %d", systemTenant.ID)
 
 	// 2. 检查并创建总公司部门
-	_, err = s.ensureRootDepartmentWithConfig(ctx, systemTenant.ID, config)
+	systemDept, err := s.ensureRootDepartmentWithConfig(ctx, systemTenant.ID, config)
 	if err != nil {
 		return fmt.Errorf("创建总公司部门失败: %w", err)
 	}
 	logger.Info("总公司部门已就绪")
 
+	// 3. 检查并创建ROOT用户
+	_, err = s.ensureRootUserWithConfig(ctx, systemTenant.ID, systemDept.ID, config)
+	if err != nil {
+		return fmt.Errorf("创建ROOT用户失败: %w", err)
+	}
+	logger.Info("ROOT用户已就绪")
+
 	logger.Info("系统初始化完成")
 	return nil
 }
 
-// ensureSystemTenant 确保系统租户存在（使用默认配置）
-func (s *InitService) ensureSystemTenant(ctx context.Context) (*ent.Tenant, error) {
-	return s.ensureSystemTenantWithConfig(ctx, DefaultInitConfig())
-}
-
 // ensureSystemTenantWithConfig 确保系统租户存在（使用指定配置）
-func (s *InitService) ensureSystemTenantWithConfig(ctx context.Context, config *InitConfig) (*ent.Tenant, error) {
+func (s *InitService) ensureSystemTenantWithConfig(ctx context.Context, config *config.InitConfig) (*ent.Tenant, error) {
 	// 检查是否已存在系统租户
 	existingTenant, err := s.client.Tenant.Query().
 		Where(tenant.Name(config.SystemTenantName)).
@@ -117,13 +116,8 @@ func (s *InitService) ensureSystemTenantWithConfig(ctx context.Context, config *
 	return systemTenant, nil
 }
 
-// ensureRootDepartment 确保总公司部门存在（使用默认配置）
-func (s *InitService) ensureRootDepartment(ctx context.Context, tenantID int64) (*ent.Department, error) {
-	return s.ensureRootDepartmentWithConfig(ctx, tenantID, DefaultInitConfig())
-}
-
 // ensureRootDepartmentWithConfig 确保总公司部门存在（使用指定配置）
-func (s *InitService) ensureRootDepartmentWithConfig(ctx context.Context, tenantID int64, config *InitConfig) (*ent.Department, error) {
+func (s *InitService) ensureRootDepartmentWithConfig(ctx context.Context, tenantID int64, config *config.InitConfig) (*ent.Department, error) {
 	// 检查是否已存在总公司部门
 	existingDept, err := s.client.Department.Query().
 		Where(
@@ -169,6 +163,67 @@ func (s *InitService) ensureRootDepartmentWithConfig(ctx context.Context, tenant
 
 	logger.Info("已创建总公司部门")
 	return rootDept, nil
+}
+
+func (s *InitService) ensureRootUserWithConfig(ctx context.Context, tenantID, deptID int64, config *config.InitConfig) (*ent.User, error) {
+	// 检查是否已存在ROOT用户
+	existingUser, err := s.client.User.Query().
+		Where(user.Username(config.RootName)).First(ctx)
+	if err == nil {
+		logger.Info("ROOT用户已存在")
+		return existingUser, nil
+	}
+
+	if !ent.IsNotFound(err) {
+		return nil, fmt.Errorf("查询ROOT用户失败: %w", err)
+	}
+
+	// 创建ROOT用户
+	// 开始事务
+	tx, err := s.client.Tx(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("开启事务失败: %w", err)
+	}
+	// 确保在函数结束时尝试回滚（若已提交，Rollback 会返回 sql.ErrTxDone）
+	defer func() {
+		_ = tx.Rollback() // 忽略错误处理示例（可按需记录）
+	}()
+
+	user, err := s.client.User.Create().
+		SetUsername(config.RootName).
+		SetPassword(config.RootPassword).
+		SetFullName(config.RootFullName).
+		SetStatus(user.StatusACTIVE).
+		Save(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("创建ROOT用户失败: %w", err)
+	}
+
+	_, err = tx.UserTenant.Create().
+		SetUserID(user.ID).
+		SetTenantID(tenantID).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建ROOT用户租户关联失败: %w", err)
+	}
+
+	_, err = tx.UserDepartment.Create().
+		SetUserID(user.ID).
+		SetTenantID(tenantID).
+		SetDepartmentID(deptID).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("创建ROOT用户部门关联失败: %w", err)
+	}
+
+	// 显式提交
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	logger.Info("已创建ROOT用户")
+	return user, nil
 }
 
 // CheckSystemStatus 检查系统状态
