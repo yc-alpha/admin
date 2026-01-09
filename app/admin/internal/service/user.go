@@ -15,9 +15,9 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	v1 "github.com/yc-alpha/admin/api/admin/v1"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/common/excel"
+	"github.com/yc-alpha/admin/ent"
+	"github.com/yc-alpha/admin/ent/user"
 	"github.com/yc-alpha/config"
 	"github.com/yc-alpha/variant"
 	"golang.org/x/crypto/bcrypt"

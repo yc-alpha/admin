@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
+	"github.com/yc-alpha/admin/ent"
 )
 
 func TestTenantHierarchy(t *testing.T) {

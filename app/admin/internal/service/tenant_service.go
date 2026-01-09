@@ -6,7 +6,7 @@ import (
 	"time"
 
 	v1 "github.com/yc-alpha/admin/api/admin/v1"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
+	"github.com/yc-alpha/admin/ent"
 	"github.com/yc-alpha/logger"
 )
 

@@ -11,11 +11,11 @@ ifeq ($(GOHOSTOS), windows)
 	Git_Bash=D:\Program Files\Git\bin\bash.exe
 	INTERNAL_PROTO_FILES=$(shell $(Git_Bash) -c "find internal -name *.proto")
 	API_PROTO_FILES=$(shell "$(Git_Bash)" -c "find api -name *.proto")
-	ENT_DIRS=$(shell $(Git_Bash) -c "find ./app -type d -name ent | sed 's|^\./||'")
+	ENT_DIRS=$(shell $(Git_Bash) -c "find ./ -type d -name ent | sed 's|^\./||'")
 else
 	INTERNAL_PROTO_FILES=$(shell find internal -name *.proto)
 	API_PROTO_FILES=$(shell find api -name *.proto)
-	ENT_DIRS=$(shell find ./app -type d -name ent | sed 's|^\./||')
+	ENT_DIRS=$(shell find ./ -type d -name ent | sed 's|^\./||')
 endif
 
 .PHONY: install

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
+	"github.com/yc-alpha/admin/ent"
+	"github.com/yc-alpha/admin/ent/tenant"
 	"github.com/yc-alpha/logger"
 )
 

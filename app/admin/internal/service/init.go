@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/yc-alpha/admin/app/admin/constant"
 	"github.com/yc-alpha/admin/app/admin/internal/config"
-	"github.com/yc-alpha/admin/app/admin/internal/constant"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
-	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
+	"github.com/yc-alpha/admin/ent"
+	"github.com/yc-alpha/admin/ent/department"
+	"github.com/yc-alpha/admin/ent/tenant"
+	"github.com/yc-alpha/admin/ent/user"
 	"github.com/yc-alpha/logger"
 )
 
