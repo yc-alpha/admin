@@ -17,6 +17,7 @@ import (
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userrole"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
@@ -30,6 +31,7 @@ type UserQuery struct {
 	withAccounts        *UserAccountQuery
 	withUserTenants     *UserTenantQuery
 	withUserDepartments *UserDepartmentQuery
+	withUserRoles       *UserRoleQuery
 	modifiers           []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -126,6 +128,28 @@ func (uq *UserQuery) QueryUserDepartments() *UserDepartmentQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(userdepartment.Table, userdepartment.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.UserDepartmentsTable, user.UserDepartmentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserRoles chains the current query on the "user_roles" edge.
+func (uq *UserQuery) QueryUserRoles() *UserRoleQuery {
+	query := (&UserRoleClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userrole.Table, userrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UserRolesTable, user.UserRolesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -328,6 +352,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withAccounts:        uq.withAccounts.Clone(),
 		withUserTenants:     uq.withUserTenants.Clone(),
 		withUserDepartments: uq.withUserDepartments.Clone(),
+		withUserRoles:       uq.withUserRoles.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -364,6 +389,17 @@ func (uq *UserQuery) WithUserDepartments(opts ...func(*UserDepartmentQuery)) *Us
 		opt(query)
 	}
 	uq.withUserDepartments = query
+	return uq
+}
+
+// WithUserRoles tells the query-builder to eager-load the nodes that are connected to
+// the "user_roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithUserRoles(opts ...func(*UserRoleQuery)) *UserQuery {
+	query := (&UserRoleClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withUserRoles = query
 	return uq
 }
 
@@ -445,10 +481,11 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			uq.withAccounts != nil,
 			uq.withUserTenants != nil,
 			uq.withUserDepartments != nil,
+			uq.withUserRoles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -490,6 +527,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadUserDepartments(ctx, query, nodes,
 			func(n *User) { n.Edges.UserDepartments = []*UserDepartment{} },
 			func(n *User, e *UserDepartment) { n.Edges.UserDepartments = append(n.Edges.UserDepartments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withUserRoles; query != nil {
+		if err := uq.loadUserRoles(ctx, query, nodes,
+			func(n *User) { n.Edges.UserRoles = []*UserRole{} },
+			func(n *User, e *UserRole) { n.Edges.UserRoles = append(n.Edges.UserRoles, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -571,6 +615,36 @@ func (uq *UserQuery) loadUserDepartments(ctx context.Context, query *UserDepartm
 	}
 	query.Where(predicate.UserDepartment(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.UserDepartmentsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadUserRoles(ctx context.Context, query *UserRoleQuery, nodes []*User, init func(*User), assign func(*User, *UserRole)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int64]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userrole.FieldUserID)
+	}
+	query.Where(predicate.UserRole(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserRolesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

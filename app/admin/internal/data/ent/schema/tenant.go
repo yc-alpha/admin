@@ -48,6 +48,8 @@ func (Tenant) Edges() []ent.Edge {
 		// 父子租户关系
 		edge.From("parent", Tenant.Type).Ref("children").Unique().Field("parent_id"),
 		edge.To("children", Tenant.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("roles", Role.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("user_roles", UserRole.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }
 

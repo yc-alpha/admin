@@ -69,6 +69,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("accounts", UserAccount.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("user_tenants", UserTenant.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("user_departments", UserDepartment.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("user_roles", UserRole.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }
 

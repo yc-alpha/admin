@@ -9,6 +9,30 @@ import (
 )
 
 var (
+	// CasbinRulesColumns holds the columns for the "casbin_rules" table.
+	CasbinRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "ptype", Type: field.TypeString, Size: 100},
+		{Name: "v0", Type: field.TypeString, Size: 100, Default: ""},
+		{Name: "v1", Type: field.TypeString, Size: 100, Default: ""},
+		{Name: "v2", Type: field.TypeString, Size: 100, Default: ""},
+		{Name: "v3", Type: field.TypeString, Size: 100, Default: ""},
+		{Name: "v4", Type: field.TypeString, Size: 100, Default: ""},
+		{Name: "v5", Type: field.TypeString, Size: 100, Default: ""},
+	}
+	// CasbinRulesTable holds the schema information for the "casbin_rules" table.
+	CasbinRulesTable = &schema.Table{
+		Name:       "casbin_rules",
+		Columns:    CasbinRulesColumns,
+		PrimaryKey: []*schema.Column{CasbinRulesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "casbinrule_ptype_v0_v1_v2_v3_v4_v5",
+				Unique:  false,
+				Columns: []*schema.Column{CasbinRulesColumns[1], CasbinRulesColumns[2], CasbinRulesColumns[3], CasbinRulesColumns[4], CasbinRulesColumns[5], CasbinRulesColumns[6], CasbinRulesColumns[7]},
+			},
+		},
+	}
 	// DepartmentsColumns holds the columns for the "departments" table.
 	DepartmentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true, Comment: "Primary Key ID"},
@@ -64,6 +88,39 @@ var (
 						"postgres": "GIST",
 					},
 				},
+			},
+		},
+	}
+	// RolesColumns holds the columns for the "roles" table.
+	RolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "code", Type: field.TypeString, Comment: "角色编码，如 admin, tenant_admin, sales_manager"},
+		{Name: "name", Type: field.TypeString, Comment: "角色名称"},
+		{Name: "is_system", Type: field.TypeBool, Comment: "是否系统预置角色（系统预置的不可删除/修改code）", Default: false},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "tenant_id", Type: field.TypeInt64, Nullable: true, Comment: "租户ID"},
+	}
+	// RolesTable holds the schema information for the "roles" table.
+	RolesTable = &schema.Table{
+		Name:       "roles",
+		Columns:    RolesColumns,
+		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "roles_tenants_roles",
+				Columns:    []*schema.Column{RolesColumns[8]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "role_tenant_id_code",
+				Unique:  true,
+				Columns: []*schema.Column{RolesColumns[8], RolesColumns[1]},
 			},
 		},
 	}
@@ -276,6 +333,63 @@ var (
 			},
 		},
 	}
+	// UserRolesColumns holds the columns for the "user_roles" table.
+	UserRolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "granted_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true, Comment: "过期时间,NULL表示永久有效"},
+		{Name: "role_id", Type: field.TypeInt64, Comment: "角色ID"},
+		{Name: "tenant_id", Type: field.TypeInt64, Nullable: true, Comment: "租户ID"},
+		{Name: "user_id", Type: field.TypeInt64, Comment: "用户ID"},
+	}
+	// UserRolesTable holds the schema information for the "user_roles" table.
+	UserRolesTable = &schema.Table{
+		Name:       "user_roles",
+		Columns:    UserRolesColumns,
+		PrimaryKey: []*schema.Column{UserRolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_roles_roles_user_roles",
+				Columns:    []*schema.Column{UserRolesColumns[3]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_roles_tenants_user_roles",
+				Columns:    []*schema.Column{UserRolesColumns[4]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "user_roles_users_user_roles",
+				Columns:    []*schema.Column{UserRolesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userrole_user_id_role_id_tenant_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserRolesColumns[5], UserRolesColumns[3], UserRolesColumns[4]},
+			},
+			{
+				Name:    "userrole_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserRolesColumns[5]},
+			},
+			{
+				Name:    "userrole_role_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserRolesColumns[3]},
+			},
+			{
+				Name:    "userrole_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserRolesColumns[4]},
+			},
+		},
+	}
 	// UserTenantsColumns holds the columns for the "user_tenants" table.
 	UserTenantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -322,17 +436,21 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		CasbinRulesTable,
 		DepartmentsTable,
+		RolesTable,
 		TenantsTable,
 		UsersTable,
 		UserAccountsTable,
 		UserDepartmentsTable,
+		UserRolesTable,
 		UserTenantsTable,
 	}
 )
 
 func init() {
 	DepartmentsTable.ForeignKeys[0].RefTable = TenantsTable
+	RolesTable.ForeignKeys[0].RefTable = TenantsTable
 	TenantsTable.ForeignKeys[0].RefTable = TenantsTable
 	TenantsTable.Annotation = &entsql.Annotation{}
 	TenantsTable.Annotation.Checks = map[string]string{
@@ -345,6 +463,9 @@ func init() {
 	UserAccountsTable.ForeignKeys[0].RefTable = UsersTable
 	UserDepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	UserDepartmentsTable.ForeignKeys[1].RefTable = UsersTable
+	UserRolesTable.ForeignKeys[0].RefTable = RolesTable
+	UserRolesTable.ForeignKeys[1].RefTable = TenantsTable
+	UserRolesTable.ForeignKeys[2].RefTable = UsersTable
 	UserTenantsTable.ForeignKeys[0].RefTable = TenantsTable
 	UserTenantsTable.ForeignKeys[1].RefTable = UsersTable
 }

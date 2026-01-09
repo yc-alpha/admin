@@ -12,11 +12,14 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/casbinrule"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/role"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userrole"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/usertenant"
 )
 
@@ -78,11 +81,14 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			casbinrule.Table:     casbinrule.ValidColumn,
 			department.Table:     department.ValidColumn,
+			role.Table:           role.ValidColumn,
 			tenant.Table:         tenant.ValidColumn,
 			user.Table:           user.ValidColumn,
 			useraccount.Table:    useraccount.ValidColumn,
 			userdepartment.Table: userdepartment.ValidColumn,
+			userrole.Table:       userrole.ValidColumn,
 			usertenant.Table:     usertenant.ValidColumn,
 		})
 	})

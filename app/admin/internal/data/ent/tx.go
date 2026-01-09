@@ -12,8 +12,12 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// CasbinRule is the client for interacting with the CasbinRule builders.
+	CasbinRule *CasbinRuleClient
 	// Department is the client for interacting with the Department builders.
 	Department *DepartmentClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
 	// Tenant is the client for interacting with the Tenant builders.
 	Tenant *TenantClient
 	// User is the client for interacting with the User builders.
@@ -22,6 +26,8 @@ type Tx struct {
 	UserAccount *UserAccountClient
 	// UserDepartment is the client for interacting with the UserDepartment builders.
 	UserDepartment *UserDepartmentClient
+	// UserRole is the client for interacting with the UserRole builders.
+	UserRole *UserRoleClient
 	// UserTenant is the client for interacting with the UserTenant builders.
 	UserTenant *UserTenantClient
 
@@ -155,11 +161,14 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.CasbinRule = NewCasbinRuleClient(tx.config)
 	tx.Department = NewDepartmentClient(tx.config)
+	tx.Role = NewRoleClient(tx.config)
 	tx.Tenant = NewTenantClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserAccount = NewUserAccountClient(tx.config)
 	tx.UserDepartment = NewUserDepartmentClient(tx.config)
+	tx.UserRole = NewUserRoleClient(tx.config)
 	tx.UserTenant = NewUserTenantClient(tx.config)
 }
 
@@ -170,7 +179,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Department.QueryXXX(), the query will be executed
+// applies a query, for example: CasbinRule.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

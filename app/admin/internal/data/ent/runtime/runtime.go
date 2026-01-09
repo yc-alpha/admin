@@ -5,18 +5,63 @@ package runtime
 import (
 	"time"
 
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/casbinrule"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/department"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/role"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/schema"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/tenant"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/user"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/useraccount"
 	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userdepartment"
+	"github.com/yc-alpha/admin/app/admin/internal/data/ent/userrole"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	casbinruleFields := schema.CasbinRule{}.Fields()
+	_ = casbinruleFields
+	// casbinruleDescPtype is the schema descriptor for ptype field.
+	casbinruleDescPtype := casbinruleFields[1].Descriptor()
+	// casbinrule.PtypeValidator is a validator for the "ptype" field. It is called by the builders before save.
+	casbinrule.PtypeValidator = casbinruleDescPtype.Validators[0].(func(string) error)
+	// casbinruleDescV0 is the schema descriptor for v0 field.
+	casbinruleDescV0 := casbinruleFields[2].Descriptor()
+	// casbinrule.DefaultV0 holds the default value on creation for the v0 field.
+	casbinrule.DefaultV0 = casbinruleDescV0.Default.(string)
+	// casbinrule.V0Validator is a validator for the "v0" field. It is called by the builders before save.
+	casbinrule.V0Validator = casbinruleDescV0.Validators[0].(func(string) error)
+	// casbinruleDescV1 is the schema descriptor for v1 field.
+	casbinruleDescV1 := casbinruleFields[3].Descriptor()
+	// casbinrule.DefaultV1 holds the default value on creation for the v1 field.
+	casbinrule.DefaultV1 = casbinruleDescV1.Default.(string)
+	// casbinrule.V1Validator is a validator for the "v1" field. It is called by the builders before save.
+	casbinrule.V1Validator = casbinruleDescV1.Validators[0].(func(string) error)
+	// casbinruleDescV2 is the schema descriptor for v2 field.
+	casbinruleDescV2 := casbinruleFields[4].Descriptor()
+	// casbinrule.DefaultV2 holds the default value on creation for the v2 field.
+	casbinrule.DefaultV2 = casbinruleDescV2.Default.(string)
+	// casbinrule.V2Validator is a validator for the "v2" field. It is called by the builders before save.
+	casbinrule.V2Validator = casbinruleDescV2.Validators[0].(func(string) error)
+	// casbinruleDescV3 is the schema descriptor for v3 field.
+	casbinruleDescV3 := casbinruleFields[5].Descriptor()
+	// casbinrule.DefaultV3 holds the default value on creation for the v3 field.
+	casbinrule.DefaultV3 = casbinruleDescV3.Default.(string)
+	// casbinrule.V3Validator is a validator for the "v3" field. It is called by the builders before save.
+	casbinrule.V3Validator = casbinruleDescV3.Validators[0].(func(string) error)
+	// casbinruleDescV4 is the schema descriptor for v4 field.
+	casbinruleDescV4 := casbinruleFields[6].Descriptor()
+	// casbinrule.DefaultV4 holds the default value on creation for the v4 field.
+	casbinrule.DefaultV4 = casbinruleDescV4.Default.(string)
+	// casbinrule.V4Validator is a validator for the "v4" field. It is called by the builders before save.
+	casbinrule.V4Validator = casbinruleDescV4.Validators[0].(func(string) error)
+	// casbinruleDescV5 is the schema descriptor for v5 field.
+	casbinruleDescV5 := casbinruleFields[7].Descriptor()
+	// casbinrule.DefaultV5 holds the default value on creation for the v5 field.
+	casbinrule.DefaultV5 = casbinruleDescV5.Default.(string)
+	// casbinrule.V5Validator is a validator for the "v5" field. It is called by the builders before save.
+	casbinrule.V5Validator = casbinruleDescV5.Validators[0].(func(string) error)
 	departmentFields := schema.Department{}.Fields()
 	_ = departmentFields
 	// departmentDescAttributes is the schema descriptor for attributes field.
@@ -37,6 +82,34 @@ func init() {
 	departmentDescID := departmentFields[0].Descriptor()
 	// department.DefaultID holds the default value on creation for the id field.
 	department.DefaultID = departmentDescID.Default.(func() int64)
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescCode is the schema descriptor for code field.
+	roleDescCode := roleFields[1].Descriptor()
+	// role.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	role.CodeValidator = roleDescCode.Validators[0].(func(string) error)
+	// roleDescName is the schema descriptor for name field.
+	roleDescName := roleFields[2].Descriptor()
+	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	role.NameValidator = roleDescName.Validators[0].(func(string) error)
+	// roleDescIsSystem is the schema descriptor for is_system field.
+	roleDescIsSystem := roleFields[4].Descriptor()
+	// role.DefaultIsSystem holds the default value on creation for the is_system field.
+	role.DefaultIsSystem = roleDescIsSystem.Default.(bool)
+	// roleDescIsActive is the schema descriptor for is_active field.
+	roleDescIsActive := roleFields[6].Descriptor()
+	// role.DefaultIsActive holds the default value on creation for the is_active field.
+	role.DefaultIsActive = roleDescIsActive.Default.(bool)
+	// roleDescCreatedAt is the schema descriptor for created_at field.
+	roleDescCreatedAt := roleFields[7].Descriptor()
+	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
+	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	// roleDescUpdatedAt is the schema descriptor for updated_at field.
+	roleDescUpdatedAt := roleFields[8].Descriptor()
+	// role.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	role.DefaultUpdatedAt = roleDescUpdatedAt.Default.(func() time.Time)
+	// role.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	role.UpdateDefaultUpdatedAt = roleDescUpdatedAt.UpdateDefault.(func() time.Time)
 	tenantHooks := schema.Tenant{}.Hooks()
 	tenant.Hooks[0] = tenantHooks[0]
 	tenant.Hooks[1] = tenantHooks[1]
@@ -169,6 +242,12 @@ func init() {
 	userdepartmentDescAttributes := userdepartmentFields[3].Descriptor()
 	// userdepartment.DefaultAttributes holds the default value on creation for the attributes field.
 	userdepartment.DefaultAttributes = userdepartmentDescAttributes.Default.(map[string]interface{})
+	userroleFields := schema.UserRole{}.Fields()
+	_ = userroleFields
+	// userroleDescGrantedAt is the schema descriptor for granted_at field.
+	userroleDescGrantedAt := userroleFields[4].Descriptor()
+	// userrole.DefaultGrantedAt holds the default value on creation for the granted_at field.
+	userrole.DefaultGrantedAt = userroleDescGrantedAt.Default.(func() time.Time)
 }
 
 const (

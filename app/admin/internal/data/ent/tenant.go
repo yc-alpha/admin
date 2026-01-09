@@ -63,9 +63,13 @@ type TenantEdges struct {
 	Parent *Tenant `json:"parent,omitempty"`
 	// Children holds the value of the children edge.
 	Children []*Tenant `json:"children,omitempty"`
+	// Roles holds the value of the roles edge.
+	Roles []*Role `json:"roles,omitempty"`
+	// UserRoles holds the value of the user_roles edge.
+	UserRoles []*UserRole `json:"user_roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [6]bool
 }
 
 // UserTenantsOrErr returns the UserTenants value or an error if the edge
@@ -104,6 +108,24 @@ func (e TenantEdges) ChildrenOrErr() ([]*Tenant, error) {
 		return e.Children, nil
 	}
 	return nil, &NotLoadedError{edge: "children"}
+}
+
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) RolesOrErr() ([]*Role, error) {
+	if e.loadedTypes[4] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
+}
+
+// UserRolesOrErr returns the UserRoles value or an error if the edge
+// was not loaded in eager-loading.
+func (e TenantEdges) UserRolesOrErr() ([]*UserRole, error) {
+	if e.loadedTypes[5] {
+		return e.UserRoles, nil
+	}
+	return nil, &NotLoadedError{edge: "user_roles"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -263,6 +285,16 @@ func (t *Tenant) QueryParent() *TenantQuery {
 // QueryChildren queries the "children" edge of the Tenant entity.
 func (t *Tenant) QueryChildren() *TenantQuery {
 	return NewTenantClient(t.config).QueryChildren(t)
+}
+
+// QueryRoles queries the "roles" edge of the Tenant entity.
+func (t *Tenant) QueryRoles() *RoleQuery {
+	return NewTenantClient(t.config).QueryRoles(t)
+}
+
+// QueryUserRoles queries the "user_roles" edge of the Tenant entity.
+func (t *Tenant) QueryUserRoles() *UserRoleQuery {
+	return NewTenantClient(t.config).QueryUserRoles(t)
 }
 
 // Update returns a builder for updating this Tenant.
